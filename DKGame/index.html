@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>双英雄碰撞对战</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        [v-cloak] { display: none; }
+    </style>
+</head>
+<body>
+    <div id="app" v-cloak>
+        <!-- 英雄选择界面 -->
+        <div id="select-screen" class="screen" :class="{ active: screen === 'select' }">
+            <h1>选择你的英雄</h1>
+            <div class="hero-pool" id="hero-pool">
+                <div v-for="hero in heroPool" :key="hero.id" 
+                     class="hero-card" 
+                     :class="{ 'selected-p1': p1Selection?.id === hero.id, 'selected-p2': p2Selection?.id === hero.id }"
+                     @click="selectHero(hero)">
+                    <div class="hero-icon" :style="{ background: hero.iconColor }"></div>
+                    <h3>{{ hero.name }}</h3>
+                </div>
+            </div>
+            <div class="selection-status">
+                <p>玩家 1: <span>{{ p1Selection ? p1Selection.name : '未选择' }}</span></p>
+                <p>玩家 2: <span>{{ p2Selection ? p2Selection.name : '未选择' }}</span></p>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button :disabled="!p1Selection || !p2Selection" @click="startGame(false)">开始对战</button>
+                <button :disabled="!p1Selection || !p2Selection" @click="startGame(true)" style="background: #4caf50; color: white;">进入训练场</button>
+            </div>
+        </div>
+
+        <!-- 对战界面/训练场界面 -->
+        <div id="battle-screen" class="screen" :class="{ active: screen === 'battle' }">
+            <div class="battle-layout">
+                <!-- 训练场左侧控制面板 (仅训练模式显示) -->
+                <div id="training-panel-p1" class="training-panel" :class="{ hidden: !isTraining }">
+                    <h3>Player 1 参数</h3>
+                    <div class="control-group">
+                        <label>生命值 (HP): <span>{{ Math.floor(trainParams.p1.hp) }}</span></label>
+                        <input type="range" v-model.number="trainParams.p1.hp" min="1" max="500">
+                    </div>
+                    <div class="control-group">
+                        <label>基础移速: <span>{{ trainParams.p1.baseSpeed }}</span></label>
+                        <input type="range" v-model.number="trainParams.p1.baseSpeed" min="10" max="200">
+                    </div>
+                    <div class="control-group">
+                        <label>攻击倍率: <span>{{ trainParams.p1.damageMultiplier.toFixed(1) }}</span>x</label>
+                        <input type="range" v-model.number="trainParams.p1.damageMultiplier" min="0.1" max="5" step="0.1">
+                    </div>
+                    <div class="control-group" v-if="battleState.p1.name === '狂战士'">
+                        <label>旋转速度: <span>{{ trainParams.p1.baseSpinSpeed }}</span></label>
+                        <input type="range" v-model.number="trainParams.p1.baseSpinSpeed" min="5" max="50">
+                    </div>
+                    <div class="control-group">
+                        <button @click="triggerAwaken(1)" class="action-btn" :disabled="battleState.p1.isDead || battleState.p1.isAwakened">触发觉醒</button>
+                    </div>
+                </div>
+
+                <div class="arena-wrapper">
+                    <div class="battle-header">
+                        <div class="player-info" id="p1-info">
+                            <h2 class="hero-name">{{ battleState.p1.name }}</h2>
+                            <div class="hp-bar-container">
+                                <div class="hp-bar" :style="{ width: Math.max(0, (battleState.p1.hp / battleState.p1.maxHp) * 100) + '%' }"></div>
+                            </div>
+                            <p class="hp-text">HP: <span>{{ Math.floor(battleState.p1.hp) }}</span></p>
+                            <div class="buffs">
+                                <span v-if="battleState.p1.isAwakened" class="buff-icon" style="background: #ffd700; color: #000;">Awakened</span>
+                                <span v-if="battleState.p1.invincibleTime > 0" class="buff-icon" style="background: #ffd700; color: #000;">Invincible</span>
+                                <span v-for="(buff, i) in battleState.p1.buffs" :key="i" class="buff-icon" 
+                                      :style="{ background: buff.type === 'slow' ? '#ff4444' : (buff.type === 'vampire_drain' ? '#8b0000' : '#444') }">
+                                    {{ buff.type === 'slow' ? `Slow (${buff.time.toFixed(1)}s)` : (buff.type === 'vampire_drain' ? `Drain (${buff.time.toFixed(1)}s)` : buff.type) }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="vs">VS</div>
+                        <div class="player-info right" id="p2-info">
+                            <h2 class="hero-name">{{ battleState.p2.name }}</h2>
+                            <div class="hp-bar-container">
+                                <div class="hp-bar" :style="{ width: Math.max(0, (battleState.p2.hp / battleState.p2.maxHp) * 100) + '%' }"></div>
+                            </div>
+                            <p class="hp-text">HP: <span>{{ Math.floor(battleState.p2.hp) }}</span></p>
+                            <div class="buffs">
+                                <span v-if="battleState.p2.isAwakened" class="buff-icon" style="background: #ffd700; color: #000;">Awakened</span>
+                                <span v-if="battleState.p2.invincibleTime > 0" class="buff-icon" style="background: #ffd700; color: #000;">Invincible</span>
+                                <span v-for="(buff, i) in battleState.p2.buffs" :key="i" class="buff-icon" 
+                                      :style="{ background: buff.type === 'slow' ? '#ff4444' : (buff.type === 'vampire_drain' ? '#8b0000' : '#444') }">
+                                    {{ buff.type === 'slow' ? `Slow (${buff.time.toFixed(1)}s)` : (buff.type === 'vampire_drain' ? `Drain (${buff.time.toFixed(1)}s)` : buff.type) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="arena-container">
+                        <!-- Keep canvas fixed -->
+                        <canvas id="game-canvas" width="600" height="600"></canvas>
+                    </div>
+                    
+                    <!-- 训练场全局控制 -->
+                    <div id="training-global-controls" :class="{ hidden: !isTraining }">
+                        <button @click="resetToDefaults" class="small-btn">重置默认</button>
+                        <button @click="savePreset" class="small-btn">保存预设</button>
+                        <button @click="loadPreset" class="small-btn">加载预设</button>
+                    </div>
+                </div>
+
+                <!-- 训练场右侧控制面板 (仅训练模式显示) -->
+                <div id="training-panel-p2" class="training-panel" :class="{ hidden: !isTraining }">
+                    <h3>Player 2 参数</h3>
+                    <div class="control-group">
+                        <label>生命值 (HP): <span>{{ Math.floor(trainParams.p2.hp) }}</span></label>
+                        <input type="range" v-model.number="trainParams.p2.hp" min="1" max="500">
+                    </div>
+                    <div class="control-group">
+                        <label>基础移速: <span>{{ trainParams.p2.baseSpeed }}</span></label>
+                        <input type="range" v-model.number="trainParams.p2.baseSpeed" min="10" max="200">
+                    </div>
+                    <div class="control-group">
+                        <label>攻击倍率: <span>{{ trainParams.p2.damageMultiplier.toFixed(1) }}</span>x</label>
+                        <input type="range" v-model.number="trainParams.p2.damageMultiplier" min="0.1" max="5" step="0.1">
+                    </div>
+                    <div class="control-group" v-if="battleState.p2.name === '狂战士'">
+                        <label>旋转速度: <span>{{ trainParams.p2.baseSpinSpeed }}</span></label>
+                        <input type="range" v-model.number="trainParams.p2.baseSpinSpeed" min="5" max="50">
+                    </div>
+                    <div class="control-group">
+                        <button @click="triggerAwaken(2)" class="action-btn" :disabled="battleState.p2.isDead || battleState.p2.isAwakened">触发觉醒</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 胜利提示 -->
+            <div id="victory-overlay" :class="{ hidden: !victory.show }">
+                <h2 id="victory-text">{{ victory.text }}</h2>
+                <div v-if="isTraining" style="margin-bottom: 15px; display: flex; align-items: center; gap: 5px;">
+                    <input type="checkbox" id="keep-params-checkbox" v-model="victory.keepParams">
+                    <label for="keep-params-checkbox" style="color: white; font-size: 1.1rem; cursor: pointer;">保持当前参数</label>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button @click="backToSelect">返回选择</button>
+                    <button @click="restartBattle" style="background: #4caf50; color: white;">重新本局</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- import map for Vue -->
+    <script type="importmap">
+    {
+      "imports": {
+        "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+      }
+    }
+    </script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
