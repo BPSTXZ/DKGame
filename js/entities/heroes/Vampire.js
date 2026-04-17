@@ -110,9 +110,16 @@ export class Vampire extends Hero {
                     this.awakenShotTimer = 0.5; // 每0.5秒发射一次
                 }
             } else {
-                // 当牙齿发射完毕，且场上没有存活的飞行牙齿时，结束觉醒状态
+                // 当牙齿发射完毕，且场上没有存活的飞行牙齿时，延迟一帧结束觉醒状态以避免竞争条件
                 if (this.fangs.length === 0) {
-                    this.isAwakened = false;
+                    if (this.awakenEndPending) {
+                        this.isAwakened = false;
+                        this.awakenEndPending = false;
+                    } else {
+                        this.awakenEndPending = true;
+                    }
+                } else {
+                    this.awakenEndPending = false;
                 }
             }
         }
