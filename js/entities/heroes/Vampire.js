@@ -28,6 +28,7 @@ export class Vampire extends Hero {
         this.suckAudio.loop = true; // 确保无缝循环
         
         this.laughAudio = new Audio('assets/audio/vampire/吸血鬼笑.mp3');
+        this.biteAudio = new Audio('assets/audio/vampire/牙齿咬住.mp3');
     }
     
     applyPassives() {
@@ -77,10 +78,6 @@ export class Vampire extends Hero {
             if (this.suckTime >= this.suckDuration) {
                 this.isSucking = false;
                 
-                // 停止吸血音效
-                this.suckAudio.pause();
-                this.suckAudio.currentTime = 0;
-                
                 // 给双方施加一个向后的推力（反弹），保证顺利脱离
                 if (this.enemy) {
                     const dx = this.x - this.enemy.x;
@@ -104,12 +101,19 @@ export class Vampire extends Hero {
         }
         
         // 觉醒技能：发射牙齿
-        if (this.isAwakened && this.awakenShotsLeft > 0) {
-            this.awakenShotTimer -= dt;
-            if (this.awakenShotTimer <= 0) {
-                this.shootFang();
-                this.awakenShotsLeft--;
-                this.awakenShotTimer = 0.5; // 每0.5秒发射一次
+        if (this.isAwakened) {
+            if (this.awakenShotsLeft > 0) {
+                this.awakenShotTimer -= dt;
+                if (this.awakenShotTimer <= 0) {
+                    this.shootFang();
+                    this.awakenShotsLeft--;
+                    this.awakenShotTimer = 0.5; // 每0.5秒发射一次
+                }
+            } else {
+                // 当牙齿发射完毕，且场上没有存活的飞行牙齿时，结束觉醒状态
+                if (this.fangs.length === 0) {
+                    this.isAwakened = false;
+                }
             }
         }
         
@@ -165,6 +169,26 @@ export class Vampire extends Hero {
                 this.fangs.splice(i, 1);
             }
         }
+        
+        // 统一管理吸血音效状态：物理吸附或牙齿吸血 buff 生效期间均播放音效
+        let isDraining = this.isSucking;
+        if (this.enemy && !this.enemy.isDead) {
+            const hasFangDrain = this.enemy.buffs.some(b => b.type === 'vampire_drain' && b.source === this);
+            if (hasFangDrain) {
+                isDraining = true;
+            }
+        }
+        
+        if (isDraining) {
+            if (this.suckAudio.paused) {
+                this.suckAudio.play().catch(e => console.warn('Suck audio play failed:', e));
+            }
+        } else {
+            if (!this.suckAudio.paused) {
+                this.suckAudio.pause();
+                this.suckAudio.currentTime = 0;
+            }
+        }
     }
     
     onHeroCollision(other) {
@@ -177,10 +201,6 @@ export class Vampire extends Hero {
         if (!this.isSucking) {
             this.isSucking = true;
             this.suckTime = 0;
-            
-            // 播放吸血音效
-            this.suckAudio.currentTime = 0;
-            this.suckAudio.play().catch(e => console.warn('Audio play failed:', e));
             
             // 施加减速 buff
             other.addBuff('vampire_slow', 'slow', 0.5, 3.0);
@@ -209,6 +229,11 @@ export class Vampire extends Hero {
         }
     }
     
+    playVictoryAudio() {
+        // 当前版本临时复用觉醒音效作为胜利音效
+        this.playAwakenAudio();
+    }
+    
     stopAllAudio() {
         if (this.suckAudio) {
             this.suckAudio.pause();
@@ -217,6 +242,10 @@ export class Vampire extends Hero {
         if (this.laughAudio) {
             this.laughAudio.pause();
             this.laughAudio.currentTime = 0;
+        }
+        if (this.biteAudio) {
+            this.biteAudio.pause();
+            this.biteAudio.currentTime = 0;
         }
     }
     
@@ -242,6 +271,12 @@ export class Vampire extends Hero {
     
     onFangHit(target, fang) {
         if (target.isDead || target.invincibleTime > 0) return;
+        
+        // 播放击中音效
+        if (this.biteAudio) {
+            this.biteAudio.currentTime = 0;
+            this.biteAudio.play().catch(e => console.warn('Bite audio play failed:', e));
+        }
         
         // 计算击中时的角度
         const hitAngle = Math.atan2(fang.y - target.y, fang.x - target.x);

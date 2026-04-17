@@ -157,6 +157,11 @@ export class Spider extends Hero {
         }
     }
     
+    playVictoryAudio() {
+        // 当前版本临时复用觉醒音效作为胜利音效
+        this.playAwakenAudio();
+    }
+    
     stopAllAudio() {
         if (this.webHitAudio) {
             this.webHitAudio.pause();

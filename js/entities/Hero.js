@@ -243,6 +243,11 @@ export class Hero {
      */
     playAwakenAudio() {}
     
+    /**
+     * 播放胜利音效（由子类覆盖）
+     */
+    playVictoryAudio() {}
+    
     // 子类钩子函数
     onAwaken() {}
     

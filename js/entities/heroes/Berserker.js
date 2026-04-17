@@ -106,6 +106,9 @@ export class Berserker extends Hero {
                     this.enemy.takeDamage(damage, this.x, this.y);
                     this.spawnHitParticles(this.enemy.x, this.enemy.y);
                     this.playAxeHitSound();
+                    
+                    // 触发武器命中时的减速效果 (20%, 持续1秒，不可叠加但可刷新)
+                    this.applyAxeSlow(this.enemy);
                 }
             } else {
                 this.axe1Hitting = false; // 离开目标后重置状态
@@ -122,11 +125,22 @@ export class Berserker extends Hero {
                     this.enemy.takeDamage(damage, this.x, this.y);
                     this.spawnHitParticles(this.enemy.x, this.enemy.y);
                     this.playAxeHitSound();
+                    
+                    // 触发武器命中时的减速效果 (20%, 持续1秒，不可叠加但可刷新)
+                    this.applyAxeSlow(this.enemy);
                 }
             } else {
                 this.axe2Hitting = false;
             }
         }
+    }
+    
+    applyAxeSlow(target) {
+        if (target.isDead || target.invincibleTime > 0) return;
+        // 使用固定ID 'berserker_axe_slow'，利用底层 Hero.addBuff 的逻辑，
+        // 同ID再次添加会自动刷新 time，不会产生多重叠加的 value。
+        // type为 'slow' 会被 Hero.update 自动处理减速 (乘以 1 - value)
+        target.addBuff('berserker_axe_slow', 'slow', 0.2, 1.0);
     }
     
     playAxeHitSound() {
@@ -156,6 +170,11 @@ export class Berserker extends Hero {
             this.awakenAudio.currentTime = 0;
             this.awakenAudio.play().catch(e => console.warn('Audio play failed:', e));
         }
+    }
+    
+    playVictoryAudio() {
+        // 当前版本临时复用觉醒音效作为胜利音效
+        this.playAwakenAudio();
     }
     
     stopAllAudio() {

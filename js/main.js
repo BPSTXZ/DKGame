@@ -28,8 +28,8 @@ createApp({
         const cheerAudio = new Audio('assets/audio/common/喝彩.mp3');
 
         const battleState = reactive({
-            p1: { name: 'Hero 1', hp: 100, maxHp: 100, isDead: false, isAwakened: false, invincibleTime: 0, buffs: [] },
-            p2: { name: 'Hero 2', hp: 100, maxHp: 100, isDead: false, isAwakened: false, invincibleTime: 0, buffs: [] }
+            p1: { name: 'Hero 1', hp: 100, maxHp: 100, speed: 0, spinSpeed: null, isDead: false, isAwakened: false, awakenTimer: 0, invincibleTime: 0, buffs: [] },
+            p2: { name: 'Hero 2', hp: 100, maxHp: 100, speed: 0, spinSpeed: null, isDead: false, isAwakened: false, awakenTimer: 0, invincibleTime: 0, buffs: [] }
         });
 
         const trainParams = reactive({
@@ -60,8 +60,24 @@ createApp({
             state.name = hero.name;
             state.hp = Math.max(0, hero.hp);
             state.maxHp = hero.maxHp;
+            state.speed = hero.getSpeed ? hero.getSpeed() : 0;
+            state.spinSpeed = hero.currentSpinSpeed !== undefined ? hero.currentSpinSpeed : null;
             state.isDead = hero.isDead;
             state.isAwakened = hero.isAwakened;
+            
+            // 提取各个角色的觉醒剩余时间
+            if (hero.name === '狂战士') {
+                state.awakenTimer = hero.awakenTimer || 0;
+            } else if (hero.name === '蜘蛛') {
+                // 蜘蛛侠觉醒绑定无敌时间
+                state.awakenTimer = hero.isAwakened ? hero.invincibleTime : 0;
+            } else if (hero.name === '吸血鬼') {
+                // 技能触发型觉醒，不需要展示倒计时
+                state.awakenTimer = 0;
+            } else {
+                state.awakenTimer = 0;
+            }
+
             state.invincibleTime = hero.invincibleTime;
             state.buffs = hero.buffs.map(b => ({ type: b.type, time: b.time }));
         };
@@ -129,6 +145,11 @@ createApp({
                     if (gameInstance) {
                         if (gameInstance.p1) gameInstance.p1.stopAllAudio();
                         if (gameInstance.p2) gameInstance.p2.stopAllAudio();
+                    }
+                    
+                    // 播放获胜英雄的专属胜利音效（平局时 winner='draw' 没有该方法）
+                    if (winner && winner !== 'draw' && winner.playVictoryAudio) {
+                        winner.playVictoryAudio();
                     }
                     
                     // 立即播放喝彩音效

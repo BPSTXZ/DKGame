@@ -6,6 +6,8 @@ export class Physics {
     constructor(width, height) {
         this.width = width;
         this.height = height;
+        this.wallHitAudio = new Audio('assets/audio/common/碰撞.mp3');
+        this.lastWallHitTime = 0;
     }
     
     /**
@@ -15,22 +17,22 @@ export class Physics {
         let bounced = false;
         
         // 左右边界
-        if (hero.x - hero.radius < 0) {
+        if (hero.x - hero.radius <= 0 && hero.vx < 0) {
             hero.x = hero.radius;
             hero.vx = Math.abs(hero.vx);
             bounced = true;
-        } else if (hero.x + hero.radius > this.width) {
+        } else if (hero.x + hero.radius >= this.width && hero.vx > 0) {
             hero.x = this.width - hero.radius;
             hero.vx = -Math.abs(hero.vx);
             bounced = true;
         }
         
         // 上下边界
-        if (hero.y - hero.radius < 0) {
+        if (hero.y - hero.radius <= 0 && hero.vy < 0) {
             hero.y = hero.radius;
             hero.vy = Math.abs(hero.vy);
             bounced = true;
-        } else if (hero.y + hero.radius > this.height) {
+        } else if (hero.y + hero.radius >= this.height && hero.vy > 0) {
             hero.y = this.height - hero.radius;
             hero.vy = -Math.abs(hero.vy);
             bounced = true;
@@ -38,6 +40,14 @@ export class Physics {
         
         if (bounced) {
             hero.onWallBounce();
+            
+            const now = performance.now();
+            // 添加 50ms 冷却时间，防止多角色同时碰撞导致音效重叠或爆音
+            if (now - this.lastWallHitTime > 50) {
+                this.wallHitAudio.currentTime = 0;
+                this.wallHitAudio.play().catch(e => console.warn('Wall hit audio play failed:', e));
+                this.lastWallHitTime = now;
+            }
         }
     }
     
