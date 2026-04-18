@@ -66,6 +66,24 @@ export class Hero {
     }
     
     /**
+     * 触发击退效果
+     * @param {number} kx 击退X方向向量
+     * @param {number} ky 击退Y方向向量
+     * @param {number} speed 击退速度
+     * @param {number} duration 击退持续时间(秒)
+     */
+    knockback(kx, ky, speed, duration) {
+        if (this.invincibleTime > 0 || this.isDead) return;
+        
+        const dist = Math.hypot(kx, ky);
+        if (dist === 0) return;
+        
+        this.knockbackTimer = duration;
+        this.knockbackVx = (kx / dist) * speed;
+        this.knockbackVy = (ky / dist) * speed;
+    }
+    
+    /**
      * 每帧更新实体状态
      */
     update(dt) {
@@ -74,18 +92,46 @@ export class Hero {
             return;
         }
         
+        // 处理击退状态 (优先处理，覆盖普通移动)
+        if (this.knockbackTimer > 0) {
+            this.knockbackTimer -= dt;
+            this.x += this.knockbackVx * dt;
+            this.y += this.knockbackVy * dt;
+            
+            // 确保不出界
+            this.x = Math.max(this.radius, Math.min(this.game.width - this.radius, this.x));
+            this.y = Math.max(this.radius, Math.min(this.game.height - this.radius, this.y));
+            
+            // 击退期间仍在更新特殊逻辑（如施法、状态倒计时等）
+            this.updateSpecific(dt);
+            this.applyPassives();
+            
+            // 处理 Buff 倒计时
+            for (let i = this.buffs.length - 1; i >= 0; i--) {
+                const b = this.buffs[i];
+                b.time -= dt;
+                if (b.time <= 0) {
+                    this.buffs.splice(i, 1);
+                }
+            }
+            
+            if (this.invincibleTime > 0) this.invincibleTime -= dt;
+            if (this.damageBlinkTime > 0) this.damageBlinkTime -= dt;
+            return; // 跳过常规的移速计算和坐标更新
+        }
+        
         // 处理和衰减 Buff
         this.speedMultiplier = 1.0; // 每帧重置倍率
         for (let i = this.buffs.length - 1; i >= 0; i--) {
             const b = this.buffs[i];
             b.time -= dt;
-            if (b.type === 'slow') {
+            if (b.type === 'slow' || b.type === 'paralyze') {
                 if (b.decay) {
                     // 线性衰减减速：当前效果 = 最大效果 * (剩余时间 / 总时间)
                     const currentEffect = b.value * (b.time / b.maxTime);
                     this.speedMultiplier *= (1 - currentEffect);
                 } else {
-                    this.speedMultiplier *= (1 - b.value); // 减速叠加处理
+                    this.speedMultiplier *= (1 - b.value); // 减速/麻痹叠加处理
                 }
             } else if (b.type === 'speed') {
                 this.speedMultiplier *= (1 + b.value); // 加速叠加处理
@@ -261,8 +307,8 @@ export class Hero {
      * 添加状态 Buff
      */
     addBuff(id, type, value, time, extra = {}) {
-        // 如果处于无敌/无法选中状态，免疫所有负面效果（如减速、吸血）
-        if (this.invincibleTime > 0 && (type === 'slow' || type === 'vampire_drain')) {
+        // 如果处于无敌/无法选中状态，免疫所有负面效果（如减速、吸血、麻痹）
+        if (this.invincibleTime > 0 && (type === 'slow' || type === 'vampire_drain' || type === 'paralyze')) {
             return;
         }
         
@@ -281,7 +327,7 @@ export class Hero {
      * 清除所有负面状态（通常在开启无敌/觉醒时调用）
      */
     cleanseDebuffs() {
-        this.buffs = this.buffs.filter(b => b.type !== 'slow' && b.type !== 'vampire_drain');
+        this.buffs = this.buffs.filter(b => b.type !== 'slow' && b.type !== 'vampire_drain' && b.type !== 'paralyze');
     }
     
     /**
@@ -299,8 +345,8 @@ export class Hero {
             ctx.scale(this.deathTimer, this.deathTimer);
         }
         
-        // 受击闪烁
-        if (this.damageBlinkTime > 0 && !this.isDead) {
+        // 受击闪烁 (如果游戏已结束且自身为胜利者，则强制中断闪烁以确保完美展示)
+        if (this.damageBlinkTime > 0 && !this.isDead && !this.isVictorious) {
             ctx.globalAlpha = (Math.sin(this.damageBlinkTime * 30) * 0.5 + 0.5);
         }
         
@@ -316,8 +362,40 @@ export class Hero {
             ctx.shadowBlur = 30 + Math.sin(Date.now() / 150) * 10; // 呼吸光
         }
         
+        // 麻痹状态的抖动和闪白特效
+        const isParalyzed = this.buffs.some(b => b.type === 'paralyze');
+        if (isParalyzed && !this.isDead && !this.isVictorious) {
+            // 短暂抖动位移
+            ctx.translate((Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4);
+            // 叠加闪白
+            ctx.globalAlpha = Math.random() > 0.5 ? 0.8 : 1.0;
+        }
+        
         // 绘制本体
         this.drawBody(ctx);
+        
+        // 如果处于麻痹状态，叠加电弧粒子效果
+        if (isParalyzed && !this.isDead) {
+            ctx.save();
+            ctx.strokeStyle = '#00ffff';
+            ctx.lineWidth = 2;
+            for(let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                const angle1 = Math.random() * Math.PI * 2;
+                const r1 = Math.random() * this.radius;
+                const angle2 = Math.random() * Math.PI * 2;
+                const r2 = Math.random() * this.radius;
+                ctx.moveTo(Math.cos(angle1) * r1, Math.sin(angle1) * r1);
+                
+                // 绘制折线电弧
+                const midX = (Math.cos(angle1)*r1 + Math.cos(angle2)*r2)/2 + (Math.random()-0.5)*10;
+                const midY = (Math.sin(angle1)*r1 + Math.sin(angle2)*r2)/2 + (Math.random()-0.5)*10;
+                ctx.lineTo(midX, midY);
+                ctx.lineTo(Math.cos(angle2) * r2, Math.sin(angle2) * r2);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
         
         // 绘制血量数值 (水平显示)
         ctx.shadowBlur = 0; // 移除文字阴影

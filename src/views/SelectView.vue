@@ -4,11 +4,13 @@
     <div class="hero-pool" id="hero-pool">
       <div v-for="hero in heroPool" :key="hero.id" 
            class="hero-card" 
-           :class="{ 'selected-p1': store.p1Selection?.id === hero.id, 'selected-p2': store.p2Selection?.id === hero.id }"
+           :class="{ 'selected-p1': store.p1Selection?.id === hero.id, 'selected-p2': store.p2Selection?.id === hero.id, 'disabled': hero.disabled }"
            @click="selectHero(hero)"
            @mouseenter="showTooltip(hero, $event)"
            @mouseleave="hideTooltip">
-        <div class="hero-icon" :style="{ background: hero.iconColor }"></div>
+        <div class="hero-icon" :style="{ background: hero.iconColor }">
+          <span v-if="hero.disabled" style="display: flex; justify-content: center; align-items: center; height: 100%; font-size: 2rem; color: #888;">?</span>
+        </div>
         <h3>{{ hero.name }}</h3>
       </div>
     </div>
@@ -84,6 +86,23 @@ const heroPool = [
     stats: 'HP: 100 | 移速: 65',
     skill: { name: '命运骰子', desc: '投掷骰子发射同点数追踪卡牌，连续同点数可倍增卡牌量。点数6额外附带减速。' },
     audioSrc: '/assets/audio/Gambler/擦皮鞋.mp3'
+  },
+  {
+    id: 'malaoshi', name: '马老师', class: 'MaLaoshi', iconColor: '#cccccc',
+    quote: '"年轻人不讲武德，来，骗！来，偷袭！"',
+    traits: '宗师、化劲 | 多段弹幕与全屏控制',
+    stats: 'HP: 100 | 移速: 60',
+    skill: { name: '混元太极', desc: '周期发射松果糖豆。残血时释放全图混元劲击退敌人。觉醒触发闪电五连鞭，必中且高额减速。' },
+    audioSrc: '/assets/audio/MaLaoshi/耗子尾汁.mp3'
+  },
+  {
+    id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',
+    quote: '"神秘的力量正在苏醒..."',
+    traits: '未知 | ???',
+    stats: 'HP: ??? | 移速: ???',
+    skill: { name: '未知', desc: '该英雄正在设计中，敬请期待。' },
+    audioSrc: null,
+    disabled: true
   }
 ];
 
@@ -164,6 +183,8 @@ const hideTooltip = () => {
 };
 
 const selectHero = (hero) => {
+  if (hero.disabled) return;
+  
   if (!store.p1Selection) {
     store.p1Selection = hero;
   } else if (!store.p2Selection && store.p1Selection.id !== hero.id) {

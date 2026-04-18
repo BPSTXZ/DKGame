@@ -7,8 +7,8 @@ export const useGameStore = defineStore('game', () => {
   const isTraining = ref(false);
 
   const battleState = reactive({
-    p1: { name: 'Hero 1', hp: 100, maxHp: 100, speed: 0, spinSpeed: null, isDead: false, isAwakened: false, awakenTimer: 0, invincibleTime: 0, buffs: [] },
-    p2: { name: 'Hero 2', hp: 100, maxHp: 100, speed: 0, spinSpeed: null, isDead: false, isAwakened: false, awakenTimer: 0, invincibleTime: 0, buffs: [] }
+    p1: { name: 'Hero 1', color: '#ffffff', hp: 100, maxHp: 100, speed: 0, spinSpeed: null, isDead: false, isAwakened: false, awakenTimer: 0, invincibleTime: 0, buffs: [] },
+    p2: { name: 'Hero 2', color: '#ffffff', hp: 100, maxHp: 100, speed: 0, spinSpeed: null, isDead: false, isAwakened: false, awakenTimer: 0, invincibleTime: 0, buffs: [] }
   });
 
   const trainParams = reactive({

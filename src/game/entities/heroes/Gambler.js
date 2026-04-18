@@ -230,8 +230,6 @@ export class Gambler extends Hero {
                 this.rollTimer = 0.9;
             }
         }
-        
-        this.playAwakenAudio();
     }
     
     playAwakenAudio() {

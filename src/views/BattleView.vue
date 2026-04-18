@@ -28,7 +28,10 @@
       <div class="arena-wrapper">
         <div class="battle-header">
           <div class="player-info" id="p1-info">
-            <h2 class="hero-name">{{ store.battleState.p1.name }}</h2>
+            <h2 class="hero-name">
+              {{ store.battleState.p1.name }}
+              <span class="hero-indicator" :style="{ background: store.battleState.p1.color }"></span>
+            </h2>
             <div class="hp-bar-container">
               <div class="hp-bar" :style="{ width: Math.max(0, (store.battleState.p1.hp / store.battleState.p1.maxHp) * 100) + '%' }"></div>
             </div>
@@ -45,7 +48,10 @@
           </div>
           <div class="vs">VS</div>
           <div class="player-info right" id="p2-info">
-            <h2 class="hero-name">{{ store.battleState.p2.name }}</h2>
+            <h2 class="hero-name">
+              {{ store.battleState.p2.name }}
+              <span class="hero-indicator" :style="{ background: store.battleState.p2.color }"></span>
+            </h2>
             <div class="hp-bar-container">
               <div class="hp-bar" :style="{ width: Math.max(0, (store.battleState.p2.hp / store.battleState.p2.maxHp) * 100) + '%' }"></div>
             </div>
@@ -121,12 +127,14 @@ import { Vampire } from '@/game/entities/heroes/Vampire.js';
 import { Spider } from '@/game/entities/heroes/Spider.js';
 import { Berserker } from '@/game/entities/heroes/Berserker.js';
 import { Gambler } from '@/game/entities/heroes/Gambler.js';
+import { MaLaoshi } from '@/game/entities/heroes/MaLaoshi.js';
 
 const classes = {
   'Vampire': Vampire,
   'Spider': Spider,
   'Berserker': Berserker,
-  'Gambler': Gambler
+  'Gambler': Gambler,
+  'MaLaoshi': MaLaoshi
 };
 
 const store = useGameStore();
@@ -143,6 +151,7 @@ let cheerAudio = null;
 
 const updateBattleState = (state, hero) => {
   state.name = hero.name;
+  state.color = hero.color;
   state.hp = Math.max(0, hero.hp);
   state.maxHp = hero.maxHp;
   state.speed = hero.getSpeed ? hero.getSpeed() : 0;
@@ -154,6 +163,8 @@ const updateBattleState = (state, hero) => {
     state.awakenTimer = hero.awakenTimer || 0;
   } else if (hero.name === '蜘蛛') {
     state.awakenTimer = hero.isAwakened ? (hero.awakenTimer || 0) : 0;
+  } else if (hero.name === '马老师') {
+    state.awakenTimer = 0; // 马老师觉醒不需要显示时长，随技能释放完毕自动结束
   } else if (hero.name === '吸血鬼') {
     state.awakenTimer = 0;
   } else if (hero.name === '赌徒') {

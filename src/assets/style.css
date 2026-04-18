@@ -131,6 +131,9 @@ body {
     display: flex;
     gap: 1.5rem;
     margin-bottom: 2rem;
+    flex-wrap: wrap;
+    /* justify-content: center; */
+    max-width: 800px;
 }
 
 .hero-card {
@@ -138,15 +141,23 @@ body {
     border: 2px solid #444;
     border-radius: 8px;
     padding: 1rem;
-    width: 150px;
+    width: calc(25% - 1.5rem * 3 / 4); /* 每行4个，减去gap的影响 */
+    min-width: 140px; /* 保证不会太小 */
     text-align: center;
     cursor: pointer;
     transition: all 0.3s;
+    box-sizing: border-box;
 }
 
-.hero-card:hover {
+.hero-card:hover:not(.disabled) {
     border-color: #ffd700;
     transform: translateY(-5px);
+}
+
+.hero-card.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    border-style: dashed;
 }
 
 .hero-card.selected-p1 {
@@ -228,6 +239,27 @@ button:disabled {
 
 .player-info.right {
     text-align: right;
+}
+
+.hero-name {
+    margin: 0;
+    color: #ffd700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.player-info.right .hero-name {
+    justify-content: flex-end;
+}
+
+.hero-indicator {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 5px rgba(255,255,255,0.5);
 }
 
 .hp-bar-container {

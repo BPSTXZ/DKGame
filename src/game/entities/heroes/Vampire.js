@@ -38,12 +38,19 @@ export class Vampire extends Hero {
     
     updateSpecific(dt) {
         if (this.isSucking) {
-            this.suckTime += dt;
-            
-            // 每帧连续扣血并恢复自身，应用攻击力倍率
-            const drainAmount = this.currentDrainRate * this.damageMultiplier * dt;
-            
-            if (this.enemy && !this.enemy.isDead) {
+            // 被动打断检测：如果敌方身上有了强制免疫状态（比如马老师的混元劲清除了 vampire_drain 或者给予了无敌），我们要主动结束吸附
+            // 另外，如果任意一方被强控（如击退），也应强制结束吸附
+            // 不过 Vampire 自身是主动贴合逻辑（this.isSucking），所以我们要检查如果目标死亡或不可选，就断开
+            if (!this.enemy || this.enemy.isDead || this.enemy.invincibleTime > 0 || this.knockbackTimer > 0 || this.enemy.knockbackTimer > 0) {
+                this.isSucking = false;
+                this.suckTime = this.suckDuration; // 强制结束
+                // 如果是被击退或敌方死亡，我们不需要给反弹力，因为击退已经提供了位移
+            } else {
+                this.suckTime += dt;
+                
+                // 每帧连续扣血并恢复自身，应用攻击力倍率
+                const drainAmount = this.currentDrainRate * this.damageMultiplier * dt;
+                
                 // 手动减敌方血，给自己加血
                 this.enemy.hp -= drainAmount;
                 if (this.enemy.hp < 0) this.enemy.hp = 0; // 防止负血
@@ -65,13 +72,20 @@ export class Vampire extends Hero {
                 if (dist === 0) dist = 1; // 防止除0错误
                 const targetDist = this.radius + this.enemy.radius;
                 
-                // 根据目标距离重置吸血鬼的位置，使其完美贴合敌方边缘
-                this.x = this.enemy.x + (dx / dist) * targetDist;
-                this.y = this.enemy.y + (dy / dist) * targetDist;
-                
-                // 匹配敌方的速度向量，保持共同移动，防止位移打断
-                this.vx = this.enemy.vx;
-                this.vy = this.enemy.vy;
+                // 检查敌方是否被强行位移（比如被马老师击退导致距离瞬间拉开极大）
+                // 如果距离被拉开超过了正常贴合距离的 1.5 倍，说明被外力强行震开了，我们直接打断吸血
+                if (dist > targetDist * 1.5) {
+                    this.isSucking = false;
+                    this.suckTime = this.suckDuration; // 强制进入断开逻辑
+                } else {
+                    // 根据目标距离重置吸血鬼的位置，使其完美贴合敌方边缘
+                    this.x = this.enemy.x + (dx / dist) * targetDist;
+                    this.y = this.enemy.y + (dy / dist) * targetDist;
+                    
+                    // 匹配敌方的速度向量，保持共同移动，防止位移打断
+                    this.vx = this.enemy.vx;
+                    this.vy = this.enemy.vy;
+                }
             }
             
             // 结束吸血状态并给予推开力，防止分离后瞬间再次碰撞黏附
@@ -201,8 +215,8 @@ export class Vampire extends Hero {
     onHeroCollision(other) {
         if (this.isDead || other.isDead) return;
         
-        // 目标处于无敌/无法选中状态时，无法触发吸附
-        if (other.invincibleTime > 0) return;
+        // 目标处于无敌/无法选中状态时，或者任意一方正在被击退时，无法触发吸附
+        if (other.invincibleTime > 0 || this.knockbackTimer > 0 || other.knockbackTimer > 0) return;
         
         // 触发吸附
         if (!this.isSucking) {
