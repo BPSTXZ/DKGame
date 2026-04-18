@@ -5,6 +5,89 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* 英雄悬浮窗 */
+.hero-tooltip {
+    position: fixed;
+    width: 320px;
+    background: rgba(15, 15, 15, 0.95);
+    border: 2px solid #ffd700;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #fff;
+    pointer-events: none; /* 防止悬浮窗阻挡鼠标事件 */
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+}
+
+/* 动态定位的底部小三角形 */
+.tooltip-triangle {
+    position: absolute;
+    /* bottom, top 和 transform 交由 JS 动态控制 */
+    border-width: 10px 10px 0;
+    border-style: solid;
+    border-color: #ffd700 transparent transparent transparent;
+}
+
+.tooltip-header {
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.8rem;
+}
+
+.tooltip-header h4 {
+    color: #ffd700;
+    font-size: 1.2rem;
+    margin-bottom: 0.2rem;
+}
+
+.tooltip-quote {
+    font-style: italic;
+    color: #aaa;
+    font-size: 0.9rem;
+}
+
+.tooltip-body {
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.tooltip-body p {
+    margin-bottom: 0.4rem;
+}
+
+.tooltip-body strong {
+    color: #ffaa00;
+}
+
+.tooltip-skill {
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
+    border-top: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+.tooltip-skill p {
+    margin-top: 0.4rem;
+    color: #ddd;
+}
+
+.skill-cd {
+    color: #ff6666 !important;
+    font-size: 0.85rem;
+}
+
+/* 悬浮窗淡入淡出动画 */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
 body {
     background-color: #121212;
     color: #ffffff;

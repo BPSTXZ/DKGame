@@ -8,12 +8,12 @@ export class Berserker extends Hero {
     constructor(x, y, playerId) {
         super(x, y, playerId);
         this.name = '狂战士';
-        this.maxHp = 100;
-        this.hp = 100;
-        this.baseSpeed = 55; // 基础移速同步提升 (略低于其他英雄以体现力量感)
+        this.maxHp = 120;
+        this.hp = 120;
+        this.baseSpeed = 60; // 基础移速同步提升 (略低于其他英雄以体现力量感)
         this.baseSpinSpeed = 6; // radians per sec, wait 20 is very fast, let's say degrees or just a scalar
         this.baseWeaponLength = 40; // Increased to match new radius proportion
-        this.color = '#8b4513'; // Brown
+        this.color = '#8b4513'; // SaddleBrown
         
         // Berserker specific
         this.weaponRotation = 0;
@@ -26,8 +26,8 @@ export class Berserker extends Hero {
         this.awakenTimer = 0;
         
         // Audio specific
-        this.axeHitAudio = new Audio('assets/audio/berserker/斧头.mp3');
-        this.awakenAudio = new Audio('assets/audio/berserker/狂战士.mp3');
+        this.axeHitAudio = new Audio('/assets/audio/berserker/斧头.mp3');
+        this.awakenAudio = new Audio('/assets/audio/berserker/狂战士.mp3');
     }
     
     applyPassives() {
@@ -107,7 +107,7 @@ export class Berserker extends Hero {
                     this.spawnHitParticles(this.enemy.x, this.enemy.y);
                     this.playAxeHitSound();
                     
-                    // 触发武器命中时的减速效果 (20%, 持续1秒，不可叠加但可刷新)
+                    // 触发武器命中时的减速效果 (60%, 持续1秒，不可叠加但可刷新)
                     this.applyAxeSlow(this.enemy);
                 }
             } else {
@@ -126,7 +126,7 @@ export class Berserker extends Hero {
                     this.spawnHitParticles(this.enemy.x, this.enemy.y);
                     this.playAxeHitSound();
                     
-                    // 触发武器命中时的减速效果 (20%, 持续1秒，不可叠加但可刷新)
+                    // 触发武器命中时的减速效果 (60%, 持续1秒，不可叠加但可刷新)
                     this.applyAxeSlow(this.enemy);
                 }
             } else {
@@ -140,7 +140,7 @@ export class Berserker extends Hero {
         // 使用固定ID 'berserker_axe_slow'，利用底层 Hero.addBuff 的逻辑，
         // 同ID再次添加会自动刷新 time，不会产生多重叠加的 value。
         // type为 'slow' 会被 Hero.update 自动处理减速 (乘以 1 - value)
-        target.addBuff('berserker_axe_slow', 'slow', 0.2, 1.0);
+        target.addBuff('berserker_axe_slow', 'slow', 0.6, 1.0);
     }
     
     playAxeHitSound() {

@@ -6,7 +6,7 @@ export class Physics {
     constructor(width, height) {
         this.width = width;
         this.height = height;
-        this.wallHitAudio = new Audio('assets/audio/common/碰撞.mp3');
+        this.wallHitAudio = new Audio('/assets/audio/common/碰撞.mp3');
         this.lastWallHitTime = 0;
     }
     
@@ -42,11 +42,16 @@ export class Physics {
             hero.onWallBounce();
             
             const now = performance.now();
-            // 添加 50ms 冷却时间，防止多角色同时碰撞导致音效重叠或爆音
-            if (now - this.lastWallHitTime > 50) {
-                this.wallHitAudio.currentTime = 0;
-                this.wallHitAudio.play().catch(e => console.warn('Wall hit audio play failed:', e));
-                this.lastWallHitTime = now;
+            
+            // 为每个英雄单独记录边缘碰撞时间戳，设置 300ms 冷却时间防止连续接触时重复触发
+            if (!hero.lastWallHitTime || now - hero.lastWallHitTime > 300) {
+                // 保留全局 50ms 冷却，防止多角色同帧撞墙导致爆音重叠
+                if (now - this.lastWallHitTime > 50) {
+                    this.wallHitAudio.currentTime = 0;
+                    this.wallHitAudio.play().catch(e => console.warn('Wall hit audio play failed:', e));
+                    this.lastWallHitTime = now;
+                }
+                hero.lastWallHitTime = now;
             }
         }
     }

@@ -80,7 +80,13 @@ export class Hero {
             const b = this.buffs[i];
             b.time -= dt;
             if (b.type === 'slow') {
-                this.speedMultiplier *= (1 - b.value); // 减速叠加处理
+                if (b.decay) {
+                    // 线性衰减减速：当前效果 = 最大效果 * (剩余时间 / 总时间)
+                    const currentEffect = b.value * (b.time / b.maxTime);
+                    this.speedMultiplier *= (1 - currentEffect);
+                } else {
+                    this.speedMultiplier *= (1 - b.value); // 减速叠加处理
+                }
             } else if (b.type === 'speed') {
                 this.speedMultiplier *= (1 + b.value); // 加速叠加处理
             } else if (b.type === 'vampire_drain') {
@@ -263,10 +269,11 @@ export class Hero {
         const existing = this.buffs.find(b => b.id === id);
         if (existing) {
             existing.time = time; // 如果存在同ID的buff，则刷新时间
+            existing.maxTime = time; // 记录最大时间，用于衰减计算
             existing.value = value;
             Object.assign(existing, extra);
         } else {
-            this.buffs.push({ id, type, value, time, ...extra });
+            this.buffs.push({ id, type, value, time, maxTime: time, ...extra });
         }
     }
     

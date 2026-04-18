@@ -89,6 +89,7 @@ export class Game {
         
         // 限制最大 dt 以防止切后台时产生巨大跳跃
         const cappedDt = Math.min(dt, 0.1);
+        this.lastDt = cappedDt; // 记录最新帧的 dt 供英雄内部使用
         
         this.update(cappedDt);
         this.draw();

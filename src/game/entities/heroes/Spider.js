@@ -21,23 +21,27 @@ export class Spider extends Hero {
         // Passive
         this.passiveSpeedMultiplier = 1.0;
         
+        // Awaken
+        this.awakenTimer = 0;
+        this.awakenDuration = 4.0; // 觉醒总时长 4 秒
+        
         // Audio specific
-        this.webHitAudio = new Audio('assets/audio/spider/蛛丝触发.mp3');
-        this.awakenAudio = new Audio('assets/audio/spider/蜘蛛侠.mp3');
+        this.webHitAudio = new Audio('/assets/audio/spider/蛛丝触发.mp3');
+        this.awakenAudio = new Audio('/assets/audio/spider/蜘蛛侠.mp3');
     }
     
     applyPassives() {
+        super.applyPassives(); // 调用父类应用基础效果
+        
         // HP ratio speed up: "根据已损失血量比例进行百分比叠加"
         const lossRatio = 1 - (this.hp / this.maxHp);
-        // Let's say max 50% speed increase from passive
-        this.passiveSpeedMultiplier = 1.0 + (lossRatio * 0.5);
+        // 降低被动移速加成比例：最大增加 20% (原为 50%)
+        this.passiveSpeedMultiplier = 1.0 + (lossRatio * 0.2);
         this.speedMultiplier *= this.passiveSpeedMultiplier;
         
-        // 觉醒状态下的加速，绑定到无敌时间的持续状态
-        if (this.isAwakened && this.invincibleTime > 0) {
+        // 觉醒状态下的加速
+        if (this.isAwakened) {
             this.speedMultiplier *= 1.5; // +50% speed
-        } else if (this.isAwakened && this.invincibleTime <= 0) {
-            this.isAwakened = false; // 4秒结束后，清除觉醒状态
         }
     }
     
@@ -92,6 +96,15 @@ export class Spider extends Hero {
             return;
         }
         
+        // 更新觉醒倒计时
+        if (this.isAwakened) {
+            this.awakenTimer -= dt;
+            if (this.awakenTimer <= 0) {
+                this.isAwakened = false; // 4秒结束后，清除觉醒状态
+                this.awakenTimer = 0; // 重置为 0
+            }
+        }
+        
         // Check web collision with enemy
         if (this.enemy && !this.enemy.isDead) {
             for (const web of this.webs) {
@@ -144,7 +157,8 @@ export class Spider extends Hero {
     }
     
     onAwaken() {
-        this.invincibleTime = 4.0;
+        this.invincibleTime = 2.0; // 无敌时间改为 2 秒
+        this.awakenTimer = this.awakenDuration; // 觉醒总时长为 4 秒
         this.cleanseDebuffs(); // 开启觉醒时清除现有所有负面状态（减速、流血等）
         // Speed is handled in applyPassives
     }
