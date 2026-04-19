@@ -170,6 +170,23 @@ export class MaLaoshi extends Hero {
                     if (this.whipCurrentCount >= this.whipMaxCount) {
                         this.isAwakened = false;
                     }
+                } else if (this.isWhipping) {
+                    // 在鞭子挥出的中间时刻（假设在 0.15s 左右）结算伤害，而不是刚启动时
+                    if (!this.hasDealtWhipDamage && this.whipTimer <= this.whipInterval - 0.15) {
+                        this.hasDealtWhipDamage = true;
+                        if (this.enemy && !this.enemy.isDead) {
+                            // 100% 必中
+                            this.enemy.takeDamage(5, this.x, this.y);
+                            
+                            // 施加麻痹效果：降低 80% 移速，持续 2 秒
+                            this.enemy.addBuff('malaoshi_paralyze', 'paralyze', 0.8, 2.0);
+                            
+                            if (this.whipHitAudio) {
+                                const snd = new Audio(this.whipHitAudio.src);
+                                snd.play().catch(e => {});
+                            }
+                        }
+                    }
                 }
                 
                 if (this.whipTimer <= 0 && this.isAwakened) {
@@ -326,6 +343,7 @@ export class MaLaoshi extends Hero {
     triggerLightningWhip() {
         this.isWhipping = true;
         this.whipAngle = Math.random() * Math.PI * 2; // 鞭子的视觉旋转起始角度
+        this.hasDealtWhipDamage = false; // 标记本鞭尚未造成伤害
         
         // 停止上一鞭的声音（防重叠），并播放当前鞭
         if (this.currentWhipAudio) {
@@ -337,19 +355,6 @@ export class MaLaoshi extends Hero {
         if (this.whipAudioSrcs && this.whipCurrentCount >= 0 && this.whipCurrentCount < this.whipAudioSrcs.length) {
             this.currentWhipAudio = new Audio(this.whipAudioSrcs[this.whipCurrentCount]);
             this.currentWhipAudio.play().catch(e => {});
-        }
-        
-        if (this.enemy && !this.enemy.isDead) {
-            // 100% 必中
-            this.enemy.takeDamage(5, this.x, this.y);
-            
-            // 施加麻痹效果：降低 80% 移速，持续 2 秒
-            this.enemy.addBuff('malaoshi_paralyze', 'paralyze', 0.8, 2.0);
-            
-            if (this.whipHitAudio) {
-                const snd = new Audio(this.whipHitAudio.src);
-                snd.play().catch(e => {});
-            }
         }
     }
 

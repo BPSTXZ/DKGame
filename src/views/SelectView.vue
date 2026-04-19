@@ -85,7 +85,7 @@ const heroPool = [
     traits: '莫测、高风险 | 概率爆发与追踪连击',
     stats: 'HP: 100 | 移速: 65',
     skill: { name: '命运骰子', desc: '投掷骰子发射同点数追踪卡牌，连续同点数可倍增卡牌量。点数6额外附带减速。' },
-    audioSrc: '/assets/audio/Gambler/擦皮鞋.mp3'
+    audioSrc: '/assets/audio/Gambler/我要验牌.mp3'
   },
   {
     id: 'malaoshi', name: '马老师', class: 'MaLaoshi', iconColor: '#cccccc',

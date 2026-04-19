@@ -35,6 +35,15 @@ export class Gambler extends Hero {
         this.cardHitAudioSrc = '/assets/audio/Gambler/卡牌命中.mp3';
         this.awakenAudio = new Audio('/assets/audio/Gambler/赌神.mp3');
         this.victoryAudio = new Audio('/assets/audio/Gambler/擦皮鞋.mp3');
+        
+        // 觉醒状态下的摇骰子音效队列
+        this.awakenRollAudios = [
+            '/assets/audio/Gambler/牌没问题.mp3',
+            '/assets/audio/Gambler/小儿科.mp3',
+            '/assets/audio/Gambler/小瘪三.mp3'
+        ];
+        this.currentAwakenRollAudioIndex = 0;
+        this.currentAwakenAudioObj = null;
     }
 
     /**
@@ -139,10 +148,28 @@ export class Gambler extends Hero {
         // 预先决定投掷点数
         let d = Math.floor(Math.random() * 6) + 1; // 1~6
         
-        // 觉醒状态下必定为6
+        // 觉醒状态下必定为6，并播放连招音效
         if (this.isAwakened && this.awakenRollsLeft > 0) {
             d = 6;
             this.awakenRollsLeft--;
+            
+            // 播放觉醒特定阶段摇骰子音效
+            if (this.currentAwakenAudioObj) {
+                this.currentAwakenAudioObj.pause();
+                this.currentAwakenAudioObj = null;
+            }
+            
+            if (this.currentAwakenRollAudioIndex < this.awakenRollAudios.length) {
+                this.currentAwakenAudioObj = new Audio(this.awakenRollAudios[this.currentAwakenRollAudioIndex]);
+                this.currentAwakenAudioObj.play().catch(e => console.warn('Awaken roll audio failed:', e));
+                this.currentAwakenRollAudioIndex++;
+            }
+        } else {
+            // 普通状态下的摇骰子音效
+            if (this.rollAudio) {
+                this.rollAudio.currentTime = 0;
+                this.rollAudio.play().catch(e => console.warn('Roll audio failed:', e));
+            }
         }
         this.currentRollValue = d;
         
@@ -153,12 +180,6 @@ export class Gambler extends Hero {
             this.streak = 1;
         }
         this.lastRollValue = d;
-        
-        // 播放投掷音效
-        if (this.rollAudio) {
-            this.rollAudio.currentTime = 0;
-            this.rollAudio.play().catch(e => console.warn('Roll audio failed:', e));
-        }
     }
     
     queueCards() {
@@ -223,6 +244,13 @@ export class Gambler extends Hero {
         this.awakenTimer = 6.0; // 持续 6 秒
         this.awakenRollsLeft = 3; // 接下来的 3 次投掷必定为 6
         
+        // 重置觉醒语音计数
+        this.currentAwakenRollAudioIndex = 0;
+        if (this.currentAwakenAudioObj) {
+            this.currentAwakenAudioObj.pause();
+            this.currentAwakenAudioObj = null;
+        }
+        
         // 如果正在冷却中，立刻缩短剩余冷却时间适应觉醒的 2 秒节奏
         if (!this.isRolling) {
             // 如果剩余冷却时间大于 0.9秒 (2.0-1.1)，强制截断为 0.9秒，让他能马上接上下一次投掷
@@ -258,6 +286,11 @@ export class Gambler extends Hero {
         if (this.victoryAudio) {
             this.victoryAudio.pause();
             this.victoryAudio.currentTime = 0;
+        }
+        if (this.currentAwakenAudioObj) {
+            this.currentAwakenAudioObj.pause();
+            this.currentAwakenAudioObj.currentTime = 0;
+            this.currentAwakenAudioObj = null;
         }
     }
 
