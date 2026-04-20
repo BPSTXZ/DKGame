@@ -72,7 +72,7 @@ export class MaLaoshi extends Hero {
         }
         
         // ====== 机制一：松果糖豆劲 ======
-        if (!this.isAwakened) {
+        if (!this.isAwakened && !this.isSuppressed) {
             this.nutBeanTimer -= dt;
             if (this.nutBeanTimer <= 0) {
                 this.shootNutAndBean();
@@ -150,7 +150,7 @@ export class MaLaoshi extends Hero {
         }
         
         // ====== 觉醒：闪电五连鞭 ======
-        if (this.isAwakened) {
+        if (this.isAwakened && !this.isSuppressed) {
             if (this.enemy && this.enemy.isDead) {
                 this.isAwakened = false; // 敌方死亡立即停止鞭击
                 this.isWhipping = false;
@@ -306,6 +306,11 @@ export class MaLaoshi extends Hero {
         
         // 逻辑表现：对敌方造成 2 点伤害 + 击退
         if (this.enemy && !this.enemy.isDead && this.enemy.invincibleTime <= 0) {
+            // 如果敌方是“成都之心”且正在使用给佬攻击，打断他
+            if (this.enemy.name === '成都之心' && this.enemy.isGayAttacking) {
+                this.enemy.interruptGayAttack();
+            }
+            
             this.enemy.takeDamage(2, this.x, this.y);
             
             // 高优先级打断：强制清除敌方可能存在的吸血鬼吸附状态 (vampire_drain) 或其他控制状态

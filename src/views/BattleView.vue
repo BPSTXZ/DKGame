@@ -128,13 +128,17 @@ import { Spider } from '@/game/entities/heroes/Spider.js';
 import { Berserker } from '@/game/entities/heroes/Berserker.js';
 import { Gambler } from '@/game/entities/heroes/Gambler.js';
 import { MaLaoshi } from '@/game/entities/heroes/MaLaoshi.js';
+import { HuaQiang } from '@/game/entities/heroes/HuaQiang.js';
+import { Van } from '@/game/entities/heroes/Van.js';
 
 const classes = {
   'Vampire': Vampire,
   'Spider': Spider,
   'Berserker': Berserker,
   'Gambler': Gambler,
-  'MaLaoshi': MaLaoshi
+  'MaLaoshi': MaLaoshi,
+  'HuaQiang': HuaQiang,
+  'Van': Van
 };
 
 const store = useGameStore();

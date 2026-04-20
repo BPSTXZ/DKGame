@@ -137,7 +137,13 @@ export class Hero {
                 this.speedMultiplier *= (1 + b.value); // 加速叠加处理
             } else if (b.type === 'vampire_drain') {
                 // 吸血 Buff (由牙齿命中触发)
-                const drainAmount = b.value * dt;
+                let drainAmount = b.value * dt;
+                
+                // 如果 buff 来源 (吸血鬼) 存在并且处于被压制状态，伤害减半
+                if (b.source && b.source.buffs && b.source.buffs.some(buff => buff.type === 'suppress_damage')) {
+                    drainAmount *= 0.5;
+                }
+                
                 this.hp -= drainAmount; // 自己扣血
                 if (b.source && !b.source.isDead) {
                     b.source.hp += drainAmount; // 来源回血，不设上限
@@ -162,7 +168,13 @@ export class Hero {
                 b.tickTimer = (b.tickTimer || 0) + dt;
                 if (b.tickTimer >= 0.5) {
                     b.tickTimer -= 0.5;
-                    const tickDamage = b.value * 0.5;
+                    
+                    let tickDamageAmount = b.value * 0.5;
+                    if (b.source && b.source.buffs && b.source.buffs.some(buff => buff.type === 'suppress_damage')) {
+                        tickDamageAmount *= 0.5;
+                    }
+                    const tickDamage = tickDamageAmount.toFixed(1);
+                    
                     this.game.addFloatingText(this.x, this.y - 30, `-${tickDamage}`, '#ff4444');
                     if (b.source && !b.source.isDead) {
                         this.game.addFloatingText(b.source.x, b.source.y - 30, `+${tickDamage}`, '#4caf50');
@@ -205,11 +217,23 @@ export class Hero {
     /**
      * 承受伤害
      * @param {number} amount 伤害数值
-     * @param {number} sourceX 伤害来源 X 坐标（用于计算受击粒子喷射方向）
+     * @param {number} sourceX 伤害来源 X 坐标（用于计算受击粒子喷射减免）
      * @param {number} sourceY 伤害来源 Y 坐标
      */
     takeDamage(amount, sourceX, sourceY) {
         if (this.isDead || this.invincibleTime > 0) return;
+        
+        // 检查是否有压制 buff，如果有，则造成的伤害减半
+        // 注意：压制是指“造成伤害的一方”，所以应该是对方被压制
+        // 这里简单处理为，如果当前受击者(自己)带有一个标志着“正在被压制”的 buff，则意味着打它的人伤害应该减半吗？
+        // 不对，需求是：“压制效果：敌方所有造成伤害的数值乘以0.5”。
+        // 意味着，如果这个 takeDamage 是敌人调用的，并且敌人带有 'van_suppress' buff，那么 amount 乘以 0.5。
+        // 但 takeDamage 没传 sourceHero，而是 sourceX/Y。
+        // 我们可以让被压制者自己带上减伤的 buff：
+        const isSuppressed = this.buffs.some(b => b.type === 'suppress_damage');
+        if (isSuppressed) {
+            amount *= 0.5;
+        }
         
         this.hp -= amount;
         if (this.hp < 0) this.hp = 0;
@@ -217,7 +241,7 @@ export class Hero {
         this.damageBlinkTime = 0.2; // 开启闪烁
         
         // 显示扣血飘字
-        this.game.addFloatingText(this.x, this.y - 30, `-${amount}`, '#ff4444');
+        this.game.addFloatingText(this.x, this.y - 30, `-${amount.toFixed(1)}`, '#ff4444');
         
         // 生成受击反向扩散的粒子效果
         const angle = Math.atan2(this.y - sourceY, this.x - sourceX);
@@ -324,6 +348,13 @@ export class Hero {
     }
     
     /**
+     * 判断是否处于被压制状态（禁止远程发射）
+     */
+    get isSuppressed() {
+        return this.buffs.some(b => b.type === 'van_suppressed');
+    }
+    
+    /**
      * 清除所有负面状态（通常在开启无敌/觉醒时调用）
      */
     cleanseDebuffs() {
@@ -371,8 +402,12 @@ export class Hero {
             ctx.globalAlpha = Math.random() > 0.5 ? 0.8 : 1.0;
         }
         
-        // 绘制本体
+        // 绘制本体 (应用独立的视觉形变)
+        ctx.save();
+        if (this.visualRotation) ctx.rotate(this.visualRotation);
+        if (this.visualScaleX && this.visualScaleY) ctx.scale(this.visualScaleX, this.visualScaleY);
         this.drawBody(ctx);
+        ctx.restore();
         
         // 如果处于麻痹状态，叠加电弧粒子效果
         if (isParalyzed && !this.isDead) {

@@ -47,9 +47,14 @@
 </template>
 
 <script setup>
+// Import store
 import { useGameStore } from '@/store/gameStore';
 import { useRouter } from 'vue-router';
 import { ref, reactive } from 'vue';
+
+import { MaLaoshi } from '@/game/entities/heroes/MaLaoshi.js';
+import { HuaQiang } from '@/game/entities/heroes/HuaQiang.js';
+import { Van } from '@/game/entities/heroes/Van.js';
 
 const store = useGameStore();
 const router = useRouter();
@@ -64,7 +69,7 @@ const heroPool = [
     audioSrc: '/assets/audio/vampire/吸血鬼笑.mp3'
   },
   { 
-    id: 'spider', name: '蜘蛛', class: 'Spider', iconColor: '#cccccc',
+    id: 'spider', name: '蜘蛛', class: 'Spider', iconColor: '#767cdf',
     quote: '"落入我的网中，你就无处可逃了。"',
     traits: '敏捷、阴险 | 远程控制与拉扯风筝',
     stats: 'HP: 100 | 移速: 60',
@@ -92,8 +97,24 @@ const heroPool = [
     quote: '"年轻人不讲武德，来，骗！来，偷袭！"',
     traits: '宗师、化劲 | 多段弹幕与全屏控制',
     stats: 'HP: 100 | 移速: 60',
-    skill: { name: '混元太极', desc: '周期发射松果糖豆。残血时释放全图混元劲击退敌人。觉醒触发闪电五连鞭，必中且高额减速。' },
+    skill: { name: '混元太极', desc: '周期发射松果糖豆。阶段性掉血时释放全图混元劲击退敌人。觉醒触发闪电五连鞭，必中且高额减速。' },
     audioSrc: '/assets/audio/MaLaoshi/耗子尾汁.mp3'
+  },
+  {
+    id: 'huaqiang', name: '华强', class: 'HuaQiang', iconColor: '#26272d',
+    quote: '"你这瓜保熟吗？"',
+    traits: '凶狠、压制 | 场地封锁与磁吸爆发',
+    stats: 'HP: 100 | 移速: 65',
+    skill: { name: '劈瓜刀法', desc: '发射贯穿砍刀，撞墙后变为场地陷阱。觉醒时释放磁吸立场，瞬间回收全场砍刀造成大量伤害。' },
+    audioSrc: null // You can add audio later if needed
+  },
+  {
+    id: 'van', name: '成都之心', class: 'Van', iconColor: '#d4b264',
+    quote: '"这是一种...纯粹的渴望。"',
+    traits: '狂热、执念 | 脱战暴走与强力压制',
+    stats: 'HP: 100 | 移速: 70',
+    skill: { name: '给佬攻击', desc: '脱战3秒后移速翻倍(急色)。碰撞触发瞬移背刺，将敌方压制并造成连续打桩伤害。觉醒生成全屏力场，触发强化版深度压制。' },
+    audioSrc: null
   },
   {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',

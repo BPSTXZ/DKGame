@@ -49,7 +49,13 @@ export class Vampire extends Hero {
                 this.suckTime += dt;
                 
                 // 每帧连续扣血并恢复自身，应用攻击力倍率
-                const drainAmount = this.currentDrainRate * this.damageMultiplier * dt;
+                let drainAmount = this.currentDrainRate * this.damageMultiplier * dt;
+                
+                // 检查吸血鬼是否被 Van 压制减伤
+                const isSuppressed = this.buffs.some(b => b.type === 'suppress_damage');
+                if (isSuppressed) {
+                    drainAmount *= 0.5;
+                }
                 
                 // 手动减敌方血，给自己加血
                 this.enemy.hp -= drainAmount;
@@ -60,7 +66,10 @@ export class Vampire extends Hero {
                 this.suckTickTimer = (this.suckTickTimer || 0) + dt;
                 if (this.suckTickTimer >= 0.5) {
                     this.suckTickTimer -= 0.5;
-                    const tickDamage = (this.currentDrainRate * this.damageMultiplier * 0.5).toFixed(1);
+                    let tickDamageAmount = this.currentDrainRate * this.damageMultiplier * 0.5;
+                    if (isSuppressed) tickDamageAmount *= 0.5;
+                    
+                    const tickDamage = tickDamageAmount.toFixed(1);
                     this.game.addFloatingText(this.enemy.x, this.enemy.y - 30, `-${tickDamage}`, '#ff4444');
                     this.game.addFloatingText(this.x, this.y - 30, `+${tickDamage}`, '#4caf50');
                 }
@@ -118,7 +127,7 @@ export class Vampire extends Hero {
         if (this.isAwakened) {
             if (this.awakenShotsLeft > 0) {
                 this.awakenShotTimer -= dt;
-                if (this.awakenShotTimer <= 0) {
+                if (this.awakenShotTimer <= 0 && !this.isSuppressed) {
                     this.shootFang();
                     this.awakenShotsLeft--;
                     this.awakenShotTimer = 0.5; // 每0.5秒发射一次

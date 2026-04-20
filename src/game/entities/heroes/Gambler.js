@@ -66,7 +66,7 @@ export class Gambler extends Hero {
         if (this.isDead) return;
         
         // 处理投掷冷却
-        if (!this.isRolling && this.rollTimer > 0) {
+        if (!this.isRolling && this.rollTimer > 0 && !this.isSuppressed) {
             this.rollTimer -= dt;
             if (this.rollTimer <= 0) {
                 this.startRolling();
@@ -93,7 +93,7 @@ export class Gambler extends Hero {
         }
         
         // 处理卡牌单发队列
-        if (this.singleCardQueue.length > 0) {
+        if (this.singleCardQueue.length > 0 && !this.isSuppressed) {
             this.cardEmitTimer -= dt;
             if (this.cardEmitTimer <= 0) {
                 const cardInfo = this.singleCardQueue.shift();

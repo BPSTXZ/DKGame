@@ -102,6 +102,19 @@ export class Physics {
      */
     checkHeroCollision(h1, h2) {
         if (this.checkCircleCollision(h1, h2)) {
+            // 触发各自的碰撞事件回调
+            h1.onHeroCollision(h2);
+            h2.onHeroCollision(h1);
+            
+            // 检查是否有英雄要求忽略反弹（如 Van 处于给佬攻击状态）
+            const ignoreBounce1 = h1.ignoreHeroCollisionBounce === true;
+            const ignoreBounce2 = h2.ignoreHeroCollisionBounce === true;
+            
+            if (ignoreBounce1 || ignoreBounce2) {
+                // 如果任意一方处于压制/紧贴状态，则跳过物理分离与反弹
+                return;
+            }
+            
             // 弹性碰撞计算
             const dx = h2.x - h1.x;
             const dy = h2.y - h1.y;
@@ -160,10 +173,6 @@ export class Physics {
             // 重新归一化速度以保持英雄设定的恒定移速
             h1.normalizeSpeed();
             h2.normalizeSpeed();
-            
-            // 触发各自的碰撞事件回调
-            h1.onHeroCollision(h2);
-            h2.onHeroCollision(h1);
         }
     }
 }

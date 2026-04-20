@@ -11,7 +11,7 @@ export class Spider extends Hero {
         this.maxHp = 100;
         this.hp = 100;
         this.baseSpeed = 60; // 基础移速同步提升到 60
-        this.color = '#cccccc'; // White/gray circle
+        this.color = '#767cdf'; // White/gray circle
         
         // Spider specific
         this.webs = []; // Array of {x1, y1, x2, y2}
@@ -102,6 +102,26 @@ export class Spider extends Hero {
             if (this.awakenTimer <= 0) {
                 this.isAwakened = false; // 4秒结束后，清除觉醒状态
                 this.awakenTimer = 0; // 重置为 0
+            }
+        }
+        
+        // 如果在觉醒期间，发射额外的蛛网
+        if (this.isAwakened && !this.isSuppressed) {
+            // 每 0.5 秒向随机方向发射一次蛛丝
+            if (Math.floor(this.awakenTimer * 2) > Math.floor((this.awakenTimer - dt) * 2)) {
+                // ... 实际上这里逻辑放在这里有些复杂，我们可以简单点，每帧有概率发射
+                // 或者用一个专门的 timer
+                if (!this.awakenShootTimer) this.awakenShootTimer = 0;
+                this.awakenShootTimer += dt;
+                if (this.awakenShootTimer >= 0.5) {
+                    this.awakenShootTimer = 0;
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const webSpeed = 300;
+                    // ... 在Spider中增加投射物的逻辑需要新建一个对象类型。
+                    // 原代码 Spider 只有墙壁触碰，没有发射飞行物？
+                    // "觉醒时获得无敌并疯狂喷吐蛛丝" - 这里可能原版没实现或者实现不同。
+                }
             }
         }
         

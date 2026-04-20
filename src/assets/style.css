@@ -176,6 +176,7 @@ body {
     margin: 0 auto 1rem;
     border-radius: 50%;
     background: #555;
+    border: 2px solid #fff;
 }
 
 .selection-status {
