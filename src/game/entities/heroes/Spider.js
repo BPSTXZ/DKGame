@@ -9,8 +9,8 @@ export class Spider extends Hero {
         super(x, y, playerId);
         this.name = '蜘蛛';
         this.maxHp = 100;
-        this.hp = 100;
-        this.baseSpeed = 60; // 基础移速同步提升到 60
+        this.hp = 80;
+        this.baseSpeed = 50; // 基础移速同步提升到 50
         this.color = '#767cdf'; // White/gray circle
         
         // Spider specific
