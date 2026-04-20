@@ -25,6 +25,51 @@ export class HuaQiang extends Hero {
         // 磁吸回收 (觉醒)
         this.isRetrieving = false; // 是否正在回收
         this.magnet = null; // { x, y, vx, vy, active }
+        
+        // 音效配置
+        this.shootAudio = new Audio('/assets/audio/huaqiang/发射砍刀.mp3');
+        this.hitAudio = new Audio('/assets/audio/huaqiang/砍中.mp3');
+        this.insertAudio = new Audio('/assets/audio/huaqiang/插入场地.mp3');
+        this.victoryAudio = new Audio('/assets/audio/huaqiang/胜利嘲讽.mp3');
+        this.awakenAudio = new Audio('/assets/audio/huaqiang/觉醒BGM.mp3');
+        this.magnetAudio = new Audio('/assets/audio/huaqiang/吸铁石.mp3');
+    }
+    
+    playAwakenAudio() {
+        if (this.awakenAudio) {
+            this.awakenAudio.currentTime = 0;
+            this.awakenAudio.play().catch(e => console.warn('Awaken audio play failed:', e));
+        }
+    }
+    
+    playVictoryAudio() {
+        if (this.victoryAudio) {
+            this.victoryAudio.currentTime = 0;
+            this.victoryAudio.play().catch(e => console.warn('Victory audio play failed:', e));
+        }
+    }
+    
+    stopAllAudio() {
+        if (this.shootAudio) {
+            this.shootAudio.pause();
+            this.shootAudio.currentTime = 0;
+        }
+        if (this.hitAudio) {
+            this.hitAudio.pause();
+            this.hitAudio.currentTime = 0;
+        }
+        if (this.insertAudio) {
+            this.insertAudio.pause();
+            this.insertAudio.currentTime = 0;
+        }
+        if (this.victoryAudio) {
+            this.victoryAudio.pause();
+            this.victoryAudio.currentTime = 0;
+        }
+        if (this.magnetAudio) {
+            this.magnetAudio.pause();
+            this.magnetAudio.currentTime = 0;
+        }
     }
     
     applyPassives() {
@@ -39,6 +84,12 @@ export class HuaQiang extends Hero {
             // 觉醒触发瞬间，开始回收
             if (!this.isRetrieving) {
                 this.isRetrieving = true;
+                
+                // 播放发射吸铁石音效
+                if (this.magnetAudio) {
+                    this.magnetAudio.currentTime = 0;
+                    this.magnetAudio.play().catch(e => console.warn('Magnet audio play failed:', e));
+                }
                 
                 // 发射吸铁石向敌方
                 let magAngle = 0;
@@ -143,6 +194,12 @@ export class HuaQiang extends Hero {
             decayRate: 400 // 每秒衰减的速度值，参考马老师
         });
         
+        // 播放发射砍刀音效
+        if (this.shootAudio) {
+            this.shootAudio.currentTime = 0;
+            this.shootAudio.play().catch(e => console.warn('Shoot audio play failed:', e));
+        }
+        
         // 检查数量上限
         if (this.machetes.length > this.maxMachetes) {
             // 优先移除最早插地的砍刀
@@ -182,6 +239,12 @@ export class HuaQiang extends Hero {
                         if (now - m.lastHitTime > 300) {
                             this.enemy.takeDamage(4 * this.damageMultiplier, m.x, m.y);
                             m.lastHitTime = now;
+                            
+                            // 播放砍中音效
+                            if (this.hitAudio) {
+                                this.hitAudio.currentTime = 0;
+                                this.hitAudio.play().catch(e => console.warn('Hit audio play failed:', e));
+                            }
                         }
                     }
                 }
@@ -198,6 +261,12 @@ export class HuaQiang extends Hero {
                 
                 if (hitWall) {
                     m.state = 'stuck';
+                    
+                    // 播放插入场地音效
+                    if (this.insertAudio) {
+                        this.insertAudio.currentTime = 0;
+                        this.insertAudio.play().catch(e => console.warn('Insert audio play failed:', e));
+                    }
                 }
                 
             } else if (m.state === 'stuck') {
@@ -207,6 +276,12 @@ export class HuaQiang extends Hero {
                         if (now - m.lastHitTime > 500) {
                             this.enemy.takeDamage(4 * this.damageMultiplier, m.x, m.y);
                             m.lastHitTime = now;
+                            
+                            // 播放砍中音效
+                            if (this.hitAudio) {
+                                this.hitAudio.currentTime = 0;
+                                this.hitAudio.play().catch(e => console.warn('Hit audio play failed:', e));
+                            }
                             
                             // 反弹敌人
                             const bounceAngle = Math.atan2(this.enemy.y - m.y, this.enemy.x - m.x);
@@ -254,6 +329,12 @@ export class HuaQiang extends Hero {
                         if (m.lastHitTime === 0) {
                             this.enemy.takeDamage(4 * this.damageMultiplier, m.x, m.y);
                             m.lastHitTime = now; // 标记为已命中
+                            
+                            // 播放砍中音效
+                            if (this.hitAudio) {
+                                this.hitAudio.currentTime = 0;
+                                this.hitAudio.play().catch(e => console.warn('Hit audio play failed:', e));
+                            }
                         }
                     }
                 }

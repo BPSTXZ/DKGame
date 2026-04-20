@@ -38,6 +38,29 @@ export class Van extends Hero {
         this.isDesperate = false; // 是否处于急色状态
         this.desperateTimer = 0; // 急色状态持续时间计时器
         this.desperateDuration = 3.0; // 持续 3 秒
+        
+        // 音效配置
+        this.grabAudio = new Audio('/assets/audio/van/抓到.mp3');
+        this.hitAudio = new Audio('/assets/audio/common/碰撞.mp3');
+        this.awakenAudio = new Audio('/assets/audio/van/觉醒.mp3');
+    }
+    
+    playAwakenAudio() {
+        if (this.awakenAudio) {
+            this.awakenAudio.currentTime = 0;
+            this.awakenAudio.play().catch(e => console.warn('Awaken audio play failed:', e));
+        }
+    }
+    
+    stopAllAudio() {
+        if (this.grabAudio) {
+            this.grabAudio.pause();
+            this.grabAudio.currentTime = 0;
+        }
+        if (this.hitAudio) {
+            this.hitAudio.pause();
+            this.hitAudio.currentTime = 0;
+        }
     }
     
     applyPassives() {
@@ -165,6 +188,12 @@ export class Van extends Hero {
                 
                 const damage = (this.isAwakened && this.hasTriggeredAwakenAttack) ? 4 : 2;
                 this.enemy.takeDamage(damage * this.damageMultiplier, this.x, this.y);
+                
+                // 播放碰撞音效
+                if (this.hitAudio) {
+                    this.hitAudio.currentTime = 0;
+                    this.hitAudio.play().catch(e => console.warn('Hit audio play failed:', e));
+                }
                 
                 // 触发敌方的受击后仰与滑行反应 (滑行0.3个身位，身宽80，约24px，分布在0.15s内)
                 this.enemy.visualHitTimer = 0.15;
@@ -298,6 +327,12 @@ export class Van extends Hero {
         this.isGayAttacking = true;
         this.gayAttackTimer = 0;
         this.gayHitTimer = 0;
+        
+        // 播放“抓到”前摇音效
+        if (this.grabAudio) {
+            this.grabAudio.currentTime = 0;
+            this.grabAudio.play().catch(e => console.warn('Grab audio play failed:', e));
+        }
         
         if (this.enemy) {
             // 给敌方施加压制状态：伤害减半

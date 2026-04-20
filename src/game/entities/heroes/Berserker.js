@@ -182,10 +182,6 @@ export class Berserker extends Hero {
             this.axeHitAudio.pause();
             this.axeHitAudio.currentTime = 0;
         }
-        if (this.awakenAudio) {
-            this.awakenAudio.pause();
-            this.awakenAudio.currentTime = 0;
-        }
     }
     
     drawBody(ctx) {

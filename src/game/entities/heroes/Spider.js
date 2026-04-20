@@ -201,10 +201,6 @@ export class Spider extends Hero {
             this.webHitAudio.pause();
             this.webHitAudio.currentTime = 0;
         }
-        if (this.awakenAudio) {
-            this.awakenAudio.pause();
-            this.awakenAudio.currentTime = 0;
-        }
     }
     
     draw(ctx) {

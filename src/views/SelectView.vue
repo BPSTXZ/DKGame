@@ -106,7 +106,7 @@ const heroPool = [
     traits: '凶狠、压制 | 场地封锁与磁吸爆发',
     stats: 'HP: 100 | 移速: 65',
     skill: { name: '劈瓜刀法', desc: '发射贯穿砍刀，撞墙后变为场地陷阱。觉醒时释放磁吸立场，瞬间回收全场砍刀造成大量伤害。' },
-    audioSrc: null // You can add audio later if needed
+    audioSrc: '/assets/audio/huaqiang/这瓜保熟吗.mp3'
   },
   {
     id: 'van', name: '成都之心', class: 'Van', iconColor: '#d4b264',
@@ -114,7 +114,7 @@ const heroPool = [
     traits: '狂热、执念 | 脱战暴走与强力压制',
     stats: 'HP: 100 | 移速: 70',
     skill: { name: '给佬攻击', desc: '脱战3秒后移速翻倍(急色)。碰撞触发瞬移背刺，将敌方压制并造成连续打桩伤害。觉醒生成全屏力场，触发强化版深度压制。' },
-    audioSrc: null
+    audioSrc: '/assets/audio/van/成都啥子多.mp3'
   },
   {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',
