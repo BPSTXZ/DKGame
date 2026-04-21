@@ -1,6 +1,7 @@
 <template>
   <div class="screen active" id="select-screen">
-    <h1>选择你的英雄</h1>
+    <!-- 点击标题触发彩蛋 -->
+    <h1 @click="handleTitleClick">选择你的英雄</h1>
     <div class="hero-pool" id="hero-pool">
       <div v-for="hero in heroPool" :key="hero.id" 
            class="hero-card" 
@@ -47,7 +48,9 @@
       </div>
       <div class="action-buttons">
         <button :disabled="!store.p1Selection || !store.p2Selection" @click="startGame(false)">开始对战</button>
-        <button :disabled="!store.p1Selection || !store.p2Selection" @click="startGame(true)" style="background: #4caf50; color: white;">进入训练场</button>
+        <!-- 训练场按钮：只有在解锁后，并且选了两个英雄才能点击 -->
+        <button v-if="isTrainingUnlocked" :disabled="!store.p1Selection || !store.p2Selection" @click="startGame(true)" style="background: #4caf50; color: white;">进入训练场</button>
+        <button v-else disabled style="background: #555; color: #888; cursor: not-allowed;" title="???">训练场已封锁</button>
       </div>
     </div>
   </div>
@@ -140,6 +143,32 @@ const tooltipRef = ref(null);
 const hoveredHero = ref(null);
 const tooltipStyle = reactive({ top: '0px', left: '0px', opacity: 0 });
 const triangleStyle = reactive({ left: '50%' });
+
+// 训练场解锁彩蛋逻辑
+const isTrainingUnlocked = ref(localStorage.getItem('dkgame_training_unlocked') === 'true');
+let titleClickCount = 0;
+let titleClickTimer = null;
+
+const handleTitleClick = () => {
+  if (isTrainingUnlocked.value) return; // 已经解锁就不处理了
+  
+  titleClickCount++;
+  
+  // 每次点击重置定时器，如果1.5秒内没有连续点击，就清零
+  clearTimeout(titleClickTimer);
+  titleClickTimer = setTimeout(() => {
+    titleClickCount = 0;
+  }, 1500);
+
+  // 连续点击8次解锁
+  if (titleClickCount >= 8) {
+    isTrainingUnlocked.value = true;
+    localStorage.setItem('dkgame_training_unlocked', 'true');
+    
+    // 给点视觉反馈
+    alert("秘籍激活：训练场已解锁！");
+  }
+};
 
 import { nextTick } from 'vue';
 
