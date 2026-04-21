@@ -155,7 +155,7 @@ body {
 
 /* 英雄选择界面 */
 #select-screen {
-    padding-bottom: 120px; /* 为底部固定栏留出空间 */
+    padding-bottom: 200px; /* 为底部固定栏留出空间 */
     overflow-y: auto;
     justify-content: flex-start;
     padding-top: 2rem;
