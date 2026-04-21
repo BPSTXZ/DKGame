@@ -37,13 +37,17 @@ export class Berserker extends Hero {
         this.speedMultiplier *= (1.0 + lossRatio * 0.8);
         this.currentSpinSpeed = this.baseSpinSpeed * (1.0 + lossRatio * 1.0);
         
-        // HP < 30 weapon length increase
-        this.currentWeaponLength = (this.hp < 30) ? 60 : this.baseWeaponLength;
+        // 加强版：根据损失血量比例，线性增加斧柄长度（最大可增加到基础长度的 2.5 倍）
+        // 满血(120) = 1.0 倍 (40长)
+        // 半血(60) = 1.75 倍 (70长)
+        // 丝血(近0) = 2.5 倍 (100长)
+        this.currentWeaponLength = this.baseWeaponLength * (1.0 + lossRatio * 1.5);
         
         if (this.isAwakened) {
             this.speedMultiplier *= 1.2;
             this.currentSpinSpeed *= 1.3;
-            this.currentWeaponLength *= 5.0; // 觉醒时武器长度大幅增加 (3倍)
+            // 觉醒时武器长度在当前血量长度基础上再翻倍 (最大可达 200长)
+            this.currentWeaponLength *= 2.0; 
         }
     }
     
