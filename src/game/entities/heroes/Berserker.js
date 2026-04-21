@@ -219,7 +219,9 @@ export class Berserker extends Hero {
         
         // Draw trails in world space
         ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0); // world
+        // 取消由于 draw 方法里的 translate(this.x, this.y) 带来的局部坐标系偏移
+        // 而不是使用 setTransform(1,0,0,1,0,0) 重置矩阵，因为那样会丢掉外层 Game.js 设置的 devicePixelRatio 缩放
+        ctx.translate(-this.x, -this.y); 
         for (const trail of this.axeTrails) {
             ctx.globalAlpha = Math.max(0, trail.life / 0.2) * 0.5;
             ctx.fillStyle = '#aaa';
