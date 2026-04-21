@@ -24,11 +24,11 @@ export class Vampire extends Hero {
         this.fangs = [];
         
         // Audio specific
-        this.suckAudio = new Audio('/assets/audio/vampire/吸血.mp3');
+        this.suckAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/vampire/吸血.mp3');
         this.suckAudio.loop = true; // 确保无缝循环
         
-        this.laughAudio = new Audio('/assets/audio/vampire/吸血鬼笑.mp3');
-        this.biteAudio = new Audio('/assets/audio/vampire/牙齿咬住.mp3');
+        this.laughAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/vampire/吸血鬼笑.mp3');
+        this.biteAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/vampire/牙齿咬住.mp3');
     }
     
     applyPassives() {

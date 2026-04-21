@@ -40,9 +40,9 @@ export class Van extends Hero {
         this.desperateDuration = 3.0; // 持续 3 秒
         
         // 音效配置
-        this.grabAudio = new Audio('/assets/audio/van/抓到.mp3');
-        this.hitAudio = new Audio('/assets/audio/common/碰撞.mp3');
-        this.awakenAudio = new Audio('/assets/audio/van/觉醒.mp3');
+        this.grabAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/van/抓到.mp3');
+        this.hitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/common/碰撞.mp3');
+        this.awakenAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/van/觉醒.mp3');
     }
     
     playAwakenAudio() {

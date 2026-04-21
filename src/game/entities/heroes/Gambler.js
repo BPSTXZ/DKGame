@@ -30,17 +30,17 @@ export class Gambler extends Hero {
         this.cardEmitTimer = 0;
         
         // 音效
-        this.rollAudio = new Audio('/assets/audio/Gambler/摇骰子.mp3'); 
-        this.cardShootAudioSrc = '/assets/audio/Gambler/发射卡牌.mp3';
-        this.cardHitAudioSrc = '/assets/audio/Gambler/卡牌命中.mp3';
-        this.awakenAudio = new Audio('/assets/audio/Gambler/赌神.mp3');
-        this.victoryAudio = new Audio('/assets/audio/Gambler/擦皮鞋.mp3');
+        this.rollAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/Gambler/摇骰子.mp3'); 
+        this.cardShootAudioSrc = import.meta.env.BASE_URL + 'assets/audio/Gambler/发射卡牌.mp3';
+        this.cardHitAudioSrc = import.meta.env.BASE_URL + 'assets/audio/Gambler/卡牌命中.mp3';
+        this.awakenAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/Gambler/赌神.mp3');
+        this.victoryAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/Gambler/擦皮鞋.mp3');
         
         // 觉醒状态下的摇骰子音效队列
         this.awakenRollAudios = [
-            '/assets/audio/Gambler/牌没问题.mp3',
-            '/assets/audio/Gambler/小儿科.mp3',
-            '/assets/audio/Gambler/小瘪三.mp3'
+            import.meta.env.BASE_URL + 'assets/audio/Gambler/牌没问题.mp3',
+            import.meta.env.BASE_URL + 'assets/audio/Gambler/小儿科.mp3',
+            import.meta.env.BASE_URL + 'assets/audio/Gambler/小瘪三.mp3'
         ];
         this.currentAwakenRollAudioIndex = 0;
         this.currentAwakenAudioObj = null;

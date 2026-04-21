@@ -26,8 +26,8 @@ export class Berserker extends Hero {
         this.awakenTimer = 0;
         
         // Audio specific
-        this.axeHitAudio = new Audio('/assets/audio/berserker/斧头.mp3');
-        this.awakenAudio = new Audio('/assets/audio/berserker/狂战士.mp3');
+        this.axeHitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/berserker/斧头.mp3');
+        this.awakenAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/berserker/狂战士.mp3');
     }
     
     applyPassives() {

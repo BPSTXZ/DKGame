@@ -30,30 +30,30 @@ export class MaLaoshi extends Hero {
         this.isWhipping = false;
         
         // 专属音效
-        this.nutBeanFirstAudioSrc = '/assets/audio/MaLaoshi/松果糖豆劲.mp3';
-        this.nutBeanNormalAudioSrc = '/assets/audio/MaLaoshi/发射.mp3';
+        this.nutBeanFirstAudioSrc = import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/松果糖豆劲.mp3';
+        this.nutBeanNormalAudioSrc = import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/发射.mp3';
         this.hasPlayedFirstNutBean = false;
         
-        this.hitAudio = new Audio('/assets/audio/common/碰撞.mp3');
+        this.hitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/common/碰撞.mp3');
         this.hunyuanAudioSrcs = [
-            '/assets/audio/MaLaoshi/防出去.mp3',
-            '/assets/audio/MaLaoshi/化劲.mp3',
-            '/assets/audio/MaLaoshi/婷婷.mp3'
+            import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/防出去.mp3',
+            import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/化劲.mp3',
+            import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/婷婷.mp3'
         ];
         this.lastHunyuanAudioIndex = -1;
         
-        this.awakenAudioSrc = '/assets/audio/MaLaoshi/觉醒闪电鞭.mp3';
+        this.awakenAudioSrc = import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/觉醒闪电鞭.mp3';
         this.whipAudioSrcs = [
-            '/assets/audio/MaLaoshi/一鞭.mp3',
-            '/assets/audio/MaLaoshi/两鞭.mp3',
-            '/assets/audio/MaLaoshi/三鞭.mp3',
-            '/assets/audio/MaLaoshi/四鞭.mp3',
-            '/assets/audio/MaLaoshi/五鞭.mp3'
+            import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/一鞭.mp3',
+            import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/两鞭.mp3',
+            import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/三鞭.mp3',
+            import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/四鞭.mp3',
+            import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/五鞭.mp3'
         ];
         this.currentWhipAudio = null;
-        this.whipHitAudio = new Audio('/assets/audio/common/碰撞.mp3');
+        this.whipHitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/common/碰撞.mp3');
         
-        this.victoryAudioSrc = '/assets/audio/MaLaoshi/胜利宣言.mp3';
+        this.victoryAudioSrc = import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/胜利宣言.mp3';
         this.hasPlayedVictory = false;
     }
 

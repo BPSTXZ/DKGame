@@ -6,7 +6,7 @@ export class Physics {
     constructor(width, height) {
         this.width = width;
         this.height = height;
-        this.wallHitAudio = new Audio('/assets/audio/common/碰撞.mp3');
+        this.wallHitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/common/碰撞.mp3');
         this.lastWallHitTime = 0;
     }
     

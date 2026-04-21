@@ -26,8 +26,8 @@ export class Spider extends Hero {
         this.awakenDuration = 4.0; // 觉醒总时长 4 秒
         
         // Audio specific
-        this.webHitAudio = new Audio('/assets/audio/spider/蛛丝触发.mp3');
-        this.awakenAudio = new Audio('/assets/audio/spider/蜘蛛侠.mp3');
+        this.webHitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/spider/蛛丝触发.mp3');
+        this.awakenAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/spider/蜘蛛侠.mp3');
     }
     
     applyPassives() {

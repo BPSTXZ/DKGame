@@ -213,7 +213,7 @@ onMounted(async () => {
     return;
   }
 
-  cheerAudio = new Audio('/assets/audio/common/喝彩.mp3');
+  cheerAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/common/喝彩.mp3');
 
   await nextTick();
 

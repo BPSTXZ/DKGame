@@ -27,12 +27,12 @@ export class HuaQiang extends Hero {
         this.magnet = null; // { x, y, vx, vy, active }
         
         // 音效配置
-        this.shootAudio = new Audio('/assets/audio/huaqiang/发射砍刀.mp3');
-        this.hitAudio = new Audio('/assets/audio/huaqiang/砍中.mp3');
-        this.insertAudio = new Audio('/assets/audio/huaqiang/插入场地.mp3');
-        this.victoryAudio = new Audio('/assets/audio/huaqiang/胜利嘲讽.mp3');
-        this.awakenAudio = new Audio('/assets/audio/huaqiang/觉醒BGM.mp3');
-        this.magnetAudio = new Audio('/assets/audio/huaqiang/吸铁石.mp3');
+        this.shootAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/huaqiang/发射砍刀.mp3');
+        this.hitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/huaqiang/砍中.mp3');
+        this.insertAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/huaqiang/插入场地.mp3');
+        this.victoryAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/huaqiang/胜利嘲讽.mp3');
+        this.awakenAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/huaqiang/觉醒BGM.mp3');
+        this.magnetAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/huaqiang/吸铁石.mp3');
     }
     
     playAwakenAudio() {

@@ -66,7 +66,7 @@ const heroPool = [
     traits: '狡诈、嗜血 | 消耗战与强力黏附',
     stats: 'HP: 100 | 移速: 60',
     skill: { name: '尖牙吸附', desc: '碰撞时黏附敌人持续吸血并减速，残血时吸血效率翻倍。觉醒时发射多枚追踪尖牙。' },
-    audioSrc: '/assets/audio/vampire/吸血鬼笑.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/vampire/吸血鬼笑.mp3'
   },
   { 
     id: 'spider', name: '蜘蛛', class: 'Spider', iconColor: '#767cdf',
@@ -74,7 +74,7 @@ const heroPool = [
     traits: '敏捷、阴险 | 远程控制与拉扯风筝',
     stats: 'HP: 80 | 移速: 50',
     skill: { name: '蛛丝束缚', desc: '周期性向周围粘黏蛛网，触碰后造成减速控制。觉醒时获得无敌并暴增移速。' },
-    audioSrc: '/assets/audio/spider/蜘蛛侠.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/spider/蜘蛛侠.mp3'
   },
   { 
     id: 'berserker', name: '狂战士', class: 'Berserker', iconColor: '#8b4513',
@@ -82,7 +82,7 @@ const heroPool = [
     traits: '狂暴、鲁莽 | 近战爆发与大范围伤害',
     stats: 'HP: 120 | 移速: 60 | 转速: 20',
     skill: { name: '旋风斩', desc: '挥舞双斧旋转，斧刃造成全额伤害，斧柄造成半额伤害，附带减速。觉醒时双斧攻击范围、转速与移速暴增。' },
-    audioSrc: '/assets/audio/berserker/狂战士.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/berserker/狂战士.mp3'
   },
   { 
     id: 'gambler', name: '赌徒', class: 'Gambler', iconColor: '#2e8b57',
@@ -90,7 +90,7 @@ const heroPool = [
     traits: '莫测、高风险 | 概率爆发与追踪连击',
     stats: 'HP: 100 | 移速: 65',
     skill: { name: '命运骰子', desc: '投掷骰子发射同点数追踪卡牌，连续同点数可倍增卡牌量。点数6额外附带减速。' },
-    audioSrc: '/assets/audio/Gambler/我要验牌.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/Gambler/我要验牌.mp3'
   },
   {
     id: 'malaoshi', name: '马老师', class: 'MaLaoshi', iconColor: '#cccccc',
@@ -98,7 +98,7 @@ const heroPool = [
     traits: '宗师、化劲 | 多段弹幕与全屏控制',
     stats: 'HP: 100 | 移速: 60',
     skill: { name: '混元太极', desc: '周期发射松果糖豆。阶段性掉血时释放全图混元劲击退敌人。觉醒触发闪电五连鞭，必中且高额减速。' },
-    audioSrc: '/assets/audio/MaLaoshi/耗子尾汁.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/耗子尾汁.mp3'
   },
   {
     id: 'huaqiang', name: '华强', class: 'HuaQiang', iconColor: '#26272d',
@@ -106,7 +106,7 @@ const heroPool = [
     traits: '凶狠、压制 | 场地封锁与磁吸爆发',
     stats: 'HP: 100 | 移速: 65',
     skill: { name: '劈瓜刀法', desc: '发射贯穿砍刀，撞墙后变为场地陷阱。觉醒时释放磁吸立场，瞬间回收全场砍刀造成大量伤害。' },
-    audioSrc: '/assets/audio/huaqiang/这瓜保熟吗.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/huaqiang/这瓜保熟吗.mp3'
   },
   {
     id: 'van', name: '成都之心', class: 'Van', iconColor: '#d4b264',
@@ -114,7 +114,7 @@ const heroPool = [
     traits: '狂热、执念 | 脱战暴走与强力压制',
     stats: 'HP: 100 | 移速: 70',
     skill: { name: '给佬攻击', desc: '脱战3秒后移速翻倍(急色)。碰撞触发瞬移背刺，将敌方压制并造成连续打桩伤害。觉醒生成全屏力场，触发强化版深度压制。' },
-    audioSrc: '/assets/audio/van/成都啥子多.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/van/成都啥子多.mp3'
   },
   {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',
