@@ -110,7 +110,7 @@
         <input type="checkbox" id="keep-params-checkbox" v-model="victory.keepParams">
         <label for="keep-params-checkbox" style="color: white; font-size: 1.1rem; cursor: pointer;">保持当前参数</label>
       </div>
-      <div style="display: flex; gap: 10px;">
+      <div class="victory-actions">
         <button @click="backToSelect">返回选择</button>
         <button @click="restartBattle" style="background: #4caf50; color: white;">重新本局</button>
       </div>

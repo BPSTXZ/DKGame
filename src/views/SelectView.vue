@@ -1,13 +1,18 @@
 <template>
-  <div class="screen active">
-    <h1 style="margin-bottom: 2rem;">选择你的英雄</h1>
+  <div class="screen active" id="select-screen">
+    <h1>选择你的英雄</h1>
     <div class="hero-pool" id="hero-pool">
       <div v-for="hero in heroPool" :key="hero.id" 
            class="hero-card" 
            :class="{ 'selected-p1': store.p1Selection?.id === hero.id, 'selected-p2': store.p2Selection?.id === hero.id, 'disabled': hero.disabled }"
            @click="selectHero(hero)"
-           @mouseenter="showTooltip(hero, $event)"
-           @mouseleave="hideTooltip">
+           @mousedown="showTooltip(hero, $event)"
+           @touchstart="showTooltip(hero, $event)"
+           @mouseup="hideTooltip"
+           @mouseleave="hideTooltip"
+           @touchend="hideTooltip"
+           @touchcancel="hideTooltip"
+           @contextmenu.prevent>
         <div class="hero-icon" :style="{ background: hero.iconColor }">
           <span v-if="hero.disabled" style="display: flex; justify-content: center; align-items: center; height: 100%; font-size: 2rem; color: #888;">?</span>
         </div>
@@ -35,13 +40,15 @@
       </div>
     </transition>
 
-    <div class="selection-status">
-      <p>玩家 1: <span>{{ store.p1Selection ? store.p1Selection.name : '未选择' }}</span></p>
-      <p>玩家 2: <span>{{ store.p2Selection ? store.p2Selection.name : '未选择' }}</span></p>
-    </div>
-    <div style="display: flex; gap: 1rem;">
-      <button :disabled="!store.p1Selection || !store.p2Selection" @click="startGame(false)">开始对战</button>
-      <button :disabled="!store.p1Selection || !store.p2Selection" @click="startGame(true)" style="background: #4caf50; color: white;">进入训练场</button>
+    <div class="bottom-bar">
+      <div class="selection-status">
+        <p>玩家 1: <span>{{ store.p1Selection ? store.p1Selection.name : '未选择' }}</span></p>
+        <p>玩家 2: <span>{{ store.p2Selection ? store.p2Selection.name : '未选择' }}</span></p>
+      </div>
+      <div class="action-buttons">
+        <button :disabled="!store.p1Selection || !store.p2Selection" @click="startGame(false)">开始对战</button>
+        <button :disabled="!store.p1Selection || !store.p2Selection" @click="startGame(true)" style="background: #4caf50; color: white;">进入训练场</button>
+      </div>
     </div>
   </div>
 </template>
@@ -110,7 +117,7 @@ const heroPool = [
   },
   {
     id: 'van', name: '成都之心', class: 'Van', iconColor: '#d4b264',
-    quote: '"这是一种...纯粹的渴望。"',
+    quote: '"成都啥子多？诶！成都啥子多啊？。"',
     traits: '狂热、执念 | 脱战暴走与强力压制',
     stats: 'HP: 100 | 移速: 70',
     skill: { name: '给佬攻击', desc: '脱战3秒后移速翻倍(急色)。碰撞触发瞬移背刺，将敌方压制并造成连续打桩伤害。觉醒生成全屏力场，触发强化版深度压制。' },

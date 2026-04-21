@@ -10,8 +10,10 @@ export class Game {
     constructor(canvas, p1Class, p2Class, isTraining = false, onStateUpdate, onGameOver, onVictory) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.width = canvas.width;
-        this.height = canvas.height;
+        
+        // 逻辑分辨率始终保持 600x600，保证物理和碰撞逻辑不受屏幕尺寸影响
+        this.width = 600;
+        this.height = 600;
         
         this.isTraining = isTraining;
         this.onStateUpdate = onStateUpdate;
@@ -24,7 +26,26 @@ export class Game {
         this.renderer = new Renderer(this.ctx, this.width, this.height);
         this.physics = new Physics(this.width, this.height);
         
+        this.resizeHandler = this.resize.bind(this);
+        window.addEventListener('resize', this.resizeHandler);
+        this.resize();
+        
         this.initGame();
+    }
+    
+    resize() {
+        if (!this.canvas || !this.canvas.parentElement) return;
+        const rect = this.canvas.parentElement.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        
+        const displayWidth = rect.width;
+        const displayHeight = rect.height;
+        
+        this.canvas.width = displayWidth * dpr;
+        this.canvas.height = displayHeight * dpr;
+        
+        // 计算逻辑坐标到物理像素的缩放比
+        this.scale = (displayWidth * dpr) / this.width;
     }
     
     initGame() {
@@ -77,6 +98,7 @@ export class Game {
         if (this.reqId) {
             cancelAnimationFrame(this.reqId);
         }
+        window.removeEventListener('resize', this.resizeHandler);
     }
     
     /**
@@ -193,6 +215,10 @@ export class Game {
     }
     
     draw() {
+        this.ctx.save();
+        if (this.scale) {
+            this.ctx.scale(this.scale, this.scale);
+        }
         this.renderer.clear();
         
         // 绘制竞技场背景/网格
@@ -226,6 +252,8 @@ export class Game {
         // 绘制粒子和飘字
         this.particles.forEach(p => p.draw(this.ctx));
         this.floatingTexts.forEach(ft => ft.draw(this.ctx));
+        
+        this.ctx.restore();
     }
     
     /**
