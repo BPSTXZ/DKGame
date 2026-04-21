@@ -1,18 +1,13 @@
 <template>
-  <div class="screen active" id="select-screen">
+  <!-- 在根节点上监听点击事件，如果点到了卡片/浮窗外的地方，就会触发 hideTooltip -->
+  <div class="screen active" id="select-screen" @click="hideTooltip">
     <!-- 点击标题触发彩蛋 -->
-    <h1 @click="handleTitleClick">选择你的英雄</h1>
+    <h1 @click.stop="handleTitleClick">选择你的英雄</h1>
     <div class="hero-pool" id="hero-pool">
       <div v-for="hero in heroPool" :key="hero.id" 
            class="hero-card" 
            :class="{ 'selected-p1': store.p1Selection?.id === hero.id, 'selected-p2': store.p2Selection?.id === hero.id, 'disabled': hero.disabled }"
-           @click="selectHero(hero)"
-           @mousedown="showTooltip(hero, $event)"
-           @touchstart="showTooltip(hero, $event)"
-           @mouseup="hideTooltip"
-           @mouseleave="hideTooltip"
-           @touchend="hideTooltip"
-           @touchcancel="hideTooltip"
+           @click.stop="handleCardClick(hero, $event)"
            @contextmenu.prevent>
         <div class="hero-icon" :style="{ background: hero.iconColor }">
           <span v-if="hero.disabled" style="display: flex; justify-content: center; align-items: center; height: 100%; font-size: 2rem; color: #888;">?</span>
@@ -23,10 +18,17 @@
     
     <!-- 英雄介绍悬浮窗 -->
     <transition name="fade">
-      <div v-if="hoveredHero" class="hero-tooltip" ref="tooltipRef" :style="{ top: tooltipStyle.top, left: tooltipStyle.left, opacity: tooltipStyle.opacity }">
+      <div v-if="hoveredHero" class="hero-tooltip" ref="tooltipRef" @click.stop :style="{ top: tooltipStyle.top, left: tooltipStyle.left, opacity: tooltipStyle.opacity }">
         <div class="tooltip-header">
           <h4>{{ hoveredHero.name }}</h4>
           <span class="tooltip-quote">{{ hoveredHero.quote }}</span>
+          <!-- 彻底拦截点击/触摸事件，防止鬼影点击触发底部英雄卡片 -->
+          <button class="tooltip-close" @click.stop.prevent="hideTooltip" @touchstart.stop.prevent="hideTooltip">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+              <line x1="6" y1="18" x2="18" y2="6"></line>
+            </svg>
+          </button>
         </div>
         <div class="tooltip-body">
           <p><strong>属性：</strong>{{ hoveredHero.stats }}</p>
@@ -237,6 +239,14 @@ const showTooltip = async (hero, event) => {
 const hideTooltip = () => {
   hoveredHero.value = null;
   tooltipStyle.opacity = 0;
+};
+
+const handleCardClick = (hero, event) => {
+  // 先执行选择逻辑（selectHero 内部会自动阻止选择 disabled 的英雄）
+  selectHero(hero);
+  
+  // 无论是否是 disabled 的英雄，都弹出浮窗
+  showTooltip(hero, event);
 };
 
 const selectHero = (hero) => {
