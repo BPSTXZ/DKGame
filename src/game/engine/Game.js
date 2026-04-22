@@ -17,7 +17,7 @@ function mulberry32(a) {
 }
 
 export class Game {
-    constructor(canvas, p1Class, p2Class, isTraining = false, onStateUpdate, onGameOver, onVictory, seed = Date.now(), isReplay = false) {
+    constructor(canvas, p1Class, p2Class, isTraining = false, onStateUpdate, onGameOver, onVictory, seed = Date.now(), isReplay = false, p1ClassName = '', p2ClassName = '') {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         
@@ -32,6 +32,10 @@ export class Game {
         
         this.p1Class = p1Class;
         this.p2Class = p2Class;
+        
+        // 显式传入的类名，防止构建/压缩后 Function.name 被混淆导致回放找不到类
+        this.p1ClassName = p1ClassName || p1Class.name;
+        this.p2ClassName = p2ClassName || p2Class.name;
         
         this.renderer = new Renderer(this.ctx, this.width, this.height);
         this.physics = new Physics(this.width, this.height);
@@ -382,8 +386,8 @@ export class Game {
                     timestamp: Date.now(),
                     duration: parseFloat(this.gameTime.toFixed(2)),
                     seed: this.seed,
-                    p1: { class: this.p1Class.name, name: this.p1.name, color: this.p1.color },
-                    p2: { class: this.p2Class.name, name: this.p2.name, color: this.p2.color },
+                    p1: { class: this.p1ClassName, name: this.p1.name, color: this.p1.color },
+                    p2: { class: this.p2ClassName, name: this.p2.name, color: this.p2.color },
                     winner: winner === 'draw' ? 'draw' : winner.playerId,
                     events: this.events
                 };

@@ -308,7 +308,9 @@ onMounted(async () => {
       cheerAudio.play().catch(e => console.warn('Cheer audio play failed:', e));
     },
     seed,
-    isReplayMode.value
+    isReplayMode.value,
+    store.p1Selection.class,
+    store.p2Selection.class
   );
 
   readParamsFromGame();

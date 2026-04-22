@@ -61,10 +61,34 @@ const getResultText = (record, pId) => {
   return record.winner === pId ? '胜' : '败';
 };
 
+const heroNameClassMap = {
+  '吸血鬼': 'Vampire',
+  '蜘蛛': 'Spider',
+  '狂战士': 'Berserker',
+  '赌徒': 'Gambler',
+  '马老师': 'MaLaoshi',
+  '华强': 'HuaQiang',
+  '成都之心': 'Van',
+  '猴哥': 'SunWukong'
+};
+
+const getHeroClass = (recordClass, heroName) => {
+  const validClasses = ['Vampire', 'Spider', 'Berserker', 'Gambler', 'MaLaoshi', 'HuaQiang', 'Van', 'SunWukong'];
+  if (validClasses.includes(recordClass)) {
+    return recordClass;
+  }
+  return heroNameClassMap[heroName] || recordClass;
+};
+
 const playReplay = (record) => {
   // Setup store for replay
-  store.p1Selection = { class: record.p1.class, name: record.p1.name, color: record.p1.color };
-  store.p2Selection = { class: record.p2.class, name: record.p2.name, color: record.p2.color };
+  // 修复因代码压缩混淆导致旧记录 class 丢失的问题
+  const p1Class = getHeroClass(record.p1.class, record.p1.name);
+  const p2Class = getHeroClass(record.p2.class, record.p2.name);
+
+  store.p1Selection = { class: p1Class, name: record.p1.name, color: record.p1.color };
+  store.p2Selection = { class: p2Class, name: record.p2.name, color: record.p2.color };
+  store.isTraining = false;
   
   router.push({ name: 'battle', query: { replayId: record.id } });
 };
