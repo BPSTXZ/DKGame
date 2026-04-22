@@ -145,6 +145,10 @@ export class Gambler extends Hero {
         this.isRolling = true;
         this.rollAnimationTime = 0; // 投掷动画时间轴归零
         
+        if (this.game) {
+            this.game.logEvent('skill', { heroId: this.playerId, skill: 'Roll Dice' });
+        }
+        
         // 预先决定投掷点数
         let d = Math.floor(Math.random() * 6) + 1; // 1~6
         

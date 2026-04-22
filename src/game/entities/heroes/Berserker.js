@@ -167,6 +167,10 @@ export class Berserker extends Hero {
     
     onAwaken() {
         this.awakenTimer = 4.0;
+        
+        if (this.game) {
+            this.game.logEvent('skill', { heroId: this.playerId, skill: 'Awaken: Spin' });
+        }
     }
     
     playAwakenAudio() {

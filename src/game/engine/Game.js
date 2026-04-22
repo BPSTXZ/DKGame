@@ -6,8 +6,18 @@ import { Physics } from './Physics.js';
 import { Renderer } from './Renderer.js';
 import { AwakenStone } from '../entities/AwakenStone.js';
 
+// Mulberry32 PRNG
+function mulberry32(a) {
+    return function() {
+      var t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
+}
+
 export class Game {
-    constructor(canvas, p1Class, p2Class, isTraining = false, onStateUpdate, onGameOver, onVictory) {
+    constructor(canvas, p1Class, p2Class, isTraining = false, onStateUpdate, onGameOver, onVictory, seed = Date.now(), isReplay = false) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         
@@ -30,7 +40,15 @@ export class Game {
         window.addEventListener('resize', this.resizeHandler);
         this.resize();
         
+        this.seed = seed;
+        this.isReplay = isReplay;
+        this.timeScale = 1.0;
+        this.prng = mulberry32(this.seed);
+        
+        const originalRandom = Math.random;
+        Math.random = this.prng;
         this.initGame();
+        Math.random = originalRandom;
     }
     
     resize() {
@@ -82,12 +100,27 @@ export class Game {
     
     restart() {
         // 用于训练场或战斗结束后重新初始化游戏状态
+        this.prng = mulberry32(this.seed);
+        const originalRandom = Math.random;
+        Math.random = this.prng;
         this.initGame();
+        Math.random = originalRandom;
         this.lastTime = performance.now();
+        this.accumulator = 0;
+        this.gameTime = 0;
+        this.events = [];
+        this.isGameOver = false;
+        if (this.onStateUpdate) {
+            this.onStateUpdate(this.p1, this.p2);
+        }
     }
     
     start() {
         this.lastTime = performance.now();
+        this.accumulator = 0;
+        this.gameTime = 0;
+        this.events = []; // 重置事件记录
+        
         if (this.onStateUpdate) {
             this.onStateUpdate(this.p1, this.p2);
         }
@@ -101,19 +134,49 @@ export class Game {
         window.removeEventListener('resize', this.resizeHandler);
     }
     
+    logEvent(type, data) {
+        if (this.isReplay || this.isTraining) return;
+        this.events.push({ time: parseFloat(this.gameTime.toFixed(2)), type, ...data });
+    }
+    
     /**
      * 游戏主循环
      * @param {number} time 当前时间戳
      */
     loop(time) {
-        const dt = (time - this.lastTime) / 1000; // 转换为秒
+        let frameTime = (time - this.lastTime) / 1000; // 转换为秒
         this.lastTime = time;
         
         // 限制最大 dt 以防止切后台时产生巨大跳跃
-        const cappedDt = Math.min(dt, 0.1);
-        this.lastDt = cappedDt; // 记录最新帧的 dt 供英雄内部使用
+        if (frameTime > 0.1) frameTime = 0.1;
         
-        this.update(cappedDt);
+        // 如果是回放且暂停，只做绘制
+        if (this.isReplay && this.isPaused) {
+            this.draw();
+            this.reqId = requestAnimationFrame(t => this.loop(t));
+            return;
+        }
+
+        // 应用时间缩放（比如回放倍速）
+        frameTime *= this.timeScale;
+        
+        this.accumulator += frameTime;
+        const fixedDt = 1 / 60;
+        
+        // 在更新物理引擎期间全局接管 Math.random
+        const originalRandom = Math.random;
+        Math.random = this.prng;
+
+        while (this.accumulator >= fixedDt) {
+            this.lastDt = fixedDt; // 记录最新帧的 dt 供英雄内部使用
+            this.update(fixedDt);
+            this.accumulator -= fixedDt;
+            this.gameTime += fixedDt;
+        }
+        
+        // 恢复原始的 Math.random
+        Math.random = originalRandom;
+
         this.draw();
         
         // 游戏循环一直运行，以支持胜利后的粒子和退场动画
@@ -311,6 +374,23 @@ export class Game {
         
         if (winner) {
             this.isGameOver = true;
+            
+            // 保存战斗记录
+            if (!this.isReplay && !this.isTraining) {
+                const record = {
+                    id: Date.now().toString(),
+                    timestamp: Date.now(),
+                    duration: parseFloat(this.gameTime.toFixed(2)),
+                    seed: this.seed,
+                    p1: { class: this.p1Class.name, name: this.p1.name, color: this.p1.color },
+                    p2: { class: this.p2Class.name, name: this.p2.name, color: this.p2.color },
+                    winner: winner === 'draw' ? 'draw' : winner.playerId,
+                    events: this.events
+                };
+                import('../../utils/BattleRecordManager.js').then(module => {
+                    module.BattleRecordManager.saveRecord(record);
+                }).catch(e => console.error("Failed to save battle record:", e));
+            }
             
             // 触发游戏胜利瞬间的回调（如停止音效、播放喝彩等）
             if (this.onVictory) {

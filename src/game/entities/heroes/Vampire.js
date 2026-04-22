@@ -244,6 +244,11 @@ export class Vampire extends Hero {
             this.isSucking = true;
             this.suckTime = 0;
             
+            if (this.game) {
+                this.game.addFloatingText(this.x, this.y - 40, "BLOOD SUCK!", '#8b0000');
+                this.game.logEvent('skill', { heroId: this.playerId, skill: 'Blood Suck' });
+            }
+            
             // 施加减速 buff
             other.addBuff('vampire_slow', 'slow', 0.5, 3.0);
             

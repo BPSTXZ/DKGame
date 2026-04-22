@@ -202,6 +202,9 @@ export class MaLaoshi extends Hero {
      * 发射松果和糖豆 (新机制：锁定敌方后发射，带有线性速度衰减，体现“有劲”)
      */
     shootNutAndBean() {
+        if (this.game) {
+            this.game.logEvent('skill', { heroId: this.playerId, skill: 'Nut Bean' });
+        }
         const audioSrc = this.hasPlayedFirstNutBean ? this.nutBeanNormalAudioSrc : this.nutBeanFirstAudioSrc;
         this.hasPlayedFirstNutBean = true;
         
@@ -285,6 +288,10 @@ export class MaLaoshi extends Hero {
      * 触发三维立体混元劲
      */
     triggerHunyuanWave() {
+        if (this.game) {
+            this.game.logEvent('skill', { heroId: this.playerId, skill: 'Hunyuan Wave' });
+        }
+        
         if (this.hunyuanAudioSrcs && this.hunyuanAudioSrcs.length > 0) {
             let index;
             do {
@@ -346,6 +353,10 @@ export class MaLaoshi extends Hero {
     }
     
     triggerLightningWhip() {
+        if (this.game) {
+            this.game.logEvent('skill', { heroId: this.playerId, skill: `Lightning Whip ${this.whipCurrentCount + 1}` });
+        }
+        
         this.isWhipping = true;
         this.whipAngle = Math.random() * Math.PI * 2; // 鞭子的视觉旋转起始角度
         this.hasDealtWhipDamage = false; // 标记本鞭尚未造成伤害

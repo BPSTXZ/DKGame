@@ -174,6 +174,10 @@ export class HuaQiang extends Hero {
     fireMachete() {
         if (!this.enemy) return;
         
+        if (this.game) {
+            this.game.logEvent('skill', { heroId: this.playerId, skill: 'Fire Machete' });
+        }
+        
         // 朝向敌方单位方向
         const dx = this.enemy.x - this.x;
         const dy = this.enemy.y - this.y;
@@ -354,6 +358,9 @@ export class HuaQiang extends Hero {
     }
     
     onAwaken() {
+        if (this.game) {
+            this.game.logEvent('skill', { heroId: this.playerId, skill: 'Awaken: Magnet' });
+        }
         // 觉醒触发逻辑在 updateSpecific 处理，以便每次更新都能检索
     }
     

@@ -165,6 +165,9 @@ export class Spider extends Hero {
     }
     
     onEnemyHitWeb(enemy, web) {
+        if (this.game) {
+            this.game.logEvent('skill', { heroId: this.playerId, skill: 'Web Hit' });
+        }
         enemy.takeDamage(2 * this.damageMultiplier, (web.x1+web.x2)/2, (web.y1+web.y2)/2);
         
         // 播放蛛丝触发音效
@@ -181,6 +184,10 @@ export class Spider extends Hero {
         this.awakenTimer = this.awakenDuration; // 觉醒总时长为 4 秒
         this.cleanseDebuffs(); // 开启觉醒时清除现有所有负面状态（减速、流血等）
         // Speed is handled in applyPassives
+        
+        if (this.game) {
+            this.game.logEvent('skill', { heroId: this.playerId, skill: 'Awaken: Spider Web' });
+        }
     }
     
     playAwakenAudio() {

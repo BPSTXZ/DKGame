@@ -71,6 +71,24 @@
           <canvas id="game-canvas" width="600" height="600"></canvas>
         </div>
         
+        <!-- 回放控制栏 -->
+        <div v-if="isReplayMode" class="replay-controls">
+          <button @click="toggleReplayPause" class="ctrl-btn">{{ isReplayPaused ? '▶ 继续' : '⏸ 暂停' }}</button>
+          <div class="progress-wrapper">
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" :style="{ width: (replayProgress * 100) + '%' }"></div>
+            </div>
+            <span class="replay-time">{{ replayCurrentTime.toFixed(1) }}s / {{ replayTotalTime.toFixed(1) }}s</span>
+          </div>
+          <select v-model="replaySpeed" @change="updateReplaySpeed" class="ctrl-select">
+            <option :value="0.5">0.5x</option>
+            <option :value="1.0">1.0x</option>
+            <option :value="2.0">2.0x</option>
+            <option :value="4.0">4.0x</option>
+          </select>
+          <button @click="backToSelect" class="ctrl-btn exit-btn">退出</button>
+        </div>
+        
         <div id="training-global-controls" :class="{ hidden: !store.isTraining }">
           <button @click="resetToDefaults" class="small-btn">重置默认</button>
           <button @click="savePreset" class="small-btn">保存预设</button>
@@ -119,8 +137,8 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, reactive, watch, nextTick } from 'vue';
-import { useRouter } from 'vue-router';
+import { onMounted, onUnmounted, reactive, watch, nextTick, ref, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useGameStore } from '@/store/gameStore';
 import { Game } from '@/game/engine/Game.js';
 import { Vampire } from '@/game/entities/heroes/Vampire.js';
@@ -131,6 +149,7 @@ import { MaLaoshi } from '@/game/entities/heroes/MaLaoshi.js';
 import { HuaQiang } from '@/game/entities/heroes/HuaQiang.js';
 import { Van } from '@/game/entities/heroes/Van.js';
 import { SunWukong } from '@/game/entities/heroes/SunWukong.js';
+import { BattleRecordManager } from '@/utils/BattleRecordManager.js';
 
 const classes = {
   'Vampire': Vampire,
@@ -145,12 +164,31 @@ const classes = {
 
 const store = useGameStore();
 const router = useRouter();
+const route = useRoute();
 
 const victory = reactive({
   show: false,
   text: '',
   keepParams: false
 });
+
+const isReplayMode = ref(false);
+const isReplayPaused = ref(false);
+const replayCurrentTime = ref(0);
+const replayTotalTime = ref(0);
+const replaySpeed = ref(1.0);
+const replayProgress = computed(() => replayTotalTime.value > 0 ? Math.min(1, replayCurrentTime.value / replayTotalTime.value) : 0);
+
+const toggleReplayPause = () => {
+  if (!gameInstance) return;
+  isReplayPaused.value = !isReplayPaused.value;
+  gameInstance.isPaused = isReplayPaused.value;
+};
+
+const updateReplaySpeed = () => {
+  if (!gameInstance) return;
+  gameInstance.timeScale = replaySpeed.value;
+};
 
 let gameInstance = null;
 let cheerAudio = null;
@@ -210,6 +248,18 @@ const applyParamsToGame = () => {
 };
 
 onMounted(async () => {
+  let record = null;
+  if (route.query.replayId) {
+    record = BattleRecordManager.getRecordById(route.query.replayId);
+    if (record) {
+      isReplayMode.value = true;
+      replayTotalTime.value = record.duration;
+      // Setup selections just in case
+      store.p1Selection = { class: record.p1.class, name: record.p1.name, color: record.p1.color };
+      store.p2Selection = { class: record.p2.class, name: record.p2.name, color: record.p2.color };
+    }
+  }
+
   if (!store.p1Selection || !store.p2Selection) {
     router.push('/');
     return;
@@ -223,11 +273,17 @@ onMounted(async () => {
   const p1Class = classes[store.p1Selection.class];
   const p2Class = classes[store.p2Selection.class];
 
+  const seed = isReplayMode.value ? record.seed : Date.now();
+
   gameInstance = new Game(
     canvas, p1Class, p2Class, store.isTraining,
     (p1, p2) => {
       updateBattleState(store.battleState.p1, p1);
       updateBattleState(store.battleState.p2, p2);
+      
+      if (isReplayMode.value && gameInstance) {
+        replayCurrentTime.value = gameInstance.gameTime;
+      }
 
       if (store.isTraining) {
         store.trainParams.p1.hp = p1.hp;
@@ -250,7 +306,9 @@ onMounted(async () => {
       
       cheerAudio.currentTime = 0;
       cheerAudio.play().catch(e => console.warn('Cheer audio play failed:', e));
-    }
+    },
+    seed,
+    isReplayMode.value
   );
 
   readParamsFromGame();
@@ -325,11 +383,19 @@ const restartBattle = () => {
   cheerAudio.currentTime = 0;
   
   if (gameInstance) {
-    gameInstance.restart();
-    if (store.isTraining && victory.keepParams) {
-      applyParamsToGame();
+    if (isReplayMode.value) {
+      replayCurrentTime.value = 0;
+      isReplayPaused.value = false;
+      gameInstance.isPaused = false;
+      gameInstance.restart();
     } else {
-      readParamsFromGame();
+      gameInstance.seed = Date.now(); // new seed for normal battle
+      gameInstance.restart();
+      if (store.isTraining && victory.keepParams) {
+        applyParamsToGame();
+      } else {
+        readParamsFromGame();
+      }
     }
   }
 };
@@ -338,3 +404,106 @@ const backToSelect = () => {
   router.push('/');
 };
 </script>
+
+<style scoped>
+.replay-controls {
+  margin-top: 15px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px 20px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  z-index: 10;
+  width: 100%;
+  max-width: 600px;
+  box-sizing: border-box;
+}
+
+.ctrl-btn {
+  background: #2196F3;
+  color: white;
+  border: none;
+  padding: 5px 15px;
+  border-radius: 15px;
+  cursor: pointer;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.exit-btn {
+  background: #f44336;
+}
+
+.ctrl-select {
+  background: #333;
+  color: white;
+  border: 1px solid #555;
+  padding: 5px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.progress-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.progress-bar-container {
+  flex: 1;
+  height: 8px;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 100px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: #4caf50;
+  transition: width 0.1s linear;
+}
+
+.replay-time {
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #ccc;
+  white-space: nowrap;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .replay-controls {
+    flex-wrap: wrap;
+    padding: 15px;
+    border-radius: 10px;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .progress-wrapper {
+    width: 100%;
+    order: -1; /* 将进度条置于最上方 */
+    justify-content: space-between;
+  }
+
+  .ctrl-btn {
+    flex: 1;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 8px;
+  }
+
+  .ctrl-select {
+    flex: 1;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 8px;
+    text-align: center;
+  }
+}
+</style>

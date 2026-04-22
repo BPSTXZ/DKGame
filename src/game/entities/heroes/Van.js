@@ -290,6 +290,9 @@ export class Van extends Hero {
     }
     
     triggerDesperate() {
+        if (this.game) {
+            this.game.logEvent('skill', { heroId: this.playerId, skill: 'Desperate' });
+        }
         this.isDesperate = true;
         this.desperateTimer = 0;
         this.noContactTimer = 0;
@@ -321,7 +324,18 @@ export class Van extends Hero {
         this.resetContact(); // 受击重置接触
     }
     
+    onAwaken() {
+        if (this.game) {
+            this.game.logEvent('skill', { heroId: this.playerId, skill: 'Awaken: Force Field' });
+        }
+        
+        // 觉醒逻辑在 updateSpecific 处理
+    }
+    
     startGayAttack(isAwakenAttack = false) {
+        if (this.game) {
+            this.game.logEvent('skill', { heroId: this.playerId, skill: isAwakenAttack ? 'Awaken: Force Field Attack' : 'Gay Attack' });
+        }
         this.resetContact(); // 触发攻击重置接触
         
         this.isGayAttacking = true;

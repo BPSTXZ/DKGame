@@ -233,6 +233,9 @@ export class SunWukong extends Hero {
     }
     
     triggerEnhance() {
+        if (this.game && !this.isEnhanced) {
+            this.game.logEvent('skill', { heroId: this.playerId, skill: 'Enhance: Golden Stick' });
+        }
         this.isEnhanced = true;
         this.enhanceProgressAngle = 0;
         this.stickCurrentSpinSpeed = this.stickBaseSpinSpeed * 1.5; // 旋转加速
@@ -313,6 +316,10 @@ export class SunWukong extends Hero {
     }
     
     onAwaken() {
+        if (this.game) {
+            this.game.logEvent('skill', { heroId: this.playerId, skill: 'Awaken: Clones' });
+        }
+        
         this.awakenPhase = 1;
         this.awakenTimer = 1.0; // 弹射1秒
         
@@ -502,6 +509,36 @@ export class SunWukong extends Hero {
         }
     }
     
+    draw(ctx) {
+        super.draw(ctx);
+        
+        // 绘制分身及其金箍棒（在世界坐标系下独立绘制，不受本体受击形变、震动和偏移的影响）
+        if (this.clones && this.clones.length > 0) {
+            ctx.save();
+            this.clones.forEach(clone => {
+                if (clone.alpha <= 0) return;
+                ctx.save();
+                ctx.translate(clone.x, clone.y);
+                ctx.globalAlpha = clone.alpha;
+                
+                // 画分身本体
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = this.playerId === 1 ? '#ff4444' : '#4444ff';
+                ctx.stroke();
+                
+                // 画分身金箍棒
+                this.drawStick(ctx, 0, 0, clone.stickAngle, clone.stickCurrentLength || this.stickBaseLength, clone.alpha);
+                
+                ctx.restore();
+            });
+            ctx.restore();
+        }
+    }
+    
     drawBody(ctx) {
         super.drawBody(ctx);
         
@@ -524,32 +561,6 @@ export class SunWukong extends Hero {
         
         // 绘制本体金箍棒
         this.drawStick(ctx, 0, 0, this.stickAngle, this.stickCurrentLength, 1.0);
-        
-        // 绘制分身及其金箍棒
-        // 取消坐标系偏移以绘制世界坐标下的分身
-        ctx.save();
-        ctx.translate(-this.x, -this.y);
-        this.clones.forEach(clone => {
-            if (clone.alpha <= 0) return;
-            ctx.save();
-            ctx.translate(clone.x, clone.y);
-            ctx.globalAlpha = clone.alpha;
-            
-            // 画分身本体
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = this.playerId === 1 ? '#ff4444' : '#4444ff';
-            ctx.stroke();
-            
-            // 画分身金箍棒
-            this.drawStick(ctx, 0, 0, clone.stickAngle, clone.stickCurrentLength || this.stickBaseLength, clone.alpha);
-            
-            ctx.restore();
-        });
-        ctx.restore();
     }
     
     drawStick(ctx, cx, cy, angle, length, alpha) {

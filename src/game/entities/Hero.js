@@ -273,6 +273,14 @@ export class Hero {
         
         this.onTakeDamage();
         
+        if (this.game) {
+            this.game.logEvent('damage', {
+                targetId: this.playerId,
+                sourceId: this.playerId === 1 ? 2 : 1,
+                amount: Math.round(amount)
+            });
+        }
+
         if (this.hp <= 0) {
             this.die();
         }
@@ -320,8 +328,14 @@ export class Hero {
      * 触发觉醒状态
      */
     triggerAwaken() {
+        if (this.isAwakened || this.isDead) return;
         this.isAwakened = true;
+        this.invincibleTime = 1.0; // 觉醒瞬间无敌
         this.game.addFloatingText(this.x, this.y - 40, "AWAKEN!", '#ffd700');
+        
+        if (this.game) {
+            this.game.logEvent('awaken', { playerId: this.playerId });
+        }
         
         this.onAwaken();
     }
