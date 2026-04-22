@@ -67,6 +67,7 @@ import { ref, reactive } from 'vue';
 import { MaLaoshi } from '@/game/entities/heroes/MaLaoshi.js';
 import { HuaQiang } from '@/game/entities/heroes/HuaQiang.js';
 import { Van } from '@/game/entities/heroes/Van.js';
+import { SunWukong } from '@/game/entities/heroes/SunWukong.js';
 
 const store = useGameStore();
 const router = useRouter();
@@ -122,11 +123,19 @@ const heroPool = [
   },
   {
     id: 'van', name: '成都之心', class: 'Van', iconColor: '#d4b264',
-    quote: '"成都啥子多？诶！成都啥子多啊？。"',
+    quote: '"和我在成都的街头走一走~唔哦♂唔哦♂"',
     traits: '狂热、执念 | 脱战暴走与强力压制',
     stats: 'HP: 100 | 移速: 70',
     skill: { name: '给佬攻击', desc: '脱战3秒后移速翻倍(急色)。碰撞触发瞬移背刺，将敌方压制并造成连续打桩伤害。觉醒生成全屏力场，触发强化版深度压制。' },
-    audioSrc: import.meta.env.BASE_URL + 'assets/audio/van/成都啥子多.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/van/成都.mp3'
+  },
+  {
+    id: 'sunwukong', name: '猴哥', class: 'SunWukong', iconColor: '#fbd73a',
+    quote: '"俺老孙来也！"',
+    traits: '齐天大圣、金刚不坏 | 如意金箍与分身爆发',
+    stats: 'HP: 100 | 移速: 60',
+    skill: { name: '如意金箍棒', desc: '金箍棒环绕周身旋转，每4秒变长变粗一次造成更高伤害。受击时20%概率触发金刚不坏，免疫本次及后续连段伤害。觉醒大闹天宫，分出三个分身弹射全场，并同步释放超大范围的强化金箍棒。' },
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/SunWukong/老孙来也.mp3'
   },
   {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',

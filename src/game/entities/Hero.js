@@ -34,6 +34,8 @@ export class Hero {
         this.buffs = [];
         this.speedMultiplier = 1.0; // 当前移速倍率
         this.invincibleTime = 0; // 无敌时间
+        this.shakeTimer = 0; // 颤抖效果计时器
+        this.shakeIntensity = 0; // 颤抖强度
         
         // 觉醒状态
         this.isAwakened = false;
@@ -195,6 +197,11 @@ export class Hero {
         if (this.invincibleTime > 0) this.invincibleTime -= dt;
         if (this.damageBlinkTime > 0) this.damageBlinkTime -= dt;
         
+        // 更新颤抖效果
+        if (this.shakeTimer > 0) {
+            this.shakeTimer -= dt;
+        }
+        
         // 更新位置
         this.x += this.vx * dt;
         this.y += this.vy * dt;
@@ -206,6 +213,11 @@ export class Hero {
         if (this.hp <= 0 && !this.isDead) {
             this.die();
         }
+    }
+    
+    triggerShake(duration, intensity) {
+        this.shakeTimer = duration;
+        this.shakeIntensity = intensity;
     }
     
     // 子类钩子函数（待覆盖）
@@ -369,6 +381,13 @@ export class Hero {
         
         ctx.save();
         ctx.translate(this.x, this.y);
+        
+        // 应用颤抖效果
+        if (this.shakeTimer > 0) {
+            const offsetX = (Math.random() - 0.5) * this.shakeIntensity;
+            const offsetY = (Math.random() - 0.5) * this.shakeIntensity;
+            ctx.translate(offsetX, offsetY);
+        }
         
         // 死亡渐隐和缩小效果
         if (this.isDead) {

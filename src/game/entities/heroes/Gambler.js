@@ -32,7 +32,7 @@ export class Gambler extends Hero {
         // 音效
         this.rollAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/Gambler/摇骰子.mp3'); 
         this.cardShootAudioSrc = import.meta.env.BASE_URL + 'assets/audio/Gambler/发射卡牌.mp3';
-        this.cardHitAudioSrc = import.meta.env.BASE_URL + 'assets/audio/Gambler/卡牌命中.mp3';
+        this.cardHitAudioSrc = import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/发射.mp3';
         this.awakenAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/Gambler/赌神.mp3');
         this.victoryAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/Gambler/擦皮鞋.mp3');
         

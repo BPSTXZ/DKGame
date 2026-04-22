@@ -130,6 +130,7 @@ import { Gambler } from '@/game/entities/heroes/Gambler.js';
 import { MaLaoshi } from '@/game/entities/heroes/MaLaoshi.js';
 import { HuaQiang } from '@/game/entities/heroes/HuaQiang.js';
 import { Van } from '@/game/entities/heroes/Van.js';
+import { SunWukong } from '@/game/entities/heroes/SunWukong.js';
 
 const classes = {
   'Vampire': Vampire,
@@ -138,7 +139,8 @@ const classes = {
   'Gambler': Gambler,
   'MaLaoshi': MaLaoshi,
   'HuaQiang': HuaQiang,
-  'Van': Van
+  'Van': Van,
+  'SunWukong': SunWukong
 };
 
 const store = useGameStore();

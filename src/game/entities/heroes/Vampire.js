@@ -200,12 +200,24 @@ export class Vampire extends Hero {
             }
         }
         
-        // 统一管理吸血音效状态：物理吸附或牙齿吸血 buff 生效期间均播放音效
+        // 统一管理吸血音效状态与减伤状态：物理吸附或牙齿吸血 buff 生效期间均判定为吸血中
         let isDraining = this.isSucking;
         if (this.enemy && !this.enemy.isDead) {
             const hasFangDrain = this.enemy.buffs.some(b => b.type === 'vampire_drain' && b.source === this);
             if (hasFangDrain) {
                 isDraining = true;
+            }
+        }
+        
+        // 吸血期间获得 50% 减伤（利用 suppress_damage buff）
+        if (isDraining) {
+            // 每帧持续刷新一个极短的减伤 buff
+            this.addBuff('vampire_suppress', 'suppress_damage', 0.5, 0.2);
+        } else {
+            // 如果没有吸血，立刻移除该 buff
+            const buffIndex = this.buffs.findIndex(b => b.id === 'vampire_suppress');
+            if (buffIndex !== -1) {
+                this.buffs.splice(buffIndex, 1);
             }
         }
         
@@ -359,7 +371,9 @@ export class Vampire extends Hero {
         // Draw flying fangs
         // We need to inverse translate because fangs have world coordinates
         ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0); // reset transform to world
+        // 取消由于 draw 方法里的 translate(this.x, this.y) 带来的局部坐标系偏移
+        // 避免使用 setTransform(1,0,0,1,0,0) 重置矩阵，保留外层 Game.js 设置的高清缩放比例
+        ctx.translate(-this.x, -this.y);
         for (const fang of this.fangs) {
             ctx.translate(fang.x, fang.y);
             ctx.rotate(fang.angle);

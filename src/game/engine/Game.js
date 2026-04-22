@@ -368,6 +368,7 @@ class Particle {
         this.gravity = c.gravity || 0;
         this.rotation = Math.random() * Math.PI * 2;
         this.rotationSpeed = c.rotationSpeed || 0;
+        this.isLine = c.isLine || false; // 新增属性，标记是否渲染为线
     }
     
     update(dt) {
@@ -400,18 +401,38 @@ class Particle {
     draw(ctx) {
         ctx.save();
         ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rotation);
-        ctx.fillStyle = this.color;
         
-        if (this.rotationSpeed !== 0) {
-            // 彩带/纸屑画成矩形
-            ctx.fillRect(-this.size/2, -this.size, this.size, this.size*2);
+        if (this.isLine) {
+            // 速度线渲染：沿运动方向画线
+            const currentSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+            if (currentSpeed > 0.1) {
+                const dirX = this.vx / currentSpeed;
+                const dirY = this.vy / currentSpeed;
+                // 长度和线宽根据剩余生命值和 size 动态缩放
+                const lineLen = currentSpeed * 0.1 * (this.life / this.maxLife);
+                
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x - dirX * lineLen, this.y - dirY * lineLen);
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = this.size;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
         } else {
-            // 默认画圆
-            ctx.beginPath();
-            ctx.arc(0, 0, this.size, 0, Math.PI*2);
-            ctx.fill();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.fillStyle = this.color;
+            
+            if (this.rotationSpeed !== 0) {
+                // 彩带/纸屑画成矩形
+                ctx.fillRect(-this.size/2, -this.size, this.size, this.size*2);
+            } else {
+                // 默认画圆
+                ctx.beginPath();
+                ctx.arc(0, 0, this.size, 0, Math.PI*2);
+                ctx.fill();
+            }
         }
         
         ctx.restore();
