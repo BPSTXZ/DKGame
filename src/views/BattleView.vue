@@ -294,7 +294,7 @@ onMounted(async () => {
     (text) => {
       victory.text = text;
       victory.show = true;
-      if (!store.isTraining && !isReplayMode.value) {
+      if (!store.isTraining || isReplayMode.value) {
         victory.showButtons = false;
         setTimeout(() => {
           victory.showButtons = true;
