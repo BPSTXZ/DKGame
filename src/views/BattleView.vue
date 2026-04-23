@@ -124,11 +124,11 @@
     <!-- 胜利提示 -->
     <div id="victory-overlay" :class="{ hidden: !victory.show }">
       <h2 id="victory-text">{{ victory.text }}</h2>
-      <div v-if="store.isTraining" style="margin-bottom: 15px; display: flex; align-items: center; gap: 5px;">
+      <div v-if="store.isTraining" v-show="victory.showButtons" style="margin-bottom: 15px; display: flex; align-items: center; gap: 5px;">
         <input type="checkbox" id="keep-params-checkbox" v-model="victory.keepParams">
         <label for="keep-params-checkbox" style="color: white; font-size: 1.1rem; cursor: pointer;">保持当前参数</label>
       </div>
-      <div class="victory-actions">
+      <div class="victory-actions" v-show="victory.showButtons">
         <button @click="backToSelect">返回选择</button>
         <button @click="restartBattle" style="background: #4caf50; color: white;">重新本局</button>
       </div>
@@ -169,7 +169,8 @@ const route = useRoute();
 const victory = reactive({
   show: false,
   text: '',
-  keepParams: false
+  keepParams: false,
+  showButtons: true
 });
 
 const isReplayMode = ref(false);
@@ -293,6 +294,14 @@ onMounted(async () => {
     (text) => {
       victory.text = text;
       victory.show = true;
+      if (!store.isTraining && !isReplayMode.value) {
+        victory.showButtons = false;
+        setTimeout(() => {
+          victory.showButtons = true;
+        }, 1500);
+      } else {
+        victory.showButtons = true;
+      }
     },
     (winner) => {
       if (gameInstance) {
