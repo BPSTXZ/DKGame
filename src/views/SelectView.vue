@@ -94,7 +94,7 @@ const heroPool = [
     quote: '"我的双斧，渴望着杀戮！"',
     traits: '狂暴、鲁莽 | 近战爆发与大范围伤害',
     stats: 'HP: 120 | 移速: 60 | 转速: 20',
-    skill: { name: '旋风斩', desc: '挥舞双斧旋转，斧刃造成全额伤害，斧柄造成半额伤害，附带减速。觉醒时双斧攻击范围、转速与移速暴增。' },
+    skill: { name: '旋风斩', desc: '挥舞双斧旋转，斧刃造成全额伤害，斧柄造成半额伤害，附带减速。扣血将转换为属性提升。觉醒时双斧攻击范围、转速与移速暴增。' },
     audioSrc: import.meta.env.BASE_URL + 'assets/audio/berserker/狂战士.mp3'
   },
   { 
@@ -118,7 +118,7 @@ const heroPool = [
     quote: '"你这瓜保熟吗？"',
     traits: '凶狠、压制 | 场地封锁与磁吸爆发',
     stats: 'HP: 100 | 移速: 65',
-    skill: { name: '劈瓜刀法', desc: '发射贯穿砍刀，撞墙后变为场地陷阱。觉醒时释放磁吸立场，瞬间回收全场砍刀造成大量伤害。' },
+    skill: { name: '劈瓜刀法', desc: '发射贯穿砍刀(携带40%概率破障)，撞墙后变为场地陷阱。觉醒时释放磁吸立场，瞬间回收全场砍刀造成大量伤害。' },
     audioSrc: import.meta.env.BASE_URL + 'assets/audio/huaqiang/这瓜保熟吗.mp3'
   },
   {
@@ -282,6 +282,10 @@ const selectHero = (hero) => {
 };
 
 const startGame = (isTraining) => {
+  if (currentSelectAudio) {
+    currentSelectAudio.pause();
+    currentSelectAudio.currentTime = 0;
+  }
   store.isTraining = isTraining;
   router.push('/battle');
 };

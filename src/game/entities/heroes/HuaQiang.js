@@ -26,6 +26,9 @@ export class HuaQiang extends Hero {
         this.isRetrieving = false; // 是否正在回收
         this.magnet = null; // { x, y, vx, vy, active }
         
+        // 破障残影
+        this.barrierBreakAfterimages = [];
+        
         // 音效配置
         this.shootAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/huaqiang/发射砍刀.mp3');
         this.hitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/huaqiang/砍中.mp3');
@@ -33,6 +36,7 @@ export class HuaQiang extends Hero {
         this.victoryAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/huaqiang/胜利嘲讽.mp3');
         this.awakenAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/huaqiang/觉醒BGM.mp3');
         this.magnetAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/huaqiang/吸铁石.mp3');
+        this.barrierBreakAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/huaqiang/破障.mp3');
     }
     
     playAwakenAudio() {
@@ -69,6 +73,10 @@ export class HuaQiang extends Hero {
         if (this.magnetAudio) {
             this.magnetAudio.pause();
             this.magnetAudio.currentTime = 0;
+        }
+        if (this.barrierBreakAudio) {
+            this.barrierBreakAudio.pause();
+            this.barrierBreakAudio.currentTime = 0;
         }
     }
     
@@ -169,6 +177,17 @@ export class HuaQiang extends Hero {
         
         // 更新砍刀逻辑
         this.updateMachetes(dt);
+        
+        // 更新破障残影
+        if (this.barrierBreakAfterimages) {
+            for (let i = this.barrierBreakAfterimages.length - 1; i >= 0; i--) {
+                const img = this.barrierBreakAfterimages[i];
+                img.life -= dt;
+                if (img.life <= 0) {
+                    this.barrierBreakAfterimages.splice(i, 1);
+                }
+            }
+        }
     }
     
     fireMachete() {
@@ -195,7 +214,9 @@ export class HuaQiang extends Hero {
             state: 'flying',
             lastHitTime: 0,
             currentSpeed: initialSpeed,
-            decayRate: 400 // 每秒衰减的速度值，参考马老师
+            decayRate: 400, // 每秒衰减的速度值，参考马老师
+            barrierBreakCooldown: 0,
+            checkedObstacles: new Set()
         });
         
         // 播放发射砍刀音效
@@ -235,6 +256,65 @@ export class HuaQiang extends Hero {
                 
                 m.x += m.vx * dt;
                 m.y += m.vy * dt;
+                
+                // === 破障机制 ===
+                if (m.barrierBreakCooldown > 0) {
+                    m.barrierBreakCooldown -= dt;
+                } else if (this.enemy && !this.enemy.isDead) {
+                    let broken = false;
+                    
+                    if (this.enemy.name === '蜘蛛' && this.enemy.webs) {
+                        for (let j = this.enemy.webs.length - 1; j >= 0; j--) {
+                            const web = this.enemy.webs[j];
+                            if (!web.active) continue;
+                            if (m.checkedObstacles.has(web)) continue;
+                            
+                            if (this.game.physics.checkLineCircleCollision(web.x1, web.y1, web.x2, web.y2, {x: m.x, y: m.y, radius: 15})) {
+                                m.checkedObstacles.add(web);
+                                if (Math.random() < 0.4) {
+                                    this.enemy.webs.splice(j, 1);
+                                    broken = true;
+                                    break;
+                                }
+                            }
+                        }
+                    } else if (this.enemy.name === '马老师' && this.enemy.projectiles) {
+                        for (let j = this.enemy.projectiles.length - 1; j >= 0; j--) {
+                            const proj = this.enemy.projectiles[j];
+                            if (m.checkedObstacles.has(proj)) continue;
+                            
+                            if (this.game.physics.checkCircleCollision({x: m.x, y: m.y, radius: 15}, proj)) {
+                                m.checkedObstacles.add(proj);
+                                if (Math.random() < 0.4) {
+                                    this.enemy.projectiles.splice(j, 1);
+                                    broken = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (broken) {
+                        m.barrierBreakCooldown = 3.0; // 3秒冷却
+                        
+                        // 播放破障音效
+                        if (this.barrierBreakAudio) {
+                            this.barrierBreakAudio.currentTime = 0;
+                            this.barrierBreakAudio.play().catch(e => console.warn('Barrier break audio play failed:', e));
+                        }
+                        
+                        if (this.game) {
+                            this.game.addFloatingText(m.x, m.y - 20, "破障!", "#00ffff");
+                            this.barrierBreakAfterimages.push({
+                                x: m.x,
+                                y: m.y,
+                                angle: m.angle,
+                                life: 0.5,
+                                maxLife: 0.5
+                            });
+                        }
+                    }
+                }
                 
                 // 碰撞检测（敌人）
                 if (this.enemy && !this.enemy.isDead && this.enemy.invincibleTime <= 0) {
@@ -426,6 +506,24 @@ export class HuaQiang extends Hero {
             ctx.restore();
         }
         ctx.restore();
+        
+        // 绘制破障残影
+        if (this.barrierBreakAfterimages) {
+            ctx.save();
+            for (const img of this.barrierBreakAfterimages) {
+                ctx.save();
+                ctx.translate(img.x, img.y);
+                ctx.rotate(img.angle);
+                ctx.globalAlpha = (img.life / img.maxLife) * 0.8;
+                
+                ctx.scale(1.2, 1.2);
+                ctx.filter = 'brightness(200%) drop-shadow(0 0 5px #00ffff)';
+                this.drawMachete(ctx);
+                
+                ctx.restore();
+            }
+            ctx.restore();
+        }
         
         super.draw(ctx);
     }
