@@ -69,6 +69,7 @@ import { HuaQiang } from '@/game/entities/heroes/HuaQiang.js';
 import { Van } from '@/game/entities/heroes/Van.js';
 import { SunWukong } from '@/game/entities/heroes/SunWukong.js';
 import { T1000 } from '@/game/entities/heroes/T1000.js';
+import { OnePunchMan } from '@/game/entities/heroes/OnePunchMan.js';
 
 const store = useGameStore();
 const router = useRouter();
@@ -138,15 +139,24 @@ const heroPool = [
     skill: { name: '如意金箍棒', desc: '金箍棒环绕周身旋转，每4秒变长变粗一次造成更高伤害。受击时20%概率触发金刚不坏，免疫本次及后续连段伤害。觉醒大闹天宫，分出三个分身弹射全场，并同步释放超大范围的强化金箍棒。' },
     audioSrc: import.meta.env.BASE_URL + 'assets/audio/SunWukong/老孙来也.mp3'
   },
-  {
-    id: 't1000', name: 'T1000', class: 'T1000', 
-    iconColor: 'radial-gradient(circle at 30% 30%, #ffffff 0%, #a0a6b8 40%, #404040 100%)', // 使用液态金属专属渐变色代替纯灰色
-    quote: '"I\'ll be back."',
-    traits: '液态金属、变形穿刺 | 碎片标记与追踪爆发',
-    stats: 'HP: 100 | 移速: 60',
-    skill: { name: '变形刺刃', desc: '每2.5秒伸出刺刃攻击附加流血。受击时20%概率液化自愈(受击伤害减半，同时回复5点血量)，随后生成液态碎片。碎片命中叠加标记触发暴击伤害，未命中化为场地陷阱。觉醒时激活所有陷阱碎片进行追踪打击并添加标记。' },
-    audioSrc: null
-  },
+  // {
+  //   id: 't1000', name: 'T1000', class: 'T1000', 
+  //   iconColor: 'radial-gradient(circle at 30% 30%, #ffffff 0%, #a0a6b8 40%, #404040 100%)', // 使用液态金属专属渐变色代替纯灰色
+  //   quote: '"I\'ll be back."',
+  //   traits: '液态金属、变形穿刺 | 碎片标记与追踪爆发',
+  //   stats: 'HP: 100 | 移速: 60',
+  //   skill: { name: '变形刺刃', desc: '每2.5秒伸出刺刃攻击附加流血。受击时20%概率液化自愈(受击伤害减半，同时回复5点血量)，随后生成液态碎片。碎片命中叠加标记触发暴击伤害，未命中化为场地陷阱。觉醒时激活所有陷阱碎片进行追踪打击并添加标记。' },
+  //   audioSrc: null
+  // },
+  // {
+  //   id: 'onepunchman', name: '一拳超人', class: 'OnePunchMan', 
+  //   iconColor: '#ffff00',
+  //   quote: '"我变秃了，也变强了。"',
+  //   traits: '无敌、秒杀 | 怒气爆发与一击必杀',
+  //   stats: 'HP: 100 | 移速: 60',
+  //   skill: { name: '普通一拳', desc: '受到敌方伤害时积累怒气，满怒释放普通一拳，沿途破除飞行物与陷阱，命中直接秒杀。觉醒：认真一拳，立刻全屏清场并瞬移至敌方身前触发秒杀。' },
+  //   audioSrc: null
+  // },
   {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',
     quote: '"神秘的力量正在苏醒..."',
