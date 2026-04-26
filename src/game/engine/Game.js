@@ -335,7 +335,9 @@ export class Game {
      * 处理英雄拾取觉醒石
      */
     collectAwakenStone(hero) {
-        this.awakenStone.isCollected = true;
+        if (this.awakenStone) {
+            this.awakenStone.isCollected = true;
+        }
         
         // 触发全局时停演出，持续 2 秒
         this.globalFreezeTime = 2.0; 
@@ -344,7 +346,8 @@ export class Game {
         // 生成吸收粒子特效
         for(let i=0; i<30; i++) {
             this.addParticle({
-                x: this.awakenStone.x, y: this.awakenStone.y,
+                x: this.awakenStone ? this.awakenStone.x : hero.x, 
+                y: this.awakenStone ? this.awakenStone.y : hero.y - 100, // 如果没有觉醒石实体(比如直接点击UI触发)，粒子从英雄上方散落
                 vx: (Math.random() - 0.5) * 200, vy: (Math.random() - 0.5) * 200,
                 life: 1.5, color: '#ffd700', size: Math.random() * 4 + 2,
                 target: hero

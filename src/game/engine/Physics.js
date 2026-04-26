@@ -68,7 +68,7 @@ export class Physics {
     }
     
     /**
-     * 线段与圆形的碰撞检测（用于蜘蛛侠的蛛网）
+     * 线段与圆形的碰撞检测（用于蜘蛛侠的蛛网与一拳超人破障）
      */
     checkLineCircleCollision(x1, y1, x2, y2, circle) {
         const dx = x2 - x1;
@@ -93,7 +93,9 @@ export class Physics {
         }
         
         const distSq = (circle.x - nearestX) ** 2 + (circle.y - nearestY) ** 2;
-        return distSq <= circle.radius * circle.radius;
+        // 在检测线段与圆的碰撞时，由于网线没有宽度而投射物可能移动较快，增加一定的容差缓冲(15px)
+        const hitRadius = circle.radius + 15; 
+        return distSq <= hitRadius * hitRadius;
     }
     
     /**
