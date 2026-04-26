@@ -149,6 +149,7 @@ import { MaLaoshi } from '@/game/entities/heroes/MaLaoshi.js';
 import { HuaQiang } from '@/game/entities/heroes/HuaQiang.js';
 import { Van } from '@/game/entities/heroes/Van.js';
 import { SunWukong } from '@/game/entities/heroes/SunWukong.js';
+import { T1000 } from '@/game/entities/heroes/T1000.js';
 import { BattleRecordManager } from '@/utils/BattleRecordManager.js';
 
 const classes = {
@@ -159,7 +160,8 @@ const classes = {
   'MaLaoshi': MaLaoshi,
   'HuaQiang': HuaQiang,
   'Van': Van,
-  'SunWukong': SunWukong
+  'SunWukong': SunWukong,
+  'T1000': T1000
 };
 
 const store = useGameStore();
