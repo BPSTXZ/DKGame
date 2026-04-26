@@ -17,8 +17,10 @@
             <div class="hp-bar-container">
               <div class="hp-bar" :style="{ width: Math.max(0, (store.battleState.p1.hp / store.battleState.p1.maxHp) * 100) + '%' }"></div>
             </div>
-            <p class="hp-text">HP: <span>{{ Math.floor(store.battleState.p1.hp) }}</span></p>
-            <p class="hp-text" style="font-size: 1rem; color: #aaa;">移速: <span>{{ store.battleState.p1.speed.toFixed(1) }}</span><span v-if="store.battleState.p1.spinSpeed !== null"> | 转速: <span>{{ store.battleState.p1.spinSpeed.toFixed(1) }}</span></span></p>
+            <div class="stats-row">
+              <p class="hp-text">HP: <span>{{ Math.floor(store.battleState.p1.hp) }}</span></p>
+              <p class="speed-text">移速: <span>{{ store.battleState.p1.speed.toFixed(1) }}</span><span v-if="store.battleState.p1.spinSpeed !== null"> | 转速: <span>{{ store.battleState.p1.spinSpeed.toFixed(1) }}</span></span></p>
+            </div>
             <div class="buffs">
               <span v-if="store.battleState.p1.rage > 0" class="buff-icon" :style="{ background: store.battleState.p1.rage >= 100 ? '#ff0000' : '#ff9900', color: '#fff' }">怒气 {{ store.battleState.p1.rage }}%</span>
               <span v-if="store.battleState.p1.damageReduction > 0" class="buff-icon" style="background: #4caf50; color: #fff;">减伤 {{ store.battleState.p1.damageReduction }}%</span>
@@ -49,8 +51,10 @@
             <div class="hp-bar-container">
               <div class="hp-bar" :style="{ width: Math.max(0, (store.battleState.p2.hp / store.battleState.p2.maxHp) * 100) + '%' }"></div>
             </div>
-            <p class="hp-text">HP: <span>{{ Math.floor(store.battleState.p2.hp) }}</span></p>
-            <p class="hp-text" style="font-size: 1rem; color: #aaa;">移速: <span>{{ store.battleState.p2.speed.toFixed(1) }}</span><span v-if="store.battleState.p2.spinSpeed !== null"> | 转速: <span>{{ store.battleState.p2.spinSpeed.toFixed(1) }}</span></span></p>
+            <div class="stats-row">
+              <p class="hp-text">HP: <span>{{ Math.floor(store.battleState.p2.hp) }}</span></p>
+              <p class="speed-text">移速: <span>{{ store.battleState.p2.speed.toFixed(1) }}</span><span v-if="store.battleState.p2.spinSpeed !== null"> | 转速: <span>{{ store.battleState.p2.spinSpeed.toFixed(1) }}</span></span></p>
+            </div>
             <div class="buffs">
               <span v-if="store.battleState.p2.rage > 0" class="buff-icon" :style="{ background: store.battleState.p2.rage >= 100 ? '#ff0000' : '#ff9900', color: '#fff' }">怒气 {{ store.battleState.p2.rage }}%</span>
               <span v-if="store.battleState.p2.damageReduction > 0" class="buff-icon" style="background: #4caf50; color: #fff;">减伤 {{ store.battleState.p2.damageReduction }}%</span>
@@ -214,7 +218,7 @@ const updateBattleState = (state, hero) => {
   
   // 同步一拳超人的怒气值
   if (hero.name === '一拳超人' && hero.rage !== undefined) {
-    state.rage = hero.rage;
+    state.rage = Math.round(hero.rage);
   } else {
     state.rage = 0;
   }
@@ -457,6 +461,49 @@ const backToSelect = () => {
 </script>
 
 <style scoped>
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.speed-text {
+  margin: 5px 0;
+  font-size: 1rem;
+  color: #aaa;
+}
+
+.buffs {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 5px;
+  justify-content: flex-start;
+  margin-top: 5px;
+  min-height: 24px;
+  max-height: 24px;
+  overflow: visible;
+  position: relative;
+  z-index: 20;
+}
+
+.player-info.right .buffs {
+  justify-content: flex-end;
+}
+
+.buff-icon {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: white;
+  white-space: nowrap;
+  height: 20px;
+  line-height: 16px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
 .clickable-player {
   cursor: pointer;
   transition: transform 0.1s ease, box-shadow 0.2s ease;

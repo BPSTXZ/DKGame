@@ -57,19 +57,26 @@ export class OnePunchMan extends Hero {
         // 如果确实受到了伤害，增加怒气
         if (this.hp < oldHp && !this.isDead) {
             const now = Date.now();
-            // 怒气增长冷却 1 秒
-            if (now - this.lastRageTime >= 1000) {
+            // 怒气增长冷却 0.6 秒
+            if (now - this.lastRageTime >= 600) {
                 this.lastRageTime = now;
                 if (!this.isPunching && !this.isChargingNormalPunch && this.rage < this.maxRage) {
                     const inc = Math.floor(Math.random() * 9) + 2; // 2到10点
-                    this.rage = Math.min(this.maxRage, this.rage + inc);
-                    
-                    // 触发普通一拳蓄力动画
-                    if (this.rage >= this.maxRage) {
-                        this.startChargingNormalPunch();
-                    }
+                    this.addRage(inc);
                 }
             }
+        }
+    }
+    
+    // 供外部（如吸血鬼等持续不走takeDamage爆发逻辑的单位）调用的公共加怒气接口
+    addRage(amount) {
+        if (this.isDead || this.isPunching || this.isChargingNormalPunch || this.rage >= this.maxRage) return;
+        
+        this.rage = Math.min(this.maxRage, this.rage + amount);
+        
+        // 触发普通一拳蓄力动画
+        if (this.rage >= this.maxRage) {
+            this.startChargingNormalPunch();
         }
     }
     

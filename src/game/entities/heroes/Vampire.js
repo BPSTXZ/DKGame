@@ -58,6 +58,13 @@ export class Vampire extends Hero {
                 }
                 
                 // 手动减敌方血，给自己加血
+                // 因为一拳超人需要通过 takeDamage 来积累怒气，所以我们这里需要调用 takeDamage，但又要避免死循环或重复处理
+                // 如果敌方是一拳超人，我们需要触发他的怒气积攒逻辑，最简单的方法是使用 takeDamage 并传入特殊标记或直接调用
+                if (this.enemy.name === '一拳超人' && typeof this.enemy.addRage === 'function') {
+                    // 直接给一拳超人加怒气，吸血的持续伤害虽然低但是频率高，这里加少量怒气
+                    this.enemy.addRage(drainAmount);
+                }
+                
                 this.enemy.hp -= drainAmount;
                 if (this.enemy.hp < 0) this.enemy.hp = 0; // 防止负血
                 this.hp += drainAmount; // 取消血量上限限制
