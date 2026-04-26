@@ -51,30 +51,30 @@ export class Vampire extends Hero {
                 // 每帧连续扣血并恢复自身，应用攻击力倍率
                 let drainAmount = this.currentDrainRate * this.damageMultiplier * dt;
                 
-                // 检查吸血鬼是否被 Van 压制减伤
-                const isSuppressed = this.buffs.some(b => b.type === 'suppress_damage');
-                if (isSuppressed) {
-                    drainAmount *= 0.5;
-                }
+                // 计算对敌方的实际扣血量（受敌方减伤影响）
+                // 使用敌方的减伤率，吸血鬼自身的压制减伤不应影响其吸血能力
+                const enemyReduction = this.enemy.getDamageReduction ? this.enemy.getDamageReduction() : 0;
+                let actualDrain = drainAmount * (1 - enemyReduction);
                 
-                // 手动减敌方血，给自己加血
-                // 因为一拳超人需要通过 takeDamage 来积累怒气，所以我们这里需要调用 takeDamage，但又要避免死循环或重复处理
-                // 如果敌方是一拳超人，我们需要触发他的怒气积攒逻辑，最简单的方法是使用 takeDamage 并传入特殊标记或直接调用
+                // 如果敌方是一拳超人，我们需要触发他的怒气积攒逻辑
                 if (this.enemy.name === '一拳超人' && typeof this.enemy.addRage === 'function') {
-                    // 直接给一拳超人加怒气，吸血的持续伤害虽然低但是频率高，这里加少量怒气
-                    this.enemy.addRage(drainAmount);
+                    // 直接给一拳超人加怒气，基于被减伤前或后的数值皆可，这里采用实际扣血量
+                    this.enemy.addRage(actualDrain);
                 }
                 
-                this.enemy.hp -= drainAmount;
+                this.enemy.hp -= actualDrain;
                 if (this.enemy.hp < 0) this.enemy.hp = 0; // 防止负血
-                this.hp += drainAmount; // 取消血量上限限制
+                
+                // 吸血鬼自身回复生命值（根据实际对敌方造成的伤害来回血）
+                this.hp += actualDrain; // 取消血量上限限制
                 
                 // 每0.5秒触发一次伤害数字提示（只做视觉，不扣血）
                 this.suckTickTimer = (this.suckTickTimer || 0) + dt;
                 if (this.suckTickTimer >= 0.5) {
                     this.suckTickTimer -= 0.5;
                     let tickDamageAmount = this.currentDrainRate * this.damageMultiplier * 0.5;
-                    if (isSuppressed) tickDamageAmount *= 0.5;
+                    // 应用敌方减伤到视觉飘字上
+                    tickDamageAmount *= (1 - enemyReduction);
                     
                     const tickDamage = tickDamageAmount.toFixed(1);
                     this.game.addFloatingText(this.enemy.x, this.enemy.y - 30, `-${tickDamage}`, '#ff4444');
