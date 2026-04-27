@@ -68,6 +68,15 @@ export class SunWukong extends Hero {
     takeDamage(amount, sourceX, sourceY) {
         if (this.isDead || this.invincibleTime > 0) return;
         
+        // 彩蛋判定：一拳超人的普通一拳或认真一拳 (极高伤害)，触发必定金刚不坏
+        if (this.forceInvincibleOnPunch && amount >= 100) {
+            this.isGoldenBody = true;
+            this.goldenBodyTimer = this.goldenBodyWindow;
+            this.game.addFloatingText(this.x, this.y - 40, "免疫", '#fbd73a');
+            this.forceInvincibleOnPunch = false; // 彩蛋每次只生效一次
+            return;
+        }
+        
         // 处于金刚不坏连段窗口中，或者当前连段已经触发过金刚不坏且在连段持续时间内
         if (this.isGoldenBody || (this.comboHitTimer > 0 && this.isGoldenBodyTriggeredInCombo)) {
             this.goldenBodyTimer = this.goldenBodyWindow; // 刷新金刚不坏窗口

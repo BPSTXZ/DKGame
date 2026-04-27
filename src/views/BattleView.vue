@@ -80,10 +80,10 @@
         
         <!-- 英雄机制描述栏 -->
         <div class="mechanics-info" v-if="store.p1Selection?.skill && store.p2Selection?.skill">
-          <div class="mechanic-card p1-mechanic">
+          <div class="mechanic-card p1-mechanic" @dblclick="handleMechanicDblClick(1)">
             <p><strong>{{ store.p1Selection.skill.name }}:</strong> {{ store.p1Selection.skill.desc }}</p>
           </div>
-          <div class="mechanic-card p2-mechanic">
+          <div class="mechanic-card p2-mechanic" @dblclick="handleMechanicDblClick(2)">
             <p><strong>{{ store.p2Selection.skill.name }}:</strong> {{ store.p2Selection.skill.desc }}</p>
           </div>
         </div>
@@ -457,6 +457,33 @@ const restartBattle = () => {
 
 const backToSelect = () => {
   router.push('/');
+};
+
+// 英雄机制描述栏双击彩蛋逻辑
+const handleMechanicDblClick = (playerIndex) => {
+  if (!gameInstance || isReplayMode.value) return;
+  
+  const targetSelection = playerIndex === 1 ? store.p1Selection : store.p2Selection;
+  const heroInstance = playerIndex === 1 ? gameInstance.p1 : gameInstance.p2;
+  
+  if (!targetSelection || !heroInstance) return;
+  
+  // 检查是否是一拳超人和猴哥的对局
+  const isSpecialMatch = 
+    (store.p1Selection.class === 'OnePunchMan' && store.p2Selection.class === 'SunWukong') ||
+    (store.p1Selection.class === 'SunWukong' && store.p2Selection.class === 'OnePunchMan');
+    
+  if (!isSpecialMatch) return;
+
+  // 双击猴哥机制描述
+  if (targetSelection.class === 'SunWukong') {
+    heroInstance.forceInvincibleOnPunch = true;
+  }
+  
+  // 双击一拳超人机制描述
+  if (targetSelection.class === 'OnePunchMan') {
+    heroInstance.forceFixedRageGain = true;
+  }
 };
 </script>
 

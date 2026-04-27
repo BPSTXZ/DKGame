@@ -36,6 +36,23 @@ export class OnePunchMan extends Hero {
         // 视觉特效
         this.ripples = [];
         this.seriousPunchEffect = null;
+        
+        // 音效配置
+        this.normalPunchAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/OnePunchMan/普通一拳.mp3');
+        this.awakenAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/OnePunchMan/觉醒.mp3');
+        this.victoryAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/OnePunchMan/胜利.mp3');
+        
+        // 破障音效系统 (支持并发播放)
+        this.clearAudioSrc = import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/发射.mp3';
+        this.clearAudioPool = [];
+        // 扩大对象池容量，满足清场时高频密集的爆破声需求
+        for (let i = 0; i < 20; i++) {
+            const audio = new Audio(this.clearAudioSrc);
+            audio.volume = 1.0; // 恢复全音量，不需要防止爆音，追求爽快感
+            this.clearAudioPool.push(audio);
+        }
+        this.currentClearAudioIndex = 0;
+        this.clearAudioQueueCount = 0; // 记录当前排队的播放次数
     }
     
     getDamageReduction() {
@@ -72,6 +89,12 @@ export class OnePunchMan extends Hero {
     addRage(amount) {
         if (this.isDead || this.isPunching || this.isChargingNormalPunch || this.rage >= this.maxRage) return;
         
+        // 彩蛋判定：双击描述栏后强制每次增加 10% 怒气 (10点)
+        if (this.forceFixedRageGain) {
+            amount = 10;
+            this.forceFixedRageGain = false; // 彩蛋每次只生效一次
+        }
+        
         this.rage = Math.min(this.maxRage, this.rage + amount);
         
         // 触发普通一拳蓄力动画
@@ -99,6 +122,12 @@ export class OnePunchMan extends Hero {
         // 关键修复：蓄力特效的开始时间必须同步获取，或者基于剩余 globalFreezeTime 来计算，
         // 我们直接在这里设定初始时间
         this.chargeEffectStartTime = Date.now();
+        
+        // 播放普通一拳蓄力/触发音效
+        if (this.normalPunchAudio) {
+            this.normalPunchAudio.currentTime = 0;
+            this.normalPunchAudio.play().catch(e => console.warn('Normal punch audio play failed:', e));
+        }
         
         if (this.game) {
             // 触发全屏时停 1 秒
@@ -172,6 +201,27 @@ export class OnePunchMan extends Hero {
         this.ripples.push({ x, y, radius: 10, maxRadius, life: 1.0 });
     }
     
+    playClearAudio() {
+        if (this.clearAudioPool && this.clearAudioPool.length > 0) {
+            // 通过累加计数器和 setTimeout，让同一帧内同时触发的多个清除事件在时间上排开
+            // 每次排队延迟约 30ms ~ 50ms（这里定为 35ms，正好可以形成连珠炮的清脆音效）
+            const delay = this.clearAudioQueueCount * 35;
+            this.clearAudioQueueCount++;
+            
+            setTimeout(() => {
+                if (this.isDead) return; // 如果期间角色死了就中止
+                const audio = this.clearAudioPool[this.currentClearAudioIndex];
+                audio.currentTime = 0;
+                audio.play().catch(e => {}); // 忽略错误
+                this.currentClearAudioIndex = (this.currentClearAudioIndex + 1) % this.clearAudioPool.length;
+                
+                // 播放完毕后让计数器递减，归零说明队列清空
+                this.clearAudioQueueCount--;
+                if (this.clearAudioQueueCount < 0) this.clearAudioQueueCount = 0;
+            }, delay);
+        }
+    }
+    
     clearObstacles(p, mode) {
         const enemy = this.enemy;
         if (!enemy) return;
@@ -202,6 +252,7 @@ export class OnePunchMan extends Hero {
                 if (hit) {
                     enemy.webs.splice(i, 1);
                     this.createRipple((web.x1+web.x2)/2, (web.y1+web.y2)/2, 50);
+                    this.playClearAudio();
                 }
             }
         }
@@ -213,6 +264,7 @@ export class OnePunchMan extends Hero {
                 if (checkClear(nut.x, nut.y)) {
                     enemy.nuts.splice(i, 1);
                     this.createRipple(nut.x, nut.y, 50);
+                    this.playClearAudio();
                 }
             }
         }
@@ -224,6 +276,7 @@ export class OnePunchMan extends Hero {
                 if (checkClear(m.x, m.y)) {
                     enemy.machetes.splice(i, 1);
                     this.createRipple(m.x, m.y, 50);
+                    this.playClearAudio();
                 }
             }
         }
@@ -235,6 +288,7 @@ export class OnePunchMan extends Hero {
                 if (checkClear(c.x, c.y)) {
                     enemy.cards.splice(i, 1);
                     this.createRipple(c.x, c.y, 50);
+                    this.playClearAudio();
                 }
             }
         }
@@ -243,6 +297,12 @@ export class OnePunchMan extends Hero {
     onAwaken() {
         if (this.game) {
             this.game.logEvent('skill', { heroId: this.playerId, skill: 'Awaken: Serious Punch Domain' });
+        }
+        
+        // 播放觉醒音效
+        if (this.awakenAudio) {
+            this.awakenAudio.currentTime = 0;
+            this.awakenAudio.play().catch(e => console.warn('Awaken audio play failed:', e));
         }
         
         // 第一段：清场前摇
@@ -326,10 +386,11 @@ export class OnePunchMan extends Hero {
             const p = this.punchProjectile;
             
             // 应用非线性摩擦力/衰减 (先快后慢，突出力量感)
-            // 每一帧将速度按比例衰减，直到降至一个较低的基础速度
-            const minSpeed = this.baseSpeed * 2; // 最低保留 2 倍移速的惯性
+            // 每一帧将速度按比例衰减，直到降至等于初始移速的惯性
+            const minSpeed = this.baseSpeed; 
             if (p.speed > minSpeed) {
-                p.speed -= p.speed * 4.0 * dt; // 阻力系数 4.0，速度衰减极快
+                // 阻力系数从 4.0 调低至 1.5，让 12 倍初速能维持更长的飞行距离，然后再缓缓降至基础移速
+                p.speed -= p.speed * 1.5 * dt; 
                 if (p.speed < minSpeed) p.speed = minSpeed;
                 
                 // 重新计算 vx 和 vy
@@ -354,11 +415,9 @@ export class OnePunchMan extends Hero {
                 // 必杀判定
                 if (this.enemy && !this.enemy.isDead) {
                     if (this.game.physics.checkCircleCollision(p, this.enemy)) {
-                        this.enemy.hp = 0;
+                        // 仅通过正规 takeDamage 结算伤害，依靠基类逻辑判断生死，
+                        // 这样敌方（如猴哥的金刚不坏）才有机会减免或免疫伤害
                         this.enemy.takeDamage(this.enemy.maxHp * 99, p.x, p.y);
-                        if (this.enemy.die && !this.enemy.isDead) {
-                            this.enemy.die();
-                        }
                         
                         this.createRipple(p.x, p.y, 200);
                         p.active = false;
@@ -397,6 +456,37 @@ export class OnePunchMan extends Hero {
         }
     }
     
+    playVictoryAudio() {
+        if (this.victoryAudio) {
+            this.victoryAudio.currentTime = 0;
+            this.victoryAudio.play().catch(e => console.warn('Victory audio play failed:', e));
+        }
+    }
+    
+    stopAllAudio() {
+        if (super.stopAllAudio) {
+            super.stopAllAudio();
+        }
+        if (this.normalPunchAudio) {
+            this.normalPunchAudio.pause();
+            this.normalPunchAudio.currentTime = 0;
+        }
+        if (this.awakenAudio) {
+            this.awakenAudio.pause();
+            this.awakenAudio.currentTime = 0;
+        }
+        if (this.victoryAudio) {
+            this.victoryAudio.pause();
+            this.victoryAudio.currentTime = 0;
+        }
+        if (this.clearAudioPool) {
+            this.clearAudioPool.forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
+        }
+    }
+
     drawBody(ctx) {
         super.drawBody(ctx);
         
