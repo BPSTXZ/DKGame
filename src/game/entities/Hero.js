@@ -50,7 +50,7 @@ export class Hero {
      * 获取最终的实际移动速度
      */
     getSpeed() {
-        return this.baseSpeed * 5 * this.speedMultiplier; // 乘以 5 放大至适合屏幕的像素级速度
+        return this.baseSpeed * 8 * this.speedMultiplier; // 乘以 5 放大至适合屏幕的像素级速度
     }
     
     /**

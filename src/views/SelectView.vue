@@ -87,7 +87,7 @@ const heroPool = [
     id: 'spider', name: '蜘蛛', class: 'Spider', iconColor: '#767cdf',
     quote: '"落入我的网中，你就无处可逃了。"',
     traits: '敏捷、阴险 | 远程控制与拉扯风筝',
-    stats: 'HP: 80 | 移速: 50',
+    stats: 'HP: 80 | 移速: 30',
     skill: { name: '蛛丝束缚', desc: '周期性向周围粘黏蛛网，触碰后造成减速控制。觉醒：获得短暂无敌并暴增移速。' },
     audioSrc: import.meta.env.BASE_URL + 'assets/audio/spider/蜘蛛侠.mp3'
   },
