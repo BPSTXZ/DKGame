@@ -4,7 +4,7 @@
     <!-- 点击标题触发彩蛋 -->
     <h1 @click.stop="handleTitleClick">选择你的英雄</h1>
     <div class="hero-pool" id="hero-pool">
-      <div v-for="hero in heroPool" :key="hero.id" 
+      <div v-for="hero in filteredHeroPool" :key="hero.id" 
            class="hero-card" 
            :class="{ 'selected-p1': store.p1Selection?.id === hero.id, 'selected-p2': store.p2Selection?.id === hero.id, 'disabled': hero.disabled }"
            @click.stop="handleCardClick(hero, $event)"
@@ -62,7 +62,7 @@
 // Import store
 import { useGameStore } from '@/store/gameStore';
 import { useRouter } from 'vue-router';
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 
 import { MaLaoshi } from '@/game/entities/heroes/MaLaoshi.js';
 import { HuaQiang } from '@/game/entities/heroes/HuaQiang.js';
@@ -70,6 +70,7 @@ import { Van } from '@/game/entities/heroes/Van.js';
 import { SunWukong } from '@/game/entities/heroes/SunWukong.js';
 import { T1000 } from '@/game/entities/heroes/T1000.js';
 import { OnePunchMan } from '@/game/entities/heroes/OnePunchMan.js';
+import { QueenS } from '@/game/entities/heroes/QueenS.js';
 
 const store = useGameStore();
 const router = useRouter();
@@ -81,7 +82,8 @@ const heroPool = [
     traits: '狡诈、嗜血 | 消耗战与强力黏附',
     stats: 'HP: 100 | 移速: 60',
     skill: { name: '尖牙吸附', desc: '碰撞时黏附敌人持续吸血并减速，残血时吸血效率翻倍。觉醒：发射多枚追踪尖牙，倍增吸血效率。' },
-    audioSrc: import.meta.env.BASE_URL + 'assets/audio/vampire/吸血鬼笑.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/vampire/吸血鬼笑.mp3',
+    isSpecial: false
   },
   { 
     id: 'spider', name: '蜘蛛', class: 'Spider', iconColor: '#767cdf',
@@ -89,7 +91,8 @@ const heroPool = [
     traits: '敏捷、阴险 | 远程控制与拉扯风筝',
     stats: 'HP: 80 | 移速: 30',
     skill: { name: '蛛丝束缚', desc: '周期性向周围粘黏蛛网，触碰后造成减速控制。觉醒：获得短暂无敌并暴增移速。' },
-    audioSrc: import.meta.env.BASE_URL + 'assets/audio/spider/蜘蛛侠.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/spider/蜘蛛侠.mp3',
+    isSpecial: false
   },
   { 
     id: 'berserker', name: '狂战士', class: 'Berserker', iconColor: '#8b4513',
@@ -97,7 +100,8 @@ const heroPool = [
     traits: '狂暴、鲁莽 | 近战爆发与大范围伤害',
     stats: 'HP: 120 | 移速: 60 | 转速: 20',
     skill: { name: '旋风斩', desc: '挥舞双斧旋转，斧刃造成全额伤害，斧柄造成半额伤害，附带减速。扣血将转换为属性提升。觉醒：双斧攻击范围、转速与移速暴增。' },
-    audioSrc: import.meta.env.BASE_URL + 'assets/audio/berserker/狂战士.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/berserker/狂战士.mp3',
+    isSpecial: false
   },
   { 
     id: 'gambler', name: '赌徒', class: 'Gambler', iconColor: '#2e8b57',
@@ -105,7 +109,8 @@ const heroPool = [
     traits: '莫测、高风险 | 概率爆发与追踪连击',
     stats: 'HP: 100 | 移速: 65',
     skill: { name: '命运骰子', desc: '投掷骰子发射同点数追踪卡牌，连续同点数可倍增卡牌量。点数6额外附带减速。觉醒：下三次骰子点数必为6。' },
-    audioSrc: import.meta.env.BASE_URL + 'assets/audio/Gambler/我要验牌.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/Gambler/我要验牌.mp3',
+    isSpecial: false
   },
   {
     id: 'malaoshi', name: '马老师', class: 'MaLaoshi', iconColor: '#cccccc',
@@ -113,7 +118,8 @@ const heroPool = [
     traits: '宗师、化劲 | 多段弹幕与全屏控制',
     stats: 'HP: 100 | 移速: 60',
     skill: { name: '混元太极', desc: '周期发射松果糖豆。阶段性掉血时释放全图混元劲击退敌人。觉醒：触发闪电五连鞭，必中且高额减速。' },
-    audioSrc: import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/耗子尾汁.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/耗子尾汁.mp3',
+    isSpecial: false
   },
   {
     id: 'huaqiang', name: '华强', class: 'HuaQiang', iconColor: '#26272d',
@@ -121,7 +127,8 @@ const heroPool = [
     traits: '凶狠、压制 | 场地封锁与磁吸爆发',
     stats: 'HP: 100 | 移速: 65',
     skill: { name: '劈瓜刀法', desc: '发射贯穿砍刀(携带40%概率破障)，撞墙后变为场地陷阱。觉醒：释放磁吸立场，瞬间回收全场砍刀造成大量伤害。' },
-    audioSrc: import.meta.env.BASE_URL + 'assets/audio/huaqiang/这瓜保熟吗.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/huaqiang/这瓜保熟吗.mp3',
+    isSpecial: false
   },
   {
     id: 'van', name: '成都之心', class: 'Van', iconColor: '#d4b264',
@@ -129,7 +136,8 @@ const heroPool = [
     traits: '狂热、执念 | 脱战暴走与强力压制',
     stats: 'HP: 100 | 移速: 70',
     skill: { name: '给佬攻击', desc: '脱战3秒后移速翻倍(急色)。碰撞触发瞬移背刺，将敌方压制并造成连续打桩伤害。觉醒：生成全屏力场，触发强化版深度压制。' },
-    audioSrc: import.meta.env.BASE_URL + 'assets/audio/van/成都.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/van/成都.mp3',
+    isSpecial: false
   },
   {
     id: 'sunwukong', name: '猴哥', class: 'SunWukong', iconColor: '#fbd73a',
@@ -137,7 +145,8 @@ const heroPool = [
     traits: '齐天大圣、金刚不坏 | 如意金箍与分身爆发',
     stats: 'HP: 100 | 移速: 60',
     skill: { name: '如意金箍棒', desc: '金箍棒环绕周身旋转，每4秒变长变粗一次造成更高伤害。受击时20%概率触发金刚不坏，免疫本次及后续连段伤害。觉醒：大闹天宫，分出三个分身弹射全场，并同步释放超大范围的强化金箍棒。' },
-    audioSrc: import.meta.env.BASE_URL + 'assets/audio/SunWukong/老孙来也.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/SunWukong/老孙来也.mp3',
+    isSpecial: false
   },
   // {
   //   id: 't1000', name: 'T1000', class: 'T1000', 
@@ -155,7 +164,8 @@ const heroPool = [
     traits: '无敌、秒杀 | 怒气爆发与一击必杀',
     stats: 'HP: 100 | 移速: 60',
     skill: { name: '普通一拳', desc: '受到敌方伤害时积累怒气(每次2%~10%)，满怒释放普通一拳，沿途破除场地障碍与陷阱，命中直接秒杀。觉醒：认真一拳，立刻全屏清场并瞬移至敌方身前触发秒杀。' },
-    audioSrc: import.meta.env.BASE_URL + 'assets/audio/OnePunchMan/选择.mp3'
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/OnePunchMan/选择.mp3',
+    isSpecial: false
   },
   {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',
