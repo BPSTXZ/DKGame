@@ -10,13 +10,14 @@ export class Vampire extends Hero {
         this.name = '吸血鬼';
         this.maxHp = 100;
         this.hp = 100;
-        this.baseSpeed = 60; // 基础移速同步提升到 60
+        this.baseSpeed = 65; // 基础移速同步提升到 65
         this.color = '#8b0000'; // Dark red
         
         // Vampire specific
         this.isSucking = false;
         this.suckTime = 0;
-        this.suckDuration = 3.0;
+        this.suckDuration = 2.0; // 吸附时间从 3.0 下调到 2.0
+
         
         // Awaken specific
         this.awakenShotsLeft = 0;
@@ -216,10 +217,10 @@ export class Vampire extends Hero {
             }
         }
         
-        // 吸血期间获得 50% 减伤（利用 suppress_damage buff）
+        // 吸血期间获得 40% 减伤
         if (isDraining) {
             // 每帧持续刷新一个极短的减伤 buff
-            this.addBuff('vampire_suppress', 'suppress_damage', 0.5, 0.2);
+            this.addBuff('vampire_suppress', 'suppress_damage', 0.4, 0.2);
         } else {
             // 如果没有吸血，立刻移除该 buff
             const buffIndex = this.buffs.findIndex(b => b.id === 'vampire_suppress');

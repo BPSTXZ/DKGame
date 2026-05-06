@@ -105,8 +105,8 @@ export class Berserker extends Hero {
             if (hitHead1 || hitHandle1) {
                 if (!this.axe1Hitting) {
                     this.axe1Hitting = true; // 标记正在命中，避免重复计伤
-                    // 斧头造成 100% 伤害，斧柄造成 50% 伤害
-                    const damage = (hitHead1 ? 5 : 2.5) * this.damageMultiplier;
+                    // 斧头造成 5 点基础伤害，斧柄造成 4 点基础伤害 (原为 2.5)
+                    const damage = (hitHead1 ? 5 : 4) * this.damageMultiplier;
                     this.enemy.takeDamage(damage, this.x, this.y);
                     this.spawnHitParticles(this.enemy.x, this.enemy.y);
                     this.playAxeHitSound();
@@ -125,7 +125,8 @@ export class Berserker extends Hero {
             if (hitHead2 || hitHandle2) {
                 if (!this.axe2Hitting) {
                     this.axe2Hitting = true;
-                    const damage = (hitHead2 ? 5 : 2.5) * this.damageMultiplier;
+                    // 斧头造成 5 点基础伤害，斧柄造成 4 点基础伤害 (原为 2.5)
+                    const damage = (hitHead2 ? 5 : 4) * this.damageMultiplier;
                     this.enemy.takeDamage(damage, this.x, this.y);
                     this.spawnHitParticles(this.enemy.x, this.enemy.y);
                     this.playAxeHitSound();

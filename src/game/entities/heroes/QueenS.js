@@ -11,32 +11,38 @@ export class QueenS extends Hero {
         this.radius = 40;
         
         // 技能一（赏赐耳光）参数
-        this.engageDistance = 20; // 边缘距离
-        this.lockDistance = 18;   // 边缘距离
+        this.engageDistance = 20;
+        this.lockDistance = 18;
         this.slapCooldown = 0;
-        this.slapTimer = 0;
-        this.slapCount = 0;
-        this.hitInterval = 0.2;
-        this.slapDamage = 1.5;
+        this.slapDamage = 2;
+        this.slapRound = 0;
+        this.slapPhase = null;
+        this.slapPhaseTimer = 0;
         
         // 技能二（小狗狗给我过来）参数
         this.timeSinceLastSlap = 0;
         
         // 觉醒（爱的惩戒）参数
-        this.whipInterval = 0.28; // 0.25~0.3s
+        this.whipInterval = 0.28;
         this.whipDamage = 5;
         this.whipCount = 0;
         this.whipTimer = 0;
         
         // 状态机
-        this.state = 'normal'; 
-        // 状态：'normal', 'slapping', 'chain_charging', 'chain_throwing', 'chain_pulling', 'awaken_chain_charging', 'awaken_chain_throwing', 'awaken_chain_pulling', 'awaken_whipping'
+        this.state = 'normal';
         
         // 链条状态
         this.chain = { active: false, length: 0, angle: 0, chargeTime: 0, throwAngle: 0, targetEnemy: false };
         
         // 视觉特效
         this.visualEffects = [];
+        
+        // 音效
+        this.slapLeftAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/QueenS/正扇.mp3');
+        this.slapRightAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/QueenS/反扇.mp3');
+        this.chainSwingAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/QueenS/挥舞绳子.mp3');
+        this.chainRetractAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/QueenS/回收绳子.mp3');
+        this.whipAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/QueenS/鞭子.mp3');
     }
 
     onHeroCollision(other) {
@@ -47,6 +53,29 @@ export class QueenS extends Hero {
         // 觉醒期间动作不可被打断（免疫击退）
         if (this.state.startsWith('awaken_')) return;
         super.knockback(kx, ky, speed, duration);
+    }
+
+    stopAllAudio() {
+        if (this.slapLeftAudio) {
+            this.slapLeftAudio.pause();
+            this.slapLeftAudio.currentTime = 0;
+        }
+        if (this.slapRightAudio) {
+            this.slapRightAudio.pause();
+            this.slapRightAudio.currentTime = 0;
+        }
+        if (this.chainSwingAudio) {
+            this.chainSwingAudio.pause();
+            this.chainSwingAudio.currentTime = 0;
+        }
+        if (this.chainRetractAudio) {
+            this.chainRetractAudio.pause();
+            this.chainRetractAudio.currentTime = 0;
+        }
+        if (this.whipAudio) {
+            this.whipAudio.pause();
+            this.whipAudio.currentTime = 0;
+        }
     }
 
     onAwaken() {
@@ -62,14 +91,50 @@ export class QueenS extends Hero {
         this.chain.chargeTime = 0;
         this.chain.angle = 0;
         this.chain.length = 0;
+        
+        if (this.chainSwingAudio) {
+            this.chainSwingAudio.currentTime = 0;
+            this.chainSwingAudio.play().catch(e => console.warn('Chain swing audio play failed:', e));
+        }
     }
 
     startSlapping() {
         this.state = 'slapping';
-        this.slapCount = 0;
-        this.slapTimer = 0;
+        this.slapRound = 0;
+        this.slapPhase = 'left';
+        this.slapPhaseTimer = 0;
+        this.dealSlapDamage('left');
         if (this.game) {
             this.game.logEvent('skill', { heroId: this.playerId, skill: 'Rewarding Slap' });
+        }
+    }
+    
+    dealSlapDamage(side) {
+        if (!this.enemy || this.enemy.isDead) return;
+        const angle = Math.atan2(this.enemy.y - this.y, this.enemy.x - this.x);
+        this.enemy.takeDamage(this.slapDamage, this.x, this.y);
+        
+        this.createSlapArcEffect(this.enemy.x, this.enemy.y, angle, side);
+        this.createSlapParticles(this.enemy.x, this.enemy.y, angle, side);
+        
+        if (side === 'left') {
+            this.enemy.headTwistAngle = -25 * Math.PI / 180;
+        } else {
+            this.enemy.headTwistAngle = 25 * Math.PI / 180;
+        }
+        this.enemy.headTwistTime = 0.25;
+        
+        if (this.game && this.game.screenShakeIntensity !== undefined) {
+            this.game.screenShakeTimer = Math.max(this.game.screenShakeTimer, 0.1);
+            this.game.screenShakeIntensity = 0.4;
+        }
+        
+        if (side === 'left' && this.slapLeftAudio) {
+            this.slapLeftAudio.currentTime = 0;
+            this.slapLeftAudio.play().catch(e => console.warn('Slap audio play failed:', e));
+        } else if (side === 'right' && this.slapRightAudio) {
+            this.slapRightAudio.currentTime = 0;
+            this.slapRightAudio.play().catch(e => console.warn('Slap audio play failed:', e));
         }
     }
 
@@ -178,6 +243,9 @@ export class QueenS extends Hero {
             if (e.type === 'heart') {
                 e.x += e.vx * dt;
                 e.y += e.vy * dt;
+            } else if (e.type === 'slap_particle') {
+                e.x += e.vx * dt;
+                e.y += e.vy * dt;
             }
             if (e.life <= 0) {
                 this.visualEffects.splice(i, 1);
@@ -212,19 +280,47 @@ export class QueenS extends Hero {
             return;
         }
 
-        this.slapTimer += dt;
-        if (this.slapTimer >= this.hitInterval) {
-            this.slapTimer -= this.hitInterval;
-            this.slapCount++;
-            
-            this.enemy.takeDamage(this.slapDamage, this.x, this.y);
-            
-            const isLeft = this.slapCount % 2 === 0;
-            this.createSlapEffect(this.enemy.x, this.enemy.y, angle, isLeft);
-            
-            if (this.slapCount >= 6) {
-                this.endSlapping();
+        if (this.enemy.headTwistTime > 0) {
+            this.enemy.headTwistTime -= dt;
+            if (this.enemy.headTwistTime <= 0) {
+                this.enemy.headTwistAngle = 0;
             }
+        }
+
+        this.slapPhaseTimer += dt;
+
+        switch (this.slapPhase) {
+            case 'left':
+                if (this.slapPhaseTimer >= 0.2) {
+                    this.slapPhaseTimer = 0;
+                    this.slapPhase = 'between';
+                }
+                break;
+            case 'between':
+                if (this.slapPhaseTimer >= 0.05) {
+                    this.slapPhaseTimer = 0;
+                    this.slapPhase = 'right';
+                    this.dealSlapDamage('right');
+                }
+                break;
+            case 'right':
+                if (this.slapPhaseTimer >= 0.2) {
+                    this.slapPhaseTimer = 0;
+                    this.slapRound++;
+                    if (this.slapRound >= 3) {
+                        this.endSlapping();
+                    } else {
+                        this.slapPhase = 'round_pause';
+                    }
+                }
+                break;
+            case 'round_pause':
+                if (this.slapPhaseTimer >= 0.3) {
+                    this.slapPhaseTimer = 0;
+                    this.slapPhase = 'left';
+                    this.dealSlapDamage('left');
+                }
+                break;
         }
     }
 
@@ -259,6 +355,16 @@ export class QueenS extends Hero {
         if (this.enemy && !this.enemy.isDead) {
             const dist = Math.hypot(this.enemy.x - chainTipX, this.enemy.y - chainTipY);
             if (dist <= this.enemy.radius + 20) {
+                // 狗绳命中瞬间造成 10 点爆发伤害
+                this.enemy.takeDamage(10 * this.damageMultiplier, this.x, this.y);
+                
+                if (this.chainRetractAudio) {
+                    this.chainSwingAudio.pause();
+                    this.chainSwingAudio.currentTime = 0;
+                    this.chainRetractAudio.currentTime = 0;
+                    this.chainRetractAudio.play().catch(e => console.warn('Chain retract audio play failed:', e));
+                }
+                
                 this.state = this.state === 'awaken_chain_throwing' ? 'awaken_chain_pulling' : 'chain_pulling';
                 return;
             }
@@ -267,9 +373,13 @@ export class QueenS extends Hero {
         // 失败判定
         const maxChainLength = Math.hypot(this.game.width, this.game.height);
         if (this.chain.length >= maxChainLength || chainTipX < 0 || chainTipX > this.game.width || chainTipY < 0 || chainTipY > this.game.height) {
+            if (this.chainSwingAudio) {
+                this.chainSwingAudio.pause();
+                this.chainSwingAudio.currentTime = 0;
+            }
             this.state = 'normal';
             this.chain.active = false;
-            this.timeSinceLastSlap = 0; // 回收消失，重新进入计时
+            this.timeSinceLastSlap = 0;
         }
     }
 
@@ -320,6 +430,11 @@ export class QueenS extends Hero {
             
             this.enemy.takeDamage(this.whipDamage, this.x, this.y);
             
+            if (this.whipAudio) {
+                this.whipAudio.currentTime = 0;
+                this.whipAudio.play().catch(e => console.warn('Whip audio play failed:', e));
+            }
+            
             this.createWhipEffect(this.enemy.x, this.enemy.y, angle);
             this.createHeartEffect(this.enemy.x, this.enemy.y);
             
@@ -329,24 +444,48 @@ export class QueenS extends Hero {
         }
     }
 
-    createSlapEffect(x, y, angle, isLeft) {
-        const offsetAngle = angle + (isLeft ? -Math.PI/2 : Math.PI/2);
-        const startX = x + Math.cos(offsetAngle) * 40;
-        const startY = y + Math.sin(offsetAngle) * 40;
+    createSlapArcEffect(ex, ey, queenAngle, side) {
+        const startOffsetAngle = side === 'left' ? Math.PI / 4 : -Math.PI / 4;
+        const endOffsetAngle = side === 'left' ? -Math.PI / 4 : Math.PI / 4;
+        const arcRadius = 35;
+        
+        const midRatio = 0.45;
+        const arcCenterX = this.x + (ex - this.x) * midRatio;
+        const arcCenterY = this.y + (ey - this.y) * midRatio;
         
         this.visualEffects.push({
-            type: 'slap',
-            x: startX, y: startY,
-            targetX: x, targetY: y,
-            life: 0.15, maxLife: 0.15
+            type: 'slap_arc',
+            startX: arcCenterX + Math.cos(queenAngle + startOffsetAngle) * arcRadius,
+            startY: arcCenterY + Math.sin(queenAngle + startOffsetAngle) * arcRadius,
+            endX: arcCenterX + Math.cos(queenAngle + endOffsetAngle) * arcRadius,
+            endY: arcCenterY + Math.sin(queenAngle + endOffsetAngle) * arcRadius,
+            life: 0.2, maxLife: 0.2,
+            side: side,
+            queenAngle: queenAngle
         });
         
         this.visualEffects.push({
             type: 'shockwave',
-            x: x, y: y,
-            life: 0.2, maxLife: 0.2,
-            maxRadius: 50
+            x: ex, y: ey,
+            life: 0.15, maxLife: 0.15,
+            maxRadius: 40
         });
+    }
+
+    createSlapParticles(ex, ey, queenAngle, side) {
+        const burstAngle = queenAngle + (side === 'left' ? -Math.PI / 2 : Math.PI / 2);
+        for (let i = 0; i < 8; i++) {
+            const angle = burstAngle + (Math.random() - 0.5) * Math.PI * 0.6;
+            const speed = 60 + Math.random() * 80;
+            this.visualEffects.push({
+                type: 'slap_particle',
+                x: ex, y: ey,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 0.15, maxLife: 0.15,
+                size: 2 + Math.random() * 3
+            });
+        }
     }
 
     createWhipEffect(x, y, angle) {
@@ -441,17 +580,82 @@ export class QueenS extends Hero {
             ctx.restore();
         }
 
+        // 绘制敌方头部扭转效果
+        if (this.enemy && !this.enemy.isDead && this.enemy.headTwistAngle && this.enemy.headTwistTime > 0) {
+            ctx.save();
+            ctx.translate(this.enemy.x, this.enemy.y);
+            const twist = this.enemy.headTwistAngle * (this.enemy.headTwistTime / 0.25);
+            ctx.rotate(twist);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, -this.enemy.radius * 0.4, 10, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+
         // 绘制特效
         for (const e of this.visualEffects) {
-            if (e.type === 'slap') {
+            if (e.type === 'slap_arc') {
                 ctx.save();
-                ctx.strokeStyle = `rgba(255, 255, 255, ${e.life / e.maxLife})`;
-                ctx.lineWidth = 8;
-                ctx.lineCap = 'round';
+                const progress = 1 - e.life / e.maxLife;
+                const alpha = 1 - Math.abs(progress - 0.5) * 2;
+                
+                const arcAmount = Math.sin(progress * Math.PI);
+                const midX = (e.startX + e.endX) / 2;
+                const midY = (e.startY + e.endY) / 2;
+                const perpAngle = e.queenAngle + Math.PI / 2;
+                const bendX = midX - Math.cos(perpAngle) * arcAmount * 25;
+                const bendY = midY - Math.sin(perpAngle) * arcAmount * 25;
+                
+                const t = progress;
+                const cx = (1 - t) * (1 - t) * e.startX + 2 * (1 - t) * t * bendX + t * t * e.endX;
+                const cy = (1 - t) * (1 - t) * e.startY + 2 * (1 - t) * t * bendY + t * t * e.endY;
+                
+                const handWidth = 13;
+                const handHeight = 24;
+                const cornerRadius = 4;
+                
+                const travelAngle = Math.atan2(e.endY - e.startY, e.endX - e.startX);
+                
+                ctx.translate(cx, cy);
+                ctx.rotate(travelAngle + (e.side === 'left' ? 0.3 : -0.3) * Math.sin(progress * Math.PI));
+                
+                ctx.fillStyle = `rgba(255, 140, 170, ${alpha * 0.95})`;
+                ctx.strokeStyle = `rgba(230, 110, 140, ${alpha})`;
+                ctx.lineWidth = 1.5;
+                
                 ctx.beginPath();
-                ctx.moveTo(e.x, e.y);
-                ctx.lineTo(e.targetX, e.targetY);
+                ctx.moveTo(-handWidth / 2 + cornerRadius, -handHeight / 2);
+                ctx.lineTo(handWidth / 2 - cornerRadius, -handHeight / 2);
+                ctx.arcTo(handWidth / 2, -handHeight / 2, handWidth / 2, -handHeight / 2 + cornerRadius, cornerRadius);
+                ctx.lineTo(handWidth / 2, handHeight / 2 - cornerRadius);
+                ctx.arcTo(handWidth / 2, handHeight / 2, handWidth / 2 - cornerRadius, handHeight / 2, cornerRadius);
+                ctx.lineTo(-handWidth / 2 + cornerRadius, handHeight / 2);
+                ctx.arcTo(-handWidth / 2, handHeight / 2, -handWidth / 2, handHeight / 2 - cornerRadius, cornerRadius);
+                ctx.lineTo(-handWidth / 2, -handHeight / 2 + cornerRadius);
+                ctx.arcTo(-handWidth / 2, -handHeight / 2, -handWidth / 2 + cornerRadius, -handHeight / 2, cornerRadius);
+                ctx.closePath();
+                ctx.fill();
                 ctx.stroke();
+                
+                ctx.strokeStyle = `rgba(210, 100, 130, ${alpha * 0.45})`;
+                ctx.lineWidth = 0.7;
+                for (let i = -1; i <= 1; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(-handWidth / 2 + 4, i * handHeight / 6);
+                    ctx.lineTo(handWidth / 2 - 4, i * handHeight / 6);
+                    ctx.stroke();
+                }
+                
+                ctx.restore();
+            } else if (e.type === 'slap_particle') {
+                ctx.save();
+                ctx.globalAlpha = e.life / e.maxLife;
+                ctx.fillStyle = '#ffb6c1';
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2);
+                ctx.fill();
                 ctx.restore();
             } else if (e.type === 'shockwave') {
                 ctx.save();

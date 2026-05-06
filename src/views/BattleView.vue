@@ -16,9 +16,9 @@
             </h2>
             <div class="hp-bar-container">
               <div class="hp-bar" :style="{ width: Math.max(0, (store.battleState.p1.hp / store.battleState.p1.maxHp) * 100) + '%' }"></div>
+              <span class="hp-bar-text">{{ Math.ceil(store.battleState.p1.hp) }}</span>
             </div>
             <div class="stats-row">
-              <p class="hp-text">HP: <span>{{ Math.floor(store.battleState.p1.hp) }}</span></p>
               <p class="speed-text">移速: <span>{{ store.battleState.p1.speed.toFixed(1) }}</span><span v-if="store.battleState.p1.spinSpeed !== null"> | 转速: <span>{{ store.battleState.p1.spinSpeed.toFixed(1) }}</span></span></p>
             </div>
             <div class="buffs">
@@ -50,9 +50,9 @@
             </h2>
             <div class="hp-bar-container">
               <div class="hp-bar" :style="{ width: Math.max(0, (store.battleState.p2.hp / store.battleState.p2.maxHp) * 100) + '%' }"></div>
+              <span class="hp-bar-text">{{ Math.ceil(store.battleState.p2.hp) }}</span>
             </div>
             <div class="stats-row">
-              <p class="hp-text">HP: <span>{{ Math.floor(store.battleState.p2.hp) }}</span></p>
               <p class="speed-text">移速: <span>{{ store.battleState.p2.speed.toFixed(1) }}</span><span v-if="store.battleState.p2.spinSpeed !== null"> | 转速: <span>{{ store.battleState.p2.spinSpeed.toFixed(1) }}</span></span></p>
             </div>
             <div class="buffs">
@@ -144,20 +144,10 @@ import { T1000 } from '@/game/entities/heroes/T1000.js';
 import { OnePunchMan } from '@/game/entities/heroes/OnePunchMan.js';
 import { QueenS } from '@/game/entities/heroes/QueenS.js';
 import { BattleRecordManager } from '@/utils/BattleRecordManager.js';
+import { heroConfig } from '@/config/heroes.js';
 
 // 将 heroPool 抽离出来供回放使用
-const heroPool = [
-  { id: 'vampire', class: 'Vampire', skill: { name: '尖牙吸附', desc: '碰撞时黏附敌人持续吸血并减速，残血时吸血效率翻倍。觉醒时发射多枚追踪尖牙。' }, traits: '狡诈、嗜血' },
-  { id: 'spider', class: 'Spider', skill: { name: '蛛丝束缚', desc: '周期性向周围粘黏蛛网，触碰后造成减速控制。觉醒时获得无敌并暴增移速。' }, traits: '敏捷、阴险' },
-  { id: 'berserker', class: 'Berserker', skill: { name: '旋风斩', desc: '挥舞双斧旋转，斧刃造成全额伤害，斧柄造成半额伤害，附带减速。扣血将转换为属性提升。觉醒时双斧攻击范围、转速与移速暴增。' }, traits: '狂暴、鲁莽' },
-  { id: 'gambler', class: 'Gambler', skill: { name: '命运骰子', desc: '投掷骰子发射同点数追踪卡牌，连续同点数可倍增卡牌量。点数6额外附带减速。' }, traits: '莫测、高风险' },
-  { id: 'malaoshi', class: 'MaLaoshi', skill: { name: '混元太极', desc: '周期发射松果糖豆。阶段性掉血时释放全图混元劲击退敌人。觉醒触发闪电五连鞭，必中且高额减速。' }, traits: '宗师、化劲' },
-  { id: 'huaqiang', class: 'HuaQiang', skill: { name: '劈瓜刀法', desc: '发射贯穿砍刀(携带40%概率破障)，撞墙后变为场地陷阱。觉醒时释放磁吸立场，瞬间回收全场砍刀造成大量伤害。' }, traits: '凶狠、压制' },
-  { id: 'van', class: 'Van', skill: { name: '给佬攻击', desc: '脱战3秒后移速翻倍(急色)。碰撞触发瞬移背刺，将敌方压制并造成连续打桩伤害。觉醒生成全屏力场，触发强化版深度压制。' }, traits: '狂热、执念' },
-  { id: 'sunwukong', class: 'SunWukong', skill: { name: '如意金箍棒', desc: '金箍棒环绕周身旋转，每4秒变长变粗一次造成更高伤害。受击时20%概率触发金刚不坏，免疫本次及后续连段伤害。觉醒大闹天宫，分出三个分身弹射全场，并同步释放超大范围的强化金箍棒。' }, traits: '齐天大圣、金刚不坏' },
-  { id: 'onepunchman', class: 'OnePunchMan', skill: { name: '普通一拳', desc: '受到敌方伤害时积累怒气(每次2%~10%)，满怒释放普通一拳，沿途破除飞行物与陷阱，命中直接秒杀。觉醒：认真一拳，立刻全屏清场并瞬移至敌方身前触发秒杀。' }, traits: '无敌、秒杀' },
-  { id: 't1000', class: 'T1000', skill: { name: '变形刺刃', desc: '每2.5秒伸出刺刃攻击附加流血。受击时20%概率液化自愈(受击伤害减半，同时回复5点血量)，随后生成液态碎片。碎片命中叠加标记触发暴击伤害，未命中化为场地陷阱。觉醒时激活所有陷阱碎片进行追踪打击并添加标记。' }, traits: '液态金属、变形穿刺' }
-];
+const heroPool = heroConfig;
 
 const classes = {
   'Vampire': Vampire,
@@ -498,8 +488,8 @@ const handleMechanicDblClick = (playerIndex) => {
 }
 
 .speed-text {
-  margin: 5px 0;
-  font-size: 1rem;
+  margin: 2px 0;
+  font-size: 0.8rem;
   color: #aaa;
 }
 
@@ -517,9 +507,6 @@ const handleMechanicDblClick = (playerIndex) => {
   z-index: 20;
 }
 
-.player-info.right .buffs {
-  justify-content: flex-end;
-}
 
 .buff-icon {
   padding: 2px 6px;

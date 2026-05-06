@@ -96,6 +96,8 @@ export class Game {
         this.globalFreezeTime = 0;
         this.awakenCenter = null;
         this.awakenRadius = 0;
+        this.screenShakeTimer = 0;
+        this.screenShakeIntensity = 0;
         
         if (this.onStateUpdate) {
             this.onStateUpdate(this.p1, this.p2);
@@ -259,6 +261,10 @@ export class Game {
         if (this.onStateUpdate) {
             this.onStateUpdate(this.p1, this.p2);
         }
+        
+        if (this.screenShakeTimer > 0) {
+            this.screenShakeTimer -= dt;
+        }
     }
     
     updateParticles(dt) {
@@ -286,6 +292,13 @@ export class Game {
         if (this.scale) {
             this.ctx.scale(this.scale, this.scale);
         }
+        
+        if (this.screenShakeTimer > 0) {
+            const sx = (Math.random() - 0.5) * 2 * this.screenShakeIntensity;
+            const sy = (Math.random() - 0.5) * 2 * this.screenShakeIntensity;
+            this.ctx.translate(sx, sy);
+        }
+        
         this.renderer.clear();
         
         // 绘制竞技场背景/网格
