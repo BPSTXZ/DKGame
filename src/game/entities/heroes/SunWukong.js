@@ -59,8 +59,14 @@ export class SunWukong extends Hero {
 
     playAwakenAudio() {
         if (this.awakenAudioSrc) {
-            const snd = new Audio(this.awakenAudioSrc);
-            snd.play().catch(e => console.warn('SunWukong awaken audio play failed:', e));
+            this.awakenAudio = new Audio(this.awakenAudioSrc);
+            this.awakenAudio.play().catch(e => console.warn('SunWukong awaken audio play failed:', e));
+        }
+    }
+
+    stopAwakenAudio() {
+        if (this.awakenAudio) {
+            this.awakenAudio.pause();
         }
     }
     

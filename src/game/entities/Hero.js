@@ -210,7 +210,8 @@ export class Hero {
         this.updateSpecific(dt);
         
         // 确保各种直接操作血量（如吸血）导致的归零能够触发死亡
-        if (this.hp <= 0 && !this.isDead) {
+        if (this.hp <= 0.001 && !this.isDead) {
+            this.hp = 0;
             this.die();
         }
     }
@@ -256,7 +257,7 @@ export class Hero {
         const finalAmount = amount * (1 - reduction);
         
         this.hp -= finalAmount;
-        if (this.hp < 0) this.hp = 0;
+        if (this.hp < 0.001) this.hp = 0;
         
         this.damageBlinkTime = 0.2; // 开启闪烁
         
@@ -289,7 +290,8 @@ export class Hero {
             });
         }
 
-        if (this.hp <= 0) {
+        if (this.hp <= 0.001) { // 考虑浮点数精度，当血量非常接近0时就判定死亡
+            this.hp = 0;
             this.die();
         }
     }
@@ -314,8 +316,10 @@ export class Hero {
         this.hp = 0;
         this.deathTimer = 1.0; // 重置死亡动画时长为1秒
         
-        // 停止所有正在播放的专属音效
+        // 停止所有正在播放的专属音效 (包括普通技能、连招等)
         this.stopAllAudio();
+        // 立即中断可能正在播放的觉醒音效
+        this.stopAwakenAudio();
         
         // 生成死亡散开粒子
         for(let i=0; i<30; i++) {
@@ -331,6 +335,11 @@ export class Hero {
      * 停止所有音效（由子类覆盖具体实现）
      */
     stopAllAudio() {}
+    
+    /**
+     * 停止觉醒音效（由子类覆盖具体实现）
+     */
+    stopAwakenAudio() {}
     
     /**
      * 触发觉醒状态
@@ -355,11 +364,26 @@ export class Hero {
     
     /**
      * 播放胜利音效（由子类覆盖）
+     * 返回音效的时长（秒），用于引擎控制后续彩带动画的播放时机
      */
-    playVictoryAudio() {}
+    playVictoryAudio() {
+        return 0;
+    }
     
     // 子类钩子函数
     onAwaken() {}
+    
+    /**
+     * 当英雄赢得比赛时的即时回调
+     * 可用于清理持续性技能特效、终止连招状态等
+     */
+    onVictory() {}
+    
+    /**
+     * 游戏结束且自身胜利后，每帧调用的更新逻辑
+     * 可用于维持自身的退场或胜利动画特效
+     */
+    updateVictorious(dt) {}
     
     /**
      * 添加状态 Buff

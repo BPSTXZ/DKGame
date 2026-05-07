@@ -287,6 +287,9 @@ export class Gambler extends Hero {
             this.victoryAudio.pause();
             this.victoryAudio.currentTime = 0;
         }
+    }
+    
+    stopAwakenAudio() {
         if (this.currentAwakenAudioObj) {
             this.currentAwakenAudioObj.pause();
             this.currentAwakenAudioObj.currentTime = 0;

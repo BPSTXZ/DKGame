@@ -97,8 +97,8 @@ export const heroConfig = [
     quote: '"乖乖臣服于我吧。"',
     traits: '控制、爆发 | 连续鞭笞与牵引',
     stats: 'HP: 100 | 移速: 65',
-    skill: { name: '赏赐耳光', desc: '敌方靠近时将其控在身前，连续扇6次耳光后推开。若连续3秒未触发，则甩出狗链将敌方强行拉回并掌掴。觉醒：爱的惩戒，掷出追踪必中狗链，拉回后进行6次高伤害鞭笞。' },
-    audioSrc: null,
+    skill: { name: '赏赐耳光', desc: '敌方靠近时将其控在身前，连续扇8次耳光后推开。若连续3秒未触发，则甩出狗链将敌方强行拉回并掌掴。觉醒：爱的惩戒，掷出追踪必中狗链，拉至稍远身位后进行6次狂暴鞭笞。' },
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/QueenS/选择.mp3',
     isSpecial: true
   },
   {

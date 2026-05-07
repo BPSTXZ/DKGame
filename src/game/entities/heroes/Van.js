@@ -63,6 +63,13 @@ export class Van extends Hero {
         }
     }
     
+    stopAwakenAudio() {
+        if (this.awakenAudio) {
+            this.awakenAudio.pause();
+            this.awakenAudio.currentTime = 0;
+        }
+    }
+    
     applyPassives() {
         super.applyPassives();
         

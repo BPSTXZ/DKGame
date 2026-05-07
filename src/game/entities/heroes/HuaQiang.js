@@ -70,13 +70,16 @@ export class HuaQiang extends Hero {
             this.victoryAudio.pause();
             this.victoryAudio.currentTime = 0;
         }
-        if (this.magnetAudio) {
-            this.magnetAudio.pause();
-            this.magnetAudio.currentTime = 0;
-        }
         if (this.barrierBreakAudio) {
             this.barrierBreakAudio.pause();
             this.barrierBreakAudio.currentTime = 0;
+        }
+    }
+    
+    stopAwakenAudio() {
+        if (this.magnetAudio) {
+            this.magnetAudio.pause();
+            this.magnetAudio.currentTime = 0;
         }
     }
     

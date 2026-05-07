@@ -606,4 +606,12 @@ export class T1000 extends Hero {
             ctx.restore();
         }
     }
+    
+    stopAllAudio() {
+        // T-1000 目前好像没有定义专属音效，如果后续加了可以在这里切断
+    }
+    
+    stopAwakenAudio() {
+        // 停止 T-1000 觉醒音效
+    }
 }

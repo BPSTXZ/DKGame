@@ -151,15 +151,11 @@ export class MaLaoshi extends Hero {
         
         // ====== 觉醒：闪电五连鞭 ======
         if (this.isAwakened && !this.isSuppressed) {
-            if (this.enemy && this.enemy.isDead) {
-                this.isAwakened = false; // 敌方死亡立即停止鞭击
-                this.isWhipping = false;
+            // 判断是否应该停止鞭击：当敌方死亡，并且当前这鞭的动画也播放完毕时才结束
+            if (this.enemy && this.enemy.isDead && !this.isWhipping) {
+                this.isAwakened = false;
                 
-                // 中断连招音效并清空队列
-                if (this.currentWhipAudio) {
-                    this.currentWhipAudio.pause();
-                    this.currentWhipAudio = null;
-                }
+                // 不在这里强制切断 currentWhipAudio，让它自然播放完，之后外部的 game.js 会检测战斗结束并调用胜利音效
             } else {
                 this.whipTimer -= dt;
                 
@@ -189,7 +185,8 @@ export class MaLaoshi extends Hero {
                     }
                 }
                 
-                if (this.whipTimer <= 0 && this.isAwakened) {
+                // 注意：如果敌方已经死亡，就不再触发下一鞭了
+                if (this.whipTimer <= 0 && this.isAwakened && (!this.enemy || !this.enemy.isDead)) {
                     this.triggerLightningWhip();
                     this.whipCurrentCount++;
                     this.whipTimer = this.whipInterval;
@@ -410,6 +407,11 @@ export class MaLaoshi extends Hero {
     }
 
     stopAllAudio() {
+        // 马老师没有其他的持续性长音效（如吸血鬼的吸血、S女王的挥鞭）需要被外层强制打断。
+        // 松果糖豆和混元劲的音效都是短促的单次播放（fire-and-forget），不需要追踪和暂停。
+    }
+
+    stopAwakenAudio() {
         if (this.currentWhipAudio) {
             this.currentWhipAudio.pause();
             this.currentWhipAudio.currentTime = 0;

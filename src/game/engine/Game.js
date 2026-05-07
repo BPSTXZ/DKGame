@@ -17,7 +17,7 @@ function mulberry32(a) {
 }
 
 export class Game {
-    constructor(canvas, p1Class, p2Class, isTraining = false, onStateUpdate, onGameOver, onVictory, seed = Date.now(), isReplay = false, p1ClassName = '', p2ClassName = '') {
+    constructor(canvas, p1Class, p2Class, isTraining = false, onStateUpdate, onGameOver, onVictory, seed = Date.now(), isReplay = false, p1ClassName = '', p2ClassName = '', onCelebration = null) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         
@@ -29,6 +29,7 @@ export class Game {
         this.onStateUpdate = onStateUpdate;
         this.onGameOver = onGameOver;
         this.onVictory = onVictory;
+        this.onCelebration = onCelebration;
         
         this.p1Class = p1Class;
         this.p2Class = p2Class;
@@ -196,11 +197,16 @@ export class Game {
     update(dt) {
         if (this.isPaused) return;
         
-        // 如果游戏结束，则停止英雄逻辑更新和碰撞，但保留退场动画
+        // 如果游戏结束，则停止英雄主体逻辑更新和碰撞，但保留退场动画及胜利者的视觉特效更新
         if (this.isGameOver) {
             this.entities.forEach(e => {
                 if (e.isDead && e.deathTimer > 0) {
                     e.deathTimer -= dt; // 仅更新死亡动画计时器
+                } else if (!e.isDead && e.isVictorious) {
+                    // 让胜利者继续更新其内部的视觉特效或清理逻辑
+                    if (typeof e.updateVictorious === 'function') {
+                        e.updateVictorious(dt);
+                    }
                 }
             });
             this.updateParticles(dt);
@@ -420,36 +426,68 @@ export class Game {
             if (winner !== 'draw') {
                 winner.isVictorious = true;
                 
-                // 生成连续的彩带喷发效果
-                let confettiCount = 0;
-                const confettiInterval = setInterval(() => {
-                    for(let i=0; i<15; i++) {
-                        this.addParticle({
-                            x: this.width/2 + (Math.random() - 0.5) * 200, 
-                            y: this.height, // 从底部喷出
-                            vx: (Math.random() - 0.5) * 800, 
-                            vy: -Math.random() * 800 - 300, // 向上初速度
-                            life: 3 + Math.random()*2, 
-                            color: `hsl(${Math.random()*360}, 100%, 50%)`, 
-                            size: Math.random() * 8 + 4,
-                            gravity: 400,
-                            rotationSpeed: (Math.random() - 0.5) * 10 // 添加旋转效果的参数(如果需要)
-                        });
-                    }
-                    confettiCount++;
-                    if (confettiCount > 20) { // 持续喷发一段时间
-                        clearInterval(confettiInterval);
-                    }
-                }, 100);
-            }
-            
-            // 延迟2秒显示胜利结算 UI，让玩家有时间欣赏胜利和死亡动画
-            setTimeout(() => {
-                if (this.onGameOver) {
-                    this.onGameOver(winner === 'draw' ? '平局！' : `${winner.name} Wins！`);
+                // 触发胜利者的即时清理逻辑（如立刻中断正在释放的技能、特效）
+                if (typeof winner.onVictory === 'function') {
+                    winner.onVictory();
                 }
-            }, 2500);
+                
+                // 为了让英雄在释放技能击杀对手时能自然播放完当前的技能音效，延迟播放胜利音效
+                // 等待0.5秒后再播放胜利宣言，避免突兀打断当前的打击感
+                let audioDuration = 0;
+                setTimeout(() => {
+                    if (winner.playVictoryAudio) {
+                        audioDuration = winner.playVictoryAudio() || 0;
+                    }
+                    
+                    // 胜利音效播放完毕（或没有音效）后，触发彩带和喝彩流程
+                    setTimeout(() => {
+                        this.triggerVictoryCelebration();
+                        if (this.onCelebration) {
+                            this.onCelebration();
+                        }
+                    }, audioDuration * 1000);
+                }, 500);
+            } else {
+                // 平局直接触发UI，无彩带
+                setTimeout(() => {
+                    if (this.onGameOver) {
+                        this.onGameOver('平局！');
+                    }
+                }, 2500);
+            }
         }
+    }
+    
+    triggerVictoryCelebration() {
+        // 生成连续的彩带喷发效果
+        let confettiCount = 0;
+        const confettiInterval = setInterval(() => {
+            for(let i=0; i<15; i++) {
+                this.addParticle({
+                    x: this.width/2 + (Math.random() - 0.5) * 200, 
+                    y: this.height, // 从底部喷出
+                    vx: (Math.random() - 0.5) * 800, 
+                    vy: -Math.random() * 800 - 300, // 向上初速度
+                    life: 3 + Math.random()*2, 
+                    color: `hsl(${Math.random()*360}, 100%, 50%)`, 
+                    size: Math.random() * 8 + 4,
+                    gravity: 400,
+                    rotationSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+            confettiCount++;
+            if (confettiCount > 20) { // 持续喷发一段时间
+                clearInterval(confettiInterval);
+            }
+        }, 100);
+        
+        // 延迟显示胜利结算 UI，让玩家有时间欣赏彩带和胜利状态
+        setTimeout(() => {
+            if (this.onGameOver) {
+                const winner = this.p1.isVictorious ? this.p1 : this.p2;
+                this.onGameOver(`${winner.name} Wins！`);
+            }
+        }, 2000);
     }
 }
 

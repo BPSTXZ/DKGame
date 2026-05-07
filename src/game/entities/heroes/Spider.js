@@ -210,6 +210,10 @@ export class Spider extends Hero {
         }
     }
     
+    stopAwakenAudio() {
+        // 如果有长段觉醒语音可以在这里暂停
+    }
+    
     draw(ctx) {
         // Draw webs before hero body
         if (!this.isDead) {

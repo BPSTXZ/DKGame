@@ -487,6 +487,13 @@ export class OnePunchMan extends Hero {
         }
     }
 
+    stopAwakenAudio() {
+        if (this.awakenAudio) {
+            this.awakenAudio.pause();
+            this.awakenAudio.currentTime = 0;
+        }
+    }
+
     drawBody(ctx) {
         super.drawBody(ctx);
         

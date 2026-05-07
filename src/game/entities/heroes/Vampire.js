@@ -294,13 +294,16 @@ export class Vampire extends Hero {
             this.suckAudio.pause();
             this.suckAudio.currentTime = 0;
         }
-        if (this.laughAudio) {
-            this.laughAudio.pause();
-            this.laughAudio.currentTime = 0;
-        }
         if (this.biteAudio) {
             this.biteAudio.pause();
             this.biteAudio.currentTime = 0;
+        }
+    }
+    
+    stopAwakenAudio() {
+        if (this.laughAudio) {
+            this.laughAudio.pause();
+            this.laughAudio.currentTime = 0;
         }
     }
     

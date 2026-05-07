@@ -331,21 +331,21 @@ onMounted(async () => {
     },
     (winner) => {
       if (gameInstance) {
-        if (gameInstance.p1) gameInstance.p1.stopAllAudio();
-        if (gameInstance.p2) gameInstance.p2.stopAllAudio();
+        // 游戏结束时，立即停止战败方的所有音效
+        // 胜利方的音效不停止，让其自然播放完
+        if (gameInstance.p1 && gameInstance.p1 !== winner) gameInstance.p1.stopAllAudio();
+        if (gameInstance.p2 && gameInstance.p2 !== winner) gameInstance.p2.stopAllAudio();
       }
-      
-      if (winner && winner !== 'draw' && winner.playVictoryAudio) {
-        winner.playVictoryAudio();
-      }
-      
-      cheerAudio.currentTime = 0;
-      cheerAudio.play().catch(e => console.warn('Cheer audio play failed:', e));
     },
     seed,
     isReplayMode.value,
     store.p1Selection.class,
-    store.p2Selection.class
+    store.p2Selection.class,
+    // onCelebration 回调：在英雄胜利音效播放完毕后触发
+    () => {
+      cheerAudio.currentTime = 0;
+      cheerAudio.play().catch(e => console.warn('Cheer audio play failed:', e));
+    }
   );
 
   readParamsFromGame();
