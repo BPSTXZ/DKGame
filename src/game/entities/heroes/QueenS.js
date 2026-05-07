@@ -22,7 +22,7 @@ export class QueenS extends Hero {
         // 技能二（小狗狗给我过来）参数
         this.timeSinceLastSlap = 0;
         
-        // 觉醒（爱的惩戒）参数
+        // 觉醒（鞭笞惩戒）参数
         this.whipInterval = 0.28;
         this.whipDamage = 5;
         this.whipCount = 0;
@@ -241,6 +241,11 @@ export class QueenS extends Hero {
         this.slapCooldown = 2.0;
         this.timeSinceLastSlap = 0;
         this.absoluteControl = false;
+        
+        // 如果是由链条触发的耳光，结束时一起收回链条
+        if (this.chain.active) {
+            this.chain.active = false;
+        }
 
         if (this.enemy && !this.enemy.isDead) {
             // 清除敌方的头部扭转效果
@@ -330,7 +335,7 @@ export class QueenS extends Hero {
                     const engageTotalDist = this.radius + this.enemy.radius + this.engageDistance;
                     if (dist <= engageTotalDist) {
                         this.startSlapping();
-                    } else if (this.timeSinceLastSlap >= 3.0) {
+                    } else if (this.timeSinceLastSlap >= 2.0) {
                         this.startChain('normal');
                     }
                 }
@@ -606,10 +611,11 @@ export class QueenS extends Hero {
         
         if (dist <= targetDist) {
             // 拉到位
-            this.chain.active = false;
             if (this.state === 'awaken_chain_pulling') {
+                this.chain.active = false;
                 this.startWhipping();
             } else {
+                // 普通狗链拉回后，维持 chain.active 为 true，保留视觉连结
                 this.startSlapping(true); // 传入 true 表示是从狗链拉过来的，附加绝对强控
             }
         } else {
@@ -849,6 +855,24 @@ export class QueenS extends Hero {
                 ctrlY = this.y + Math.sin(lagAngle) * ctrlRadius;
                 
                 curveLen = orbitRadius * 1.2;
+            } else if (this.state === 'slapping') {
+                // 在扇耳光阶段，链条紧绷在女王和被控制的敌方之间
+                if (this.enemy && !this.enemy.isDead) {
+                    endX = this.enemy.x;
+                    endY = this.enemy.y;
+                    curveLen = Math.hypot(endX - startX, endY - startY);
+                    ctrlX = (startX + endX) / 2;
+                    ctrlY = (startY + endY) / 2;
+                    
+                    // 让链条在两人之间有轻微的下垂弧度
+                    const perpAngle = Math.atan2(endY - startY, endX - startX) + Math.PI / 2;
+                    ctrlX += Math.cos(perpAngle) * 15;
+                    ctrlY += Math.sin(perpAngle) * 15;
+                } else {
+                    this.chain.active = false;
+                    ctx.restore();
+                    return;
+                }
             } else {
                 endX = this.x + Math.cos(this.chain.throwAngle) * this.chain.length;
                 endY = this.y + Math.sin(this.chain.throwAngle) * this.chain.length;
