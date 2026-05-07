@@ -359,6 +359,10 @@ export class QueenS extends Hero {
             case 'awaken_chain_pulling':
                 this.updateChainPulling(dt);
                 break;
+                
+            case 'chain_delay':
+                this.updateChainDelay(dt);
+                break;
 
             case 'awaken_whipping':
                 this.updateWhipping(dt);
@@ -616,7 +620,10 @@ export class QueenS extends Hero {
                 this.startWhipping();
             } else {
                 // 普通狗链拉回后，维持 chain.active 为 true，保留视觉连结
-                this.startSlapping(true); // 传入 true 表示是从狗链拉过来的，附加绝对强控
+                this.state = 'chain_delay';
+                this.chainDelayTimer = 1.5;
+                this.chainDamageTickTimer = 0; // 新增伤害计时器
+                this.absoluteControl = true; // 在 delay 期间就赋予绝对强控
             }
         } else {
             // 将敌方拉至身前
@@ -627,6 +634,49 @@ export class QueenS extends Hero {
             // 更新链条视觉长度
             this.chain.length = dist;
             this.chain.throwAngle = Math.atan2(-dy, -dx);
+        }
+    }
+    
+    updateChainDelay(dt) {
+        if (!this.enemy || this.enemy.isDead) {
+            this.state = 'normal';
+            this.chain.active = false;
+            return;
+        }
+
+        // 强行锁住敌方位置
+        const angle = this.forceEnemyPosition(this.lockDistance);
+        if (angle === false) {
+            this.state = 'normal';
+            this.chain.active = false;
+            return;
+        }
+        
+        // 更新链条视觉
+        const dx = this.x - this.enemy.x;
+        const dy = this.y - this.enemy.y;
+        this.chain.length = Math.hypot(dx, dy);
+        this.chain.throwAngle = Math.atan2(-dy, -dx);
+        
+        // 每 0.5 秒造成 1 点伤害
+        this.chainDamageTickTimer += dt;
+        if (this.chainDamageTickTimer >= 0.5) {
+            this.chainDamageTickTimer -= 0.5;
+            this.enemy.takeDamage(1 * this.damageMultiplier, this.x, this.y);
+            
+            // 简单的受击形变与颜色反馈
+            this.enemy.visualHitTimer = 0.1;
+            
+            if (this.enemy.isDead) {
+                this.state = 'normal';
+                this.chain.active = false;
+                return;
+            }
+        }
+
+        this.chainDelayTimer -= dt;
+        if (this.chainDelayTimer <= 0) {
+            this.startSlapping(true); // 传入 true 表示是从狗链拉过来的，附加绝对强控
         }
     }
 
@@ -855,8 +905,8 @@ export class QueenS extends Hero {
                 ctrlY = this.y + Math.sin(lagAngle) * ctrlRadius;
                 
                 curveLen = orbitRadius * 1.2;
-            } else if (this.state === 'slapping') {
-                // 在扇耳光阶段，链条紧绷在女王和被控制的敌方之间
+            } else if (this.state === 'slapping' || this.state === 'chain_delay') {
+                // 在扇耳光阶段或等待阶段，链条紧绷在女王和被控制的敌方之间
                 if (this.enemy && !this.enemy.isDead) {
                     endX = this.enemy.x;
                     endY = this.enemy.y;
