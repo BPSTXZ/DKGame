@@ -143,6 +143,7 @@ import { SunWukong } from '@/game/entities/heroes/SunWukong.js';
 import { T1000 } from '@/game/entities/heroes/T1000.js';
 import { OnePunchMan } from '@/game/entities/heroes/OnePunchMan.js';
 import { QueenS } from '@/game/entities/heroes/QueenS.js';
+import { DragonKing } from '@/game/entities/heroes/DragonKing.js';
 import { BattleRecordManager } from '@/utils/BattleRecordManager.js';
 import { heroConfig } from '@/config/heroes.js';
 
@@ -160,7 +161,8 @@ const classes = {
   'SunWukong': SunWukong,
   'T1000': T1000,
   'OnePunchMan': OnePunchMan,
-  'QueenS': QueenS
+  'QueenS': QueenS,
+  'DragonKing': DragonKing
 };
 
 const store = useGameStore();

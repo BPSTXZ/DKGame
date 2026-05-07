@@ -102,6 +102,16 @@ export const heroConfig = [
     isSpecial: true
   },
   {
+    id: 'dragonking', name: '龙王赘婿', class: 'DragonKing',
+    iconColor: '#002b36',
+    quote: '"三年之期已到，恭迎龙王回归！"',
+    traits: '隐忍、爆发 | 弹射消耗与觉醒秒杀',
+    stats: 'HP: 100 | 移速: 60',
+    skill: { name: '太乙神针', desc: '每2秒发射神针，命中敌方造成伤害，命中自身恢复生命并加速。受击积攒隐忍值，满100触发【三年之期】永久强化。觉醒：真太乙神针，五针齐发，各自附带灼烧、冻结、减速、连击和强效自疗。' },
+    audioSrc: null,
+    isSpecial: true
+  },
+  {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',
     quote: '"神秘的力量正在苏醒..."',
     traits: '未知 | ???',
