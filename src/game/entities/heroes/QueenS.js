@@ -531,10 +531,18 @@ export class QueenS extends Hero {
             // 觉醒状态必定追踪
             this.chain.targetEnemy = this.state === 'awaken_chain_throwing';
             
-            // 普通状态下，如果对阵的是近战缠斗型英雄，有 50% 概率触发追踪必中
-            if (!this.chain.targetEnemy && this.enemy && (this.enemy.name === '吸血鬼' || this.enemy.name === '成都之心' || this.enemy.name === '狂战士')) {
-                if (Math.random() < 0.5) {
-                    this.chain.targetEnemy = true;
+            // 普通状态下的必中概率逻辑
+            if (!this.chain.targetEnemy && this.enemy) {
+                if (this.enemy.name === '吸血鬼' || this.enemy.name === '成都之心' || this.enemy.name === '狂战士' || this.enemy.name === '猴哥') {
+                    // 近战缠斗型英雄：50% 必中
+                    if (Math.random() < 0.5) {
+                        this.chain.targetEnemy = true;
+                    }
+                } else {
+                    // 其他英雄：20% 必中
+                    if (Math.random() < 0.2) {
+                        this.chain.targetEnemy = true;
+                    }
                 }
             }
             
