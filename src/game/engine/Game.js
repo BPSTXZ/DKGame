@@ -426,27 +426,58 @@ export class Game {
             if (winner !== 'draw') {
                 winner.isVictorious = true;
                 
+                // 停止失败者可能残留的所有音效
+                const loser = winner === this.p1 ? this.p2 : this.p1;
+                if (typeof loser.stopAllAudio === 'function') {
+                    loser.stopAllAudio();
+                }
+                if (typeof loser.stopAwakenAudio === 'function') {
+                    loser.stopAwakenAudio();
+                }
+
+                // 停止胜利者自身的普通音效，确保只留胜利语音
+                if (typeof winner.stopAllAudio === 'function') {
+                    winner.stopAllAudio();
+                }
+                if (typeof winner.stopAwakenAudio === 'function') {
+                    winner.stopAwakenAudio();
+                }
+                
                 // 触发胜利者的即时清理逻辑（如立刻中断正在释放的技能、特效）
                 if (typeof winner.onVictory === 'function') {
                     winner.onVictory();
                 }
                 
-                // 为了让英雄在释放技能击杀对手时能自然播放完当前的技能音效，延迟播放胜利音效
-                // 等待0.5秒后再播放胜利宣言，避免突兀打断当前的打击感
+                // 播放胜利音效的逻辑
+                // 如果英雄拥有 immediateVictoryAudio 标记（如 S女王），则立即播放胜利语音，无需等待 0.5 秒
                 let audioDuration = 0;
-                setTimeout(() => {
+                if (winner.immediateVictoryAudio) {
                     if (winner.playVictoryAudio) {
                         audioDuration = winner.playVictoryAudio() || 0;
                     }
-                    
-                    // 胜利音效播放完毕（或没有音效）后，触发彩带和喝彩流程
                     setTimeout(() => {
                         this.triggerVictoryCelebration();
                         if (this.onCelebration) {
                             this.onCelebration();
                         }
                     }, audioDuration * 1000);
-                }, 500);
+                } else {
+                    // 为了让英雄在释放技能击杀对手时能自然播放完当前的技能音效，延迟播放胜利音效
+                    // 等待0.5秒后再播放胜利宣言，避免突兀打断当前的打击感
+                    setTimeout(() => {
+                        if (winner.playVictoryAudio) {
+                            audioDuration = winner.playVictoryAudio() || 0;
+                        }
+                        
+                        // 胜利音效播放完毕（或没有音效）后，触发彩带和喝彩流程
+                        setTimeout(() => {
+                            this.triggerVictoryCelebration();
+                            if (this.onCelebration) {
+                                this.onCelebration();
+                            }
+                        }, audioDuration * 1000);
+                    }, 500);
+                }
             } else {
                 // 平局直接触发UI，无彩带
                 setTimeout(() => {

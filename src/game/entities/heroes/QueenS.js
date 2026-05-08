@@ -28,6 +28,9 @@ export class QueenS extends Hero {
         this.whipCount = 0;
         this.whipTimer = 0;
         
+        // 特殊标记：胜利时立即播放语音，不延迟
+        this.immediateVictoryAudio = true;
+        
         // 状态机
         this.state = 'normal';
         
@@ -405,6 +408,8 @@ export class QueenS extends Hero {
             if (this.enemy.isGayAttacking && typeof this.enemy.endGayAttack === 'function') {
                 this.enemy.endGayAttack(true);
             }
+            // 当进入绝对强控时，必须清除掉之前可能遗留的反制标记，否则会导致强控失效
+            this.isCountered = false;
         }
         
         // 如果之前被反制过，且现在反制结束（如吸血时间到并弹开），则女王的强控也应顺势中断，不再强行拉回
@@ -522,7 +527,16 @@ export class QueenS extends Hero {
             this.state = this.state === 'awaken_chain_charging' ? 'awaken_chain_throwing' : 'chain_throwing';
             this.chain.length = 0;
             this.chain.throwAngle = this.enemy ? Math.atan2(this.enemy.y - this.y, this.enemy.x - this.x) : 0;
+            
+            // 觉醒状态必定追踪
             this.chain.targetEnemy = this.state === 'awaken_chain_throwing';
+            
+            // 普通状态下，如果对阵的是近战缠斗型英雄，有 50% 概率触发追踪必中
+            if (!this.chain.targetEnemy && this.enemy && (this.enemy.name === '吸血鬼' || this.enemy.name === '成都之心' || this.enemy.name === '狂战士')) {
+                if (Math.random() < 0.5) {
+                    this.chain.targetEnemy = true;
+                }
+            }
             
             if (this.game) {
                 this.game.logEvent('skill', { heroId: this.playerId, skill: this.state === 'awaken_chain_throwing' ? 'Awaken Chain Throw' : 'Chain Throw' });
@@ -546,8 +560,8 @@ export class QueenS extends Hero {
         if (this.enemy && !this.enemy.isDead) {
             const dist = Math.hypot(this.enemy.x - chainTipX, this.enemy.y - chainTipY);
             if (dist <= this.enemy.radius + 20) {
-                // 狗绳命中瞬间造成 10 点爆发伤害
-                this.enemy.takeDamage(10 * this.damageMultiplier, this.x, this.y);
+                // 狗绳命中瞬间造成 5 点爆发伤害
+                this.enemy.takeDamage(5 * this.damageMultiplier, this.x, this.y);
                 
                 if (this.enemy.isDead) {
                     this.state = 'normal';

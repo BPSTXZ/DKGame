@@ -99,7 +99,7 @@ export const heroConfig = [
     stats: 'HP: 100 | 移速: 65',
     skill: { name: '赏赐耳光', desc: '敌方靠近时将其控在身前，连续扇8次耳光后推开。若连续2秒未触发，则甩出狗链将敌方强行拉回并掌掴。觉醒：鞭笞惩戒，掷出追踪必中狗链，拉至身前进行6次狂暴鞭笞。' },
     audioSrc: import.meta.env.BASE_URL + 'assets/audio/QueenS/选择.mp3',
-    isSpecial: true
+    isSpecial: false
   },
   {
     id: 'dragonking', name: '龙王赘婿', class: 'DragonKing',
