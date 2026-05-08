@@ -16,7 +16,8 @@ export class Vampire extends Hero {
         // Vampire specific
         this.isSucking = false;
         this.suckTime = 0;
-        this.suckDuration = 2.0; // 吸附时间从 3.0 下调到 2.0
+        this.suckDuration = 3.0;
+        this.suckCooldown = 0; // 吸附技能冷却时间
 
         
         // Awaken specific
@@ -38,6 +39,11 @@ export class Vampire extends Hero {
     }
     
     updateSpecific(dt) {
+        // 更新吸附冷却时间
+        if (!this.isSucking && this.suckCooldown > 0) {
+            this.suckCooldown -= dt;
+        }
+        
         if (this.isSucking) {
             // 被动打断检测：如果敌方身上有了强制免疫状态（比如马老师的混元劲清除了 vampire_drain 或者给予了无敌），我们要主动结束吸附
             // 另外，如果任意一方被强控（如击退），也应强制结束吸附
@@ -45,6 +51,7 @@ export class Vampire extends Hero {
             if (!this.enemy || this.enemy.isDead || this.enemy.invincibleTime > 0 || this.knockbackTimer > 0 || this.enemy.knockbackTimer > 0) {
                 this.isSucking = false;
                 this.suckTime = this.suckDuration; // 强制结束
+                this.suckCooldown = 2.0; // 被打断时进入 2 秒冷却
                 // 如果是被击退或敌方死亡，我们不需要给反弹力，因为击退已经提供了位移
             } else {
                 this.suckTime += dt;
@@ -94,6 +101,7 @@ export class Vampire extends Hero {
                 if (dist > targetDist * 1.5) {
                     this.isSucking = false;
                     this.suckTime = this.suckDuration; // 强制进入断开逻辑
+                    this.suckCooldown = 2.0; // 距离拉开被打断时进入 2 秒冷却
                 } else {
                     // 根据目标距离重置吸血鬼的位置，使其完美贴合敌方边缘
                     this.x = this.enemy.x + (dx / dist) * targetDist;
@@ -108,6 +116,7 @@ export class Vampire extends Hero {
             // 结束吸血状态并给予推开力，防止分离后瞬间再次碰撞黏附
             if (this.suckTime >= this.suckDuration) {
                 this.isSucking = false;
+                this.suckCooldown = 2.0; // 正常结束时进入 2 秒冷却
                 
                 // 给双方施加一个向后的推力（反弹），保证顺利脱离
                 if (this.enemy) {
@@ -244,8 +253,8 @@ export class Vampire extends Hero {
     onHeroCollision(other) {
         if (this.isDead || other.isDead) return;
         
-        // 目标处于无敌/无法选中状态时，或者任意一方正在被击退时，无法触发吸附
-        if (other.invincibleTime > 0 || this.knockbackTimer > 0 || other.knockbackTimer > 0) return;
+        // 目标处于无敌/无法选中状态时，或者任意一方正在被击退时，或者吸附技能在冷却中，无法触发吸附
+        if (other.invincibleTime > 0 || this.knockbackTimer > 0 || other.knockbackTimer > 0 || this.suckCooldown > 0) return;
         
         // 触发吸附
         if (!this.isSucking) {
