@@ -233,7 +233,7 @@ export class Hero {
     getDamageReduction() {
         let reduction = 0;
         
-        // 压制减伤 Buff (如成都之心的给佬攻击)
+        // 压制减伤 Buff (如白袜尊者的背刺攻击)
         // 注意：原版设计是给攻击者加，这里假设如果是“压制”buff，减伤逻辑应该由受击者自己承担（即自己身上带减伤buff）
         const suppressBuff = this.buffs.find(b => b.type === 'suppress_damage');
         if (suppressBuff) {

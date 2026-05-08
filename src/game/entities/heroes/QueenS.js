@@ -434,7 +434,7 @@ export class QueenS extends Hero {
         // 补偿机制：虽然物理上没有发生重叠，但给予近战英雄反制的机会
         // 强控期间主动触发他们的碰撞判定，让他们有机会发动近身技能挣脱控制
         // 注意：如果在绝对强控期间（被狗链拉回），则剥夺此补偿机制
-        if (!this.absoluteControl && (this.enemy.name === '吸血鬼' || this.enemy.name === '成都之心')) {
+        if (!this.absoluteControl && (this.enemy.name === '吸血鬼' || this.enemy.name === '白袜尊者')) {
             if (typeof this.enemy.onHeroCollision === 'function') {
                 this.enemy.onHeroCollision(this);
             }
@@ -533,7 +533,7 @@ export class QueenS extends Hero {
             
             // 普通状态下的必中概率逻辑
             if (!this.chain.targetEnemy && this.enemy) {
-                if (this.enemy.name === '吸血鬼' || this.enemy.name === '成都之心' || this.enemy.name === '狂战士' || this.enemy.name === '猴哥') {
+                if (this.enemy.name === '吸血鬼' || this.enemy.name === '白袜尊者' || this.enemy.name === '狂战士' || this.enemy.name === '猴哥') {
                     // 近战缠斗型英雄：50% 必中
                     if (Math.random() < 0.5) {
                         this.chain.targetEnemy = true;

@@ -54,12 +54,12 @@ export const heroConfig = [
     isSpecial: false
   },
   {
-    id: 'van', name: '成都之心', class: 'Van', iconColor: '#d4b264',
-    quote: '"和我在成都的街头走一走~唔哦♂唔哦♂"',
+    id: 'van', name: '白袜尊者', class: 'Van', iconColor: '#d4b264',
+    quote: '"Do you like van♂游戏"',
     traits: '狂热、执念 | 脱战暴走与强力压制',
     stats: 'HP: 100 | 移速: 70',
-    skill: { name: '给佬攻击', desc: '脱战3秒后移速翻倍(急色)。碰撞触发瞬移背刺，将敌方压制并造成连续打桩伤害。觉醒：生成全屏力场，触发强化版深度压制。' },
-    audioSrc: import.meta.env.BASE_URL + 'assets/audio/van/成都.mp3',
+    skill: { name: '背刺攻击', desc: '脱战3秒后移速翻倍(急色)。碰撞触发瞬移背刺，将敌方压制并造成连续打桩伤害。觉醒：生成全屏力场，触发强化版深度压制。' },
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/van/选择.mp3',
     isSpecial: false
   },
   {

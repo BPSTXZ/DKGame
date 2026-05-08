@@ -310,8 +310,8 @@ export class MaLaoshi extends Hero {
         
         // 逻辑表现：对敌方造成 2 点伤害 + 击退
         if (this.enemy && !this.enemy.isDead && this.enemy.invincibleTime <= 0) {
-            // 如果敌方是“成都之心”且正在使用给佬攻击，打断他
-            if (this.enemy.name === '成都之心' && this.enemy.isGayAttacking) {
+            // 如果敌方是“白袜尊者”且正在使用背刺攻击，打断他
+            if (this.enemy.name === '白袜尊者' && this.enemy.isGayAttacking) {
                 this.enemy.interruptGayAttack();
             }
             

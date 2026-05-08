@@ -108,7 +108,7 @@ export class Physics {
             h1.onHeroCollision(h2);
             h2.onHeroCollision(h1);
             
-            // 检查是否有英雄要求忽略反弹（如 Van 处于给佬攻击状态）
+            // 检查是否有英雄要求忽略反弹（如 Van 处于背刺攻击状态）
             const ignoreBounce1 = h1.ignoreHeroCollisionBounce === true;
             const ignoreBounce2 = h2.ignoreHeroCollisionBounce === true;
             

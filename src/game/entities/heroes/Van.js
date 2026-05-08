@@ -1,20 +1,20 @@
 import { Hero } from '../Hero.js';
 
 /**
- * 成都之心 (原 Van) 英雄类
- * 特性：急色 (脱战狂暴)，给佬攻击 (瞬移背刺，压制吸附，打桩伤害)，觉醒：力场压制
+ * 白袜尊者 (原 Van) 英雄类
+ * 特性：急色 (脱战狂暴)，背刺攻击 (瞬移背刺，压制吸附，打桩伤害)，觉醒：力场压制
  */
 export class Van extends Hero {
     constructor(x, y, playerId) {
         super(x, y, playerId);
-        this.name = '成都之心';
+        this.name = '白袜尊者';
         this.color = '#d4b264'; // 外观颜色
         this.hp = 100;
         this.maxHp = 100;
         this.baseSpeed = 70; // 基础移速
         this.radius = 40; // 统一碰撞半径
         
-        // 给佬攻击相关状态
+        // 背刺攻击相关状态
         this.isGayAttacking = false;
         this.gayAttackTimer = 0; // 持续时间计时器
         this.gayAttackDuration = 3.0; // 持续 3 秒
@@ -40,7 +40,11 @@ export class Van extends Hero {
         this.desperateDuration = 3.0; // 持续 3 秒
         
         // 音效配置
-        this.grabAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/van/抓到.mp3');
+        this.grabAudios = [
+            new Audio(import.meta.env.BASE_URL + 'assets/audio/van/抓到1.mp3'),
+            new Audio(import.meta.env.BASE_URL + 'assets/audio/van/抓到2.mp3')
+        ];
+        this.urgentColorAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/van/急色.mp3');
         this.hitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/common/碰撞.mp3');
         this.awakenAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/van/觉醒.mp3');
     }
@@ -53,9 +57,15 @@ export class Van extends Hero {
     }
     
     stopAllAudio() {
-        if (this.grabAudio) {
-            this.grabAudio.pause();
-            this.grabAudio.currentTime = 0;
+        this.grabAudios.forEach(audio => {
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        });
+        if (this.urgentColorAudio) {
+            this.urgentColorAudio.pause();
+            this.urgentColorAudio.currentTime = 0;
         }
         if (this.hitAudio) {
             this.hitAudio.pause();
@@ -104,9 +114,15 @@ export class Van extends Hero {
                 // 3秒结束，重新开始无接触计时
                 this.isDesperate = false;
                 this.noContactTimer = 0;
+                
+                // 急色结束，立即暂停音效
+                if (this.urgentColorAudio) {
+                    this.urgentColorAudio.pause();
+                    this.urgentColorAudio.currentTime = 0;
+                }
             }
         } else {
-            // 不在急色状态，也不在给佬攻击中，累加无接触计时
+            // 不在急色状态，也不在背刺攻击中，累加无接触计时
             if (!this.isGayAttacking) {
                 this.noContactTimer += dt;
                 if (this.noContactTimer >= 3.0) { // 连续 3 秒未接触
@@ -115,7 +131,7 @@ export class Van extends Hero {
             }
         }
         
-        // 处理给佬攻击冷却
+        // 处理背刺攻击冷却
         if (!this.isGayAttacking && this.gayAttackCooldown > 0) {
             this.gayAttackCooldown -= dt;
         }
@@ -147,7 +163,7 @@ export class Van extends Hero {
                 const dist = Math.hypot(dx, dy);
                 
                 if (dist <= this.forceFieldRadius + this.enemy.radius) {
-                    // 敌方进入力场，立即触发觉醒版给佬攻击
+                    // 敌方进入力场，立即触发觉醒版背刺攻击
                     this.hasTriggeredAwakenAttack = true;
                     this.startGayAttack(true);
                 }
@@ -160,7 +176,7 @@ export class Van extends Hero {
             }
         }
         
-        // 给佬攻击执行逻辑
+        // 背刺攻击执行逻辑
         if (this.isGayAttacking) {
             if (!this.enemy || this.enemy.isDead) {
                 this.endGayAttack();
@@ -304,6 +320,12 @@ export class Van extends Hero {
         this.desperateTimer = 0;
         this.noContactTimer = 0;
         
+        // 播放急色音效
+        if (this.urgentColorAudio) {
+            this.urgentColorAudio.currentTime = 0;
+            this.urgentColorAudio.play().catch(e => console.warn('Urgent color audio play failed:', e));
+        }
+        
         // 视觉提示
         this.game.addFloatingText(this.x, this.y - 50, "急 色 !", '#ff0000', 24);
         
@@ -323,6 +345,12 @@ export class Van extends Hero {
         if (this.isDesperate) {
             this.isDesperate = false; // 如果接触时正在急色，立刻打断急色
             this.desperateTimer = 0;
+            
+            // 接触打断急色时，也要立即暂停音效
+            if (this.urgentColorAudio) {
+                this.urgentColorAudio.pause();
+                this.urgentColorAudio.currentTime = 0;
+            }
         }
     }
     
@@ -349,10 +377,13 @@ export class Van extends Hero {
         this.gayAttackTimer = 0;
         this.gayHitTimer = 0;
         
-        // 播放“抓到”前摇音效
-        if (this.grabAudio) {
-            this.grabAudio.currentTime = 0;
-            this.grabAudio.play().catch(e => console.warn('Grab audio play failed:', e));
+        // 随机播放“抓到”前摇音效
+        if (this.grabAudios && this.grabAudios.length > 0) {
+            const audio = this.grabAudios[Math.floor(Math.random() * this.grabAudios.length)];
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.warn('Grab audio play failed:', e));
+            }
         }
         
         if (this.enemy) {
@@ -468,12 +499,12 @@ export class Van extends Hero {
         }
         
         // 如果在冷却期间被吸血鬼等黏附，则不触发，也不打断（保持吸血鬼的吸血状态）
-        // 但如果不在冷却期间，是可以反打并触发给佬攻击的
+        // 但如果不在冷却期间，是可以反打并触发背刺攻击的
         if (this.gayAttackCooldown > 0 && other.name === '吸血鬼' && other.isSucking) {
             return;
         }
         
-        // 触发给佬攻击
+        // 触发背刺攻击
         if (this.gayAttackCooldown <= 0 && !this.isGayAttacking) {
             // 如果对方是吸血鬼且正在吸附，打断它的吸附，避免互相修改坐标导致位置异常
             if (other.name === '吸血鬼' && other.isSucking) {

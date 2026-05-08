@@ -68,7 +68,7 @@ const heroNameClassMap = {
   '赌徒': 'Gambler',
   '马老师': 'MaLaoshi',
   '华强': 'HuaQiang',
-  '成都之心': 'Van',
+  '白袜尊者': 'Van',
   '猴哥': 'SunWukong',
   '一拳超人': 'OnePunchMan',
   'T1000': 'T1000'
