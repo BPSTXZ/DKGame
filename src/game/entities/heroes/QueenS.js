@@ -60,6 +60,28 @@ export class QueenS extends Hero {
     knockback(kx, ky, speed, duration) {
         // 觉醒期间动作不可被打断（免疫击退）
         if (this.state.startsWith('awaken_')) return;
+        
+        // 普通狗链连结阶段可被强制击退直接打断
+        if (this.chain.active && (this.state === 'chain_delay' || this.state === 'slapping')) {
+            this.state = 'normal';
+            this.chain.active = false;
+            this.absoluteControl = false;
+            this.isCountered = false;
+            this.slapPhase = null;
+            this.slapPhaseTimer = 0;
+            this.slapCooldown = 2.0;
+            this.timeSinceLastSlap = 0;
+            
+            if (this.enemy && !this.enemy.isDead) {
+                this.enemy.headTwistTime = 0;
+                this.enemy.headTwistAngle = 0;
+                this.enemy.visualHitTimer = 0;
+                this.enemy.visualScaleX = 1;
+                this.enemy.visualScaleY = 1;
+                this.enemy.visualRotation = 0;
+            }
+        }
+        
         super.knockback(kx, ky, speed, duration);
     }
 
