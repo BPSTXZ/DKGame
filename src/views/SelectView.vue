@@ -7,7 +7,8 @@
       <div v-for="hero in filteredHeroPool" :key="hero.id" class="hero-card"
         :class="{ 'selected-p1': store.p1Selection?.id === hero.id, 'selected-p2': store.p2Selection?.id === hero.id, 'disabled': hero.disabled }"
         @click.stop="handleCardClick(hero, $event)" @contextmenu.prevent>
-        <div class="hero-icon" :style="{ background: hero.iconColor }">
+        <div class="hero-icon" :class="{ 'hero-icon--van': hero.class === 'Van' }" :style="{ background: hero.iconColor }">
+          <div v-if="hero.class === 'Van'" class="hero-icon-sock"></div>
           <span v-if="hero.disabled"
             style="display: flex; justify-content: center; align-items: center; height: 100%; font-size: 2rem; color: #888;">?</span>
         </div>
@@ -236,3 +237,21 @@ const startGame = (isTraining) => {
   router.push('/battle');
 };
 </script>
+
+<style scoped>
+.hero-icon--van {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-icon-sock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 38%;
+  background: #ffffff;
+  border-top: 2px solid rgba(220, 220, 220, 0.95);
+  pointer-events: none;
+}
+</style>

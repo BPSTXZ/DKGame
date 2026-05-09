@@ -18,6 +18,7 @@ export class Hero {
         this.radius = 40; // Increased from 20 to 40
         this.color = '#ffffff';
         this.name = 'Base Hero';
+        this.gender = 'male';
         
         // 状态相关
         this.vx = 0;
@@ -280,7 +281,7 @@ export class Hero {
             });
         }
         
-        this.onTakeDamage();
+        this.onTakeDamage(finalAmount, sourceX, sourceY);
         
         if (this.game) {
             this.game.logEvent('damage', {
@@ -297,7 +298,7 @@ export class Hero {
     }
     
     // 子类钩子函数
-    onTakeDamage() {}
+    onTakeDamage(amount, sourceX, sourceY) {}
     
     /**
      * 恢复生命值
@@ -384,6 +385,12 @@ export class Hero {
      * 可用于维持自身的退场或胜利动画特效
      */
     updateVictorious(dt) {}
+    
+    /**
+     * 主体绘制后的附加覆盖层
+     * 供子类在所有英雄绘制完成后追加渲染特殊覆盖效果
+     */
+    drawOverlay(ctx) {}
     
     /**
      * 添加状态 Buff

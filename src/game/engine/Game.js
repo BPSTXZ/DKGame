@@ -318,6 +318,13 @@ export class Game {
         // 绘制实体
         this.entities.forEach(e => e.draw(this.ctx));
         
+        // 绘制实体的附加覆盖层（如白袜尊者转移到敌方身上的白袜）
+        this.entities.forEach(e => {
+            if (typeof e.drawOverlay === 'function') {
+                e.drawOverlay(this.ctx);
+            }
+        });
+        
         // 绘制全局时停演出（金色能量场扩散）
         if (this.globalFreezeTime > 0) {
             this.ctx.save();

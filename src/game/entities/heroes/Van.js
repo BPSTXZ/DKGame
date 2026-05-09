@@ -38,6 +38,8 @@ export class Van extends Hero {
         this.isDesperate = false; // 是否处于急色状态
         this.desperateTimer = 0; // 急色状态持续时间计时器
         this.desperateDuration = 3.0; // 持续 3 秒
+        this.recentDamageWindow = 0; // 受伤累计窗口
+        this.recentDamageTaken = 0; // 窗口内累计受伤值
         
         // 音效配置
         this.grabAudios = [
@@ -45,6 +47,7 @@ export class Van extends Hero {
             new Audio(import.meta.env.BASE_URL + 'assets/audio/van/抓到2.mp3')
         ];
         this.urgentColorAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/van/急色.mp3');
+        this.heavyDamageAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/van/抓到4.mp3');
         this.hitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/common/碰撞.mp3');
         this.awakenAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/van/觉醒.mp3');
     }
@@ -66,6 +69,10 @@ export class Van extends Hero {
         if (this.urgentColorAudio) {
             this.urgentColorAudio.pause();
             this.urgentColorAudio.currentTime = 0;
+        }
+        if (this.heavyDamageAudio) {
+            this.heavyDamageAudio.pause();
+            this.heavyDamageAudio.currentTime = 0;
         }
         if (this.hitAudio) {
             this.hitAudio.pause();
@@ -91,6 +98,14 @@ export class Van extends Hero {
     
     updateSpecific(dt) {
         if (this.isDead) return;
+        
+        if (this.recentDamageWindow > 0) {
+            this.recentDamageWindow -= dt;
+            if (this.recentDamageWindow <= 0) {
+                this.recentDamageWindow = 0;
+                this.recentDamageTaken = 0;
+            }
+        }
         
         // “急色”机制处理
         if (this.isDesperate) {
@@ -354,9 +369,28 @@ export class Van extends Hero {
         }
     }
     
-    onTakeDamage() {
-        super.onTakeDamage();
+    onTakeDamage(amount) {
+        super.onTakeDamage(amount);
         this.resetContact(); // 受击重置接触
+        
+        if (amount <= 0) return;
+        
+        if (this.recentDamageWindow <= 0) {
+            this.recentDamageWindow = 0.6;
+            this.recentDamageTaken = 0;
+        }
+        
+        this.recentDamageTaken += amount;
+        
+        if (this.recentDamageTaken >= 6) {
+            this.recentDamageWindow = 0;
+            this.recentDamageTaken = 0;
+            
+            if (this.heavyDamageAudio) {
+                this.heavyDamageAudio.currentTime = 0;
+                this.heavyDamageAudio.play().catch(e => console.warn('Heavy damage audio play failed:', e));
+            }
+        }
     }
     
     onAwaken() {
@@ -521,6 +555,31 @@ export class Van extends Hero {
         return this.isGayAttacking;
     }
     
+    get shouldTransferSockToEnemy() {
+        return this.isGayAttacking && this.enemy && !this.enemy.isDead && this.enemy.gender === 'male';
+    }
+    
+    drawSockLayer(ctx, radius = this.radius) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        ctx.clip();
+        
+        // 白袜主体：占据球体底部约四分之一的视觉面积
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-radius, radius * 0.45, radius * 2, radius * 1.2);
+        
+        // 袜口描边，增强“袜边”辨识度
+        ctx.strokeStyle = 'rgba(220, 220, 220, 0.95)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-radius * 0.9, radius * 0.45);
+        ctx.lineTo(radius * 0.9, radius * 0.45);
+        ctx.stroke();
+        
+        ctx.restore();
+    }
+    
     drawBody(ctx) {
         // 如果处于急色状态，给身体加一层红温发光
         if (this.isDesperate) {
@@ -530,6 +589,11 @@ export class Van extends Hero {
         }
         
         super.drawBody(ctx);
+        
+        // 白袜常驻于本体底部；只有对男性目标打桩时才转移到敌方身上展示
+        if (!this.shouldTransferSockToEnemy) {
+            this.drawSockLayer(ctx);
+        }
         
         if (this.isDesperate) {
             ctx.restore();
@@ -592,5 +656,20 @@ export class Van extends Hero {
         }
         
         super.draw(ctx);
+    }
+    
+    drawOverlay(ctx) {
+        if (!this.shouldTransferSockToEnemy || this.isDead) return;
+        
+        ctx.save();
+        ctx.translate(this.enemy.x, this.enemy.y);
+        
+        if (this.enemy.visualRotation) ctx.rotate(this.enemy.visualRotation);
+        if (this.enemy.visualScaleX && this.enemy.visualScaleY) {
+            ctx.scale(this.enemy.visualScaleX, this.enemy.visualScaleY);
+        }
+        
+        this.drawSockLayer(ctx, this.enemy.radius);
+        ctx.restore();
     }
 }

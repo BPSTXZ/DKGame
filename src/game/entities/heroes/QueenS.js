@@ -4,6 +4,7 @@ export class QueenS extends Hero {
     constructor(x, y, playerId) {
         super(x, y, playerId);
         this.name = 'S女王';
+        this.gender = 'female';
         this.color = '#800080'; // 紫黑作为基础色，具体渲染在 drawBody 中实现
         this.hp = 100;
         this.maxHp = 100;
