@@ -26,13 +26,12 @@
               <span v-if="store.battleState.p1.damageReduction > 0" class="buff-icon" style="background: #4caf50; color: #fff;">减伤 {{ store.battleState.p1.damageReduction }}%</span>
               <span v-if="store.battleState.p1.isAwakened" class="buff-icon" style="background: #ffd700; color: #000;">觉醒 <span v-if="store.battleState.p1.awakenTimer > 0">({{ store.battleState.p1.awakenTimer.toFixed(1) }}s)</span></span>
               <span v-if="store.battleState.p1.invincibleTime > 0" class="buff-icon" style="background: #ffd700; color: #000;">无敌 ({{ store.battleState.p1.invincibleTime.toFixed(1) }}s)</span>
-              <span v-for="(buff, i) in store.battleState.p1.buffs" :key="i" class="buff-icon" 
+              <span v-for="(buff, i) in store.battleState.p1.buffs.filter(buff => buff.type !== 'suppress_damage')" :key="i" class="buff-icon" 
                     :style="{ background: buff.type === 'slow' ? '#ff4444' : (buff.type === 'vampire_drain' ? '#8b0000' : (buff.type === 'paralyze' ? '#9932cc' : (buff.type === 'van_suppressed' ? '#ff69b4' : '#444'))) }">
                 {{ buff.type === 'slow' ? `减速 (${buff.time.toFixed(1)}s)` : 
                    buff.type === 'vampire_drain' ? `被吸血 (${buff.time.toFixed(1)}s)` : 
                    buff.type === 'paralyze' ? `麻痹 (${buff.time.toFixed(1)}s)` :
                    buff.type === 'van_suppressed' ? `压制 (${buff.time.toFixed(1)}s)` :
-                   buff.type === 'suppress_damage' ? `压制减伤 (${buff.time.toFixed(1)}s)` :
                    buff.type }}
               </span>
             </div>
@@ -60,13 +59,12 @@
               <span v-if="store.battleState.p2.damageReduction > 0" class="buff-icon" style="background: #4caf50; color: #fff;">减伤 {{ store.battleState.p2.damageReduction }}%</span>
               <span v-if="store.battleState.p2.isAwakened" class="buff-icon" style="background: #ffd700; color: #000;">觉醒 <span v-if="store.battleState.p2.awakenTimer > 0">({{ store.battleState.p2.awakenTimer.toFixed(1) }}s)</span></span>
               <span v-if="store.battleState.p2.invincibleTime > 0" class="buff-icon" style="background: #ffd700; color: #000;">无敌 ({{ store.battleState.p2.invincibleTime.toFixed(1) }}s)</span>
-              <span v-for="(buff, i) in store.battleState.p2.buffs" :key="i" class="buff-icon" 
+              <span v-for="(buff, i) in store.battleState.p2.buffs.filter(buff => buff.type !== 'suppress_damage')" :key="i" class="buff-icon" 
                     :style="{ background: buff.type === 'slow' ? '#ff4444' : (buff.type === 'vampire_drain' ? '#8b0000' : (buff.type === 'paralyze' ? '#9932cc' : (buff.type === 'van_suppressed' ? '#ff69b4' : '#444'))) }">
                 {{ buff.type === 'slow' ? `减速 (${buff.time.toFixed(1)}s)` : 
                    buff.type === 'vampire_drain' ? `被吸血 (${buff.time.toFixed(1)}s)` : 
                    buff.type === 'paralyze' ? `麻痹 (${buff.time.toFixed(1)}s)` :
                    buff.type === 'van_suppressed' ? `压制 (${buff.time.toFixed(1)}s)` :
-                   buff.type === 'suppress_damage' ? `压制减伤 (${buff.time.toFixed(1)}s)` :
                    buff.type }}
               </span>
             </div>
