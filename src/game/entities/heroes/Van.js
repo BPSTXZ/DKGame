@@ -50,10 +50,17 @@ export class Van extends Hero {
         this.heavyDamageAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/van/抓到4.mp3');
         this.hitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/common/碰撞.mp3');
         this.awakenAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/van/觉醒.mp3');
+        this.awakenAudioPhase2 = new Audio(import.meta.env.BASE_URL + 'assets/audio/van/觉醒二段.mp3');
     }
     
     playAwakenAudio() {
         if (this.awakenAudio) {
+            this.awakenAudio.onended = () => {
+                if (this.awakenAudioPhase2 && !this.isDead && this.isAwakened) {
+                    this.awakenAudioPhase2.currentTime = 0;
+                    this.awakenAudioPhase2.play().catch(e => console.warn('Awaken phase 2 audio play failed:', e));
+                }
+            };
             this.awakenAudio.currentTime = 0;
             this.awakenAudio.play().catch(e => console.warn('Awaken audio play failed:', e));
         }
@@ -82,8 +89,13 @@ export class Van extends Hero {
     
     stopAwakenAudio() {
         if (this.awakenAudio) {
+            this.awakenAudio.onended = null;
             this.awakenAudio.pause();
             this.awakenAudio.currentTime = 0;
+        }
+        if (this.awakenAudioPhase2) {
+            this.awakenAudioPhase2.pause();
+            this.awakenAudioPhase2.currentTime = 0;
         }
     }
     
@@ -382,7 +394,7 @@ export class Van extends Hero {
         
         this.recentDamageTaken += amount;
         
-        if (this.recentDamageTaken >= 6) {
+        if (this.recentDamageTaken >= 8) {
             this.recentDamageWindow = 0;
             this.recentDamageTaken = 0;
             
@@ -411,8 +423,8 @@ export class Van extends Hero {
         this.gayAttackTimer = 0;
         this.gayHitTimer = 0;
         
-        // 随机播放“抓到”前摇音效
-        if (this.grabAudios && this.grabAudios.length > 0) {
+        // 只有普通打桩播放“抓到”前摇音效，觉醒版不播放
+        if (!isAwakenAttack && this.grabAudios && this.grabAudios.length > 0) {
             const audio = this.grabAudios[Math.floor(Math.random() * this.grabAudios.length)];
             if (audio) {
                 audio.currentTime = 0;

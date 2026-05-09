@@ -341,6 +341,63 @@ export class Hero {
      * 停止觉醒音效（由子类覆盖具体实现）
      */
     stopAwakenAudio() {}
+
+    /**
+     * 收集当前英雄可管理的觉醒演出音频对象
+     */
+    getManagedAwakenAudios() {
+        const candidates = [
+            this.awakenAudioPhase2,
+            this.awakenAudio,
+            this.currentAwakenAudioObj,
+            this.magnetAudio,
+            this.laughAudio,
+            this.currentWhipAudio
+        ];
+
+        return candidates.filter(audio => audio && typeof audio.pause === 'function');
+    }
+
+    /**
+     * 捕获当前仍在播放的觉醒演出音效状态，便于胜利结算时恢复
+     */
+    captureAwakenAudioState() {
+        return this.getManagedAwakenAudios()
+            .filter(audio => !audio.paused)
+            .map(audio => ({
+                audio,
+                currentTime: audio.currentTime || 0
+            }));
+    }
+
+    /**
+     * 恢复被胜利清场流程误停的觉醒演出音效
+     */
+    restoreAwakenAudioState(states = []) {
+        states.forEach(({ audio, currentTime }) => {
+            if (!audio) return;
+            audio.currentTime = currentTime || 0;
+            audio.play().catch(e => console.warn('Restore awaken audio failed:', e));
+        });
+    }
+
+    /**
+     * 获取当前觉醒演出音效剩余时长（秒）
+     */
+    getAwakenAudioRemainingTime(states = null) {
+        const audios = states
+            ? states.map(state => state.audio).filter(Boolean)
+            : this.getManagedAwakenAudios().filter(audio => !audio.paused);
+
+        let remaining = 0;
+        for (const audio of audios) {
+            if (!audio) continue;
+            if (!Number.isFinite(audio.duration) || Number.isNaN(audio.duration)) continue;
+            remaining = Math.max(remaining, Math.max(0, audio.duration - (audio.currentTime || 0)));
+        }
+
+        return remaining;
+    }
     
     /**
      * 触发觉醒状态
