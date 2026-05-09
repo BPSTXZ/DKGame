@@ -376,7 +376,7 @@ export class Van extends Hero {
         if (amount <= 0) return;
         
         if (this.recentDamageWindow <= 0) {
-            this.recentDamageWindow = 0.6;
+            this.recentDamageWindow = 0.4;
             this.recentDamageTaken = 0;
         }
         
