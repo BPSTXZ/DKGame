@@ -28,6 +28,8 @@ export class MaLaoshi extends Hero {
         this.whipInterval = 1.5;
         this.whipTimer = 0;
         this.isWhipping = false;
+        this.recentHitWindow = 0;
+        this.recentHitCount = 0;
         
         // 专属音效
         this.nutBeanFirstAudioSrc = import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/松果糖豆劲.mp3';
@@ -52,6 +54,7 @@ export class MaLaoshi extends Hero {
         ];
         this.currentWhipAudio = null;
         this.whipHitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/common/碰撞.mp3');
+        this.tingtingHitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/婷婷.mp3');
         
         this.victoryAudioSrc = import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/胜利宣言.mp3';
         this.hasPlayedVictory = false;
@@ -68,7 +71,19 @@ export class MaLaoshi extends Hero {
                 this.currentWhipAudio.pause();
                 this.currentWhipAudio = null;
             }
+            if (this.tingtingHitAudio) {
+                this.tingtingHitAudio.pause();
+                this.tingtingHitAudio.currentTime = 0;
+            }
             return;
+        }
+        
+        if (this.recentHitWindow > 0) {
+            this.recentHitWindow -= dt;
+            if (this.recentHitWindow <= 0) {
+                this.recentHitWindow = 0;
+                this.recentHitCount = 0;
+            }
         }
         
         // ====== 机制一：松果糖豆劲 ======
@@ -382,6 +397,27 @@ export class MaLaoshi extends Hero {
         }
     }
     
+    onTakeDamage(amount) {
+        if (amount <= 0) return;
+        
+        if (this.recentHitWindow <= 0) {
+            this.recentHitWindow = 0.6;
+            this.recentHitCount = 0;
+        }
+        
+        this.recentHitCount += 1;
+        
+        if (this.recentHitCount >= 3) {
+            this.recentHitWindow = 0;
+            this.recentHitCount = 0;
+            
+            if (this.tingtingHitAudio) {
+                this.tingtingHitAudio.currentTime = 0;
+                this.tingtingHitAudio.play().catch(e => {});
+            }
+        }
+    }
+    
     spawnHitParticles(x, y, color) {
         for (let i = 0; i < 5; i++) {
             this.game.addParticle({
@@ -409,6 +445,10 @@ export class MaLaoshi extends Hero {
     stopAllAudio() {
         // 马老师没有其他的持续性长音效（如吸血鬼的吸血、S女王的挥鞭）需要被外层强制打断。
         // 松果糖豆和混元劲的音效都是短促的单次播放（fire-and-forget），不需要追踪和暂停。
+        if (this.tingtingHitAudio) {
+            this.tingtingHitAudio.pause();
+            this.tingtingHitAudio.currentTime = 0;
+        }
     }
 
     stopAwakenAudio() {
