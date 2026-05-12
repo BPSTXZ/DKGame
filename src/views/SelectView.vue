@@ -57,6 +57,8 @@
         <!-- 训练场按钮：只有在解锁后，并且选了两个英雄才能点击 -->
         <button v-if="isTrainingUnlocked" :disabled="!store.p1Selection || !store.p2Selection" @click="startGame(true)"
           style="background: #4caf50; color: white;">进入训练场</button>
+        <button v-if="isTrainingUnlocked" :disabled="!store.p1Selection || !store.p2Selection" @click="startDebugMode"
+          style="background: #9c27b0; color: white;">进入调试模式</button>
         <button @click="router.push('/records')" style="background: #2196F3; color: white;">战斗记录</button>
       </div>
     </div>
@@ -234,7 +236,19 @@ const startGame = (isTraining) => {
     currentSelectAudio.currentTime = 0;
   }
   store.isTraining = isTraining;
+  store.isDebug = false;
   router.push('/battle');
+};
+
+const startDebugMode = () => {
+  if (currentSelectAudio) {
+    currentSelectAudio.pause();
+    currentSelectAudio.currentTime = 0;
+  }
+  store.isTraining = false;
+  store.isDebug = true;
+  store.resetDebugConfig();
+  router.push('/debug-config');
 };
 </script>
 

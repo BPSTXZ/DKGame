@@ -15,12 +15,14 @@ export class DragonKing extends Hero {
         this.smileTimer = 0;
         
         // 技能一：太乙神针
+        this.needleFireInterval = 2.0;
         this.needleFireTimer = 0;
         this.activeNeedles = [];
         this.moveSpeedBuffStacks = 0;
         
         // 隐忍值系统
         this.enduranceValue = 0;
+        this.enduranceThreshold = 100;
         this.enduranceGainCooldown = 0;
         this.dragonAwakened = false;
         this.dragonAwakenLocked = false; // 是否已经触发过三年之期
@@ -29,6 +31,7 @@ export class DragonKing extends Hero {
         this.isUltimateActive = false;
         this.ultimateNeedles = [];
         this.ultimatePhase = 0; // 0: none, 1: rotating, 2: firing
+        this.ultimateRotateDuration = 1.0;
         this.ultimateRotateTimer = 0;
         
         // 演出状态
@@ -84,8 +87,8 @@ export class DragonKing extends Hero {
                 this.enduranceValue += inc;
                 this.enduranceGainCooldown = 0.2;
                 
-                if (this.enduranceValue >= 100) {
-                    this.enduranceValue = 100;
+                if (this.enduranceValue >= this.enduranceThreshold) {
+                    this.enduranceValue = this.enduranceThreshold;
                     this.triggerDragonReturn();
                 }
             }
@@ -159,7 +162,7 @@ export class DragonKing extends Hero {
         }
         
         this.ultimatePhase = 1;
-        this.ultimateRotateTimer = 1.0; // 旋转一周耗时1秒
+        this.ultimateRotateTimer = this.ultimateRotateDuration;
     }
     
     fireNormalNeedle() {
@@ -226,7 +229,7 @@ export class DragonKing extends Hero {
             this.needleFireTimer -= dt;
             if (this.needleFireTimer <= 0) {
                 this.fireNormalNeedle();
-                this.needleFireTimer = 2.0;
+                this.needleFireTimer = this.needleFireInterval;
             }
         }
         
@@ -237,7 +240,8 @@ export class DragonKing extends Hero {
         if (this.isUltimateActive) {
             if (this.ultimatePhase === 1) {
                 this.ultimateRotateTimer -= dt;
-                const rotationSpeed = (Math.PI * 2) / 1.0; // 1秒转一圈
+                const rotateDuration = Math.max(0.1, this.ultimateRotateDuration);
+                const rotationSpeed = (Math.PI * 2) / rotateDuration;
                 
                 for (const n of this.ultimateNeedles) {
                     n.angle += rotationSpeed * dt;
@@ -448,11 +452,12 @@ export class DragonKing extends Hero {
             
             if (this.enduranceValue > 0) {
                 ctx.beginPath();
-                const angle = (this.enduranceValue / 100) * Math.PI * 2;
+                const threshold = Math.max(1, this.enduranceThreshold);
+                const angle = (this.enduranceValue / threshold) * Math.PI * 2;
                 ctx.arc(0, 0, this.radius + 8, -Math.PI / 2, -Math.PI / 2 + angle);
-                ctx.strokeStyle = this.enduranceValue >= 100 ? '#ffd700' : '#ff9900';
+                ctx.strokeStyle = this.enduranceValue >= threshold ? '#ffd700' : '#ff9900';
                 ctx.lineWidth = 4;
-                if (this.enduranceValue >= 80) {
+                if (this.enduranceValue >= threshold * 0.8) {
                     ctx.shadowColor = '#ff9900';
                     ctx.shadowBlur = 5 + Math.sin(Date.now() / 100) * 5;
                 }

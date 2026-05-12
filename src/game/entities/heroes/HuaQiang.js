@@ -19,7 +19,8 @@ export class HuaQiang extends Hero {
         
         // 砍刀生成机制
         this.machetes = []; // 存储所有砍刀 { x, y, vx, vy, angle, state: 'flying' | 'stuck' | 'returning', lastHitTime: 0 }
-        this.macheteTimer = 1.0; // 默认 2 秒发射一把
+        this.macheteTimer = 1.0;
+        this.macheteInterval = 3.0;
         this.maxMachetes = 30;
         
         // 磁吸回收 (觉醒)
@@ -173,7 +174,7 @@ export class HuaQiang extends Hero {
         if (!this.isRetrieving && !this.isSuppressed) {
             this.macheteTimer -= dt;
             if (this.macheteTimer <= 0) {
-                this.macheteTimer = 3.0;
+                this.macheteTimer = this.macheteInterval;
                 this.fireMachete();
             }
         }

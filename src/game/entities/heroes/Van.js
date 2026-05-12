@@ -18,6 +18,7 @@ export class Van extends Hero {
         this.isGayAttacking = false;
         this.gayAttackTimer = 0; // 持续时间计时器
         this.gayAttackDuration = 3.0; // 持续 3 秒
+        this.awakenGayAttackDuration = 4.0;
         this.gayHitInterval = 0.25; // 每 0.25 秒结算一次
         this.gayHitTimer = 0;
         
@@ -29,12 +30,15 @@ export class Van extends Hero {
         // 觉醒相关状态
         this.forceFieldRadius = 0; // 初始化时基于场地大小计算
         this.awakenTimer = 0;
+        this.awakenForceFieldDuration = 4.5;
         this.isForceFieldActive = false;
         this.hasTriggeredAwakenAttack = false; // 是否已经触发过觉醒版攻击
         this.forceFieldWarmup = 0; // 前摇展示时间
+        this.forceFieldWarmupDuration = 0.5;
         
         // “急色”机制相关状态
         this.noContactTimer = 0; // 无接触计时器
+        this.noContactTriggerTime = 3.0;
         this.isDesperate = false; // 是否处于急色状态
         this.desperateTimer = 0; // 急色状态持续时间计时器
         this.desperateDuration = 3.0; // 持续 3 秒
@@ -152,7 +156,7 @@ export class Van extends Hero {
             // 不在急色状态，也不在背刺攻击中，累加无接触计时
             if (!this.isGayAttacking) {
                 this.noContactTimer += dt;
-                if (this.noContactTimer >= 3.0) { // 连续 3 秒未接触
+                if (this.noContactTimer >= this.noContactTriggerTime) {
                     this.triggerDesperate();
                 }
             }
@@ -173,9 +177,9 @@ export class Van extends Hero {
         if (this.isAwakened) {
             if (!this.isForceFieldActive) {
                 this.isForceFieldActive = true;
-                this.awakenTimer = 4.5; // 最多持续 4 秒 + 0.5秒展示前摇
+                this.awakenTimer = this.awakenForceFieldDuration;
                 this.hasTriggeredAwakenAttack = false;
-                this.forceFieldWarmup = 0.5; // 0.5秒强制展示特效前摇
+                this.forceFieldWarmup = this.forceFieldWarmupDuration;
             }
             
             this.awakenTimer -= dt;
@@ -332,7 +336,7 @@ export class Van extends Hero {
             }
             
             // 结束判定
-            const currentMaxDuration = (this.isAwakened && this.hasTriggeredAwakenAttack) ? 4.0 : this.gayAttackDuration;
+            const currentMaxDuration = (this.isAwakened && this.hasTriggeredAwakenAttack) ? this.awakenGayAttackDuration : this.gayAttackDuration;
             if (this.gayAttackTimer >= currentMaxDuration) {
                 this.endGayAttack();
             }
@@ -635,7 +639,8 @@ export class Van extends Hero {
             let currentRadius = this.forceFieldRadius;
             let alphaMult = 1.0;
             if (this.forceFieldWarmup > 0) {
-                const p = 1.0 - (this.forceFieldWarmup / 0.5); // 0 -> 1
+                const warmupBase = Math.max(0.1, this.forceFieldWarmupDuration);
+                const p = 1.0 - (this.forceFieldWarmup / warmupBase); // 0 -> 1
                 const easeOut = p * (2 - p);
                 currentRadius = this.forceFieldRadius * easeOut;
                 alphaMult = p; // 淡入效果

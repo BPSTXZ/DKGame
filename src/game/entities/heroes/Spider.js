@@ -20,6 +20,7 @@ export class Spider extends Hero {
         
         // Passive
         this.passiveSpeedMultiplier = 1.0;
+        this.passiveSpeedBonus = 0.2;
         
         // Awaken
         this.awakenTimer = 0;
@@ -34,9 +35,11 @@ export class Spider extends Hero {
         super.applyPassives(); // 调用父类应用基础效果
         
         // HP ratio speed up: "根据已损失血量比例进行百分比叠加"
-        const lossRatio = 1 - (this.hp / this.maxHp);
-        // 降低被动移速加成比例：最大增加 20% (原为 50%)
-        this.passiveSpeedMultiplier = 1.0 + (lossRatio * 0.2);
+        const passiveMaxHp = this.getPassiveMaxHp();
+        const passiveCurrentHp = Math.min(this.getPassiveCurrentHp(), passiveMaxHp);
+        const lossRatio = passiveMaxHp > 0 ? (1 - (passiveCurrentHp / passiveMaxHp)) : 0;
+        // 根据损失血量比例提升移速，调试模式下可覆盖加成系数
+        this.passiveSpeedMultiplier = 1.0 + (lossRatio * this.passiveSpeedBonus);
         this.speedMultiplier *= this.passiveSpeedMultiplier;
         
         // 觉醒状态下的加速

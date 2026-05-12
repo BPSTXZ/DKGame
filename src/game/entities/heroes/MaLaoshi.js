@@ -15,6 +15,7 @@ export class MaLaoshi extends Hero {
         this.baseSpeed = 60;
         
         // 攻击机制一：松果糖豆劲 (每 2 秒一次)
+        this.nutBeanInterval = 2.0;
         this.nutBeanTimer = 2.0;
         this.projectiles = []; // 存储场上的松果和糖豆
         
@@ -91,7 +92,7 @@ export class MaLaoshi extends Hero {
             this.nutBeanTimer -= dt;
             if (this.nutBeanTimer <= 0) {
                 this.shootNutAndBean();
-                this.nutBeanTimer = 2.0;
+                this.nutBeanTimer = this.nutBeanInterval;
             }
         }
         

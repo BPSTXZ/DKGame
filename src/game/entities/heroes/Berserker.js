@@ -31,11 +31,17 @@ export class Berserker extends Hero {
     }
     
     applyPassives() {
-        const lossRatio = 1 - (this.hp / this.maxHp);
+        const passiveMaxHp = this.getPassiveMaxHp();
+        const passiveCurrentHp = Math.min(this.getPassiveCurrentHp(), passiveMaxHp);
+        const lossRatio = passiveMaxHp > 0 ? (1 - (passiveCurrentHp / passiveMaxHp)) : 0;
+        const debugLossUnits = (this.game?.debugConfig?.enabled && this.debugPassiveStartHp !== undefined && passiveMaxHp > 0)
+            ? Math.max(0, (this.debugPassiveStartHp - this.hp) / passiveMaxHp)
+            : null;
+        const effectiveLossUnits = debugLossUnits ?? lossRatio;
         
         // Speed up based on lost HP
-        this.speedMultiplier *= (1.0 + lossRatio * 0.8);
-        this.currentSpinSpeed = this.baseSpinSpeed * (1.0 + lossRatio * 1.0);
+        this.speedMultiplier *= (1.0 + effectiveLossUnits * 0.8);
+        this.currentSpinSpeed = this.baseSpinSpeed * (1.0 + effectiveLossUnits);
         
         // 加强版：根据损失血量比例，线性增加斧柄长度（最大可增加到基础长度的 2.5 倍）
         // 满血(120) = 1.0 倍 (40长)

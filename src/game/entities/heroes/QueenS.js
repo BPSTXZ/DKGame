@@ -17,6 +17,8 @@ export class QueenS extends Hero {
         this.slapCooldown = 0;
         this.slapDamage = 2;
         this.slapRound = 0;
+        this.slapHitCount = 0;
+        this.slapHitLimit = 8;
         this.slapPhase = null;
         this.slapPhaseTimer = 0;
         
@@ -217,16 +219,22 @@ export class QueenS extends Hero {
     startSlapping(isFromChain = false) {
         this.state = 'slapping';
         this.slapRound = 0;
+        this.slapHitCount = 0;
         this.slapPhase = 'left';
         this.slapPhaseTimer = 0;
         this.isCountered = false;
         // 如果是由狗链拉过来触发的耳光，则附加不可被反制的强控标记
         this.absoluteControl = isFromChain;
         
-        this.dealSlapDamage('left');
+        this.performSlap('left');
         if (this.game) {
             this.game.logEvent('skill', { heroId: this.playerId, skill: 'Rewarding Slap' });
         }
+    }
+
+    performSlap(side) {
+        this.dealSlapDamage(side);
+        this.slapHitCount++;
     }
     
     dealSlapDamage(side) {
@@ -512,21 +520,25 @@ export class QueenS extends Hero {
             case 'left':
                 if (this.slapPhaseTimer >= 0.12) { // 从 0.2 加快到 0.12
                     this.slapPhaseTimer = 0;
-                    this.slapPhase = 'between';
+                    if (this.slapHitCount >= this.slapHitLimit) {
+                        this.endSlapping();
+                    } else {
+                        this.slapPhase = 'between';
+                    }
                 }
                 break;
             case 'between':
                 if (this.slapPhaseTimer >= 0.03) { // 从 0.05 加快到 0.03
                     this.slapPhaseTimer = 0;
                     this.slapPhase = 'right';
-                    this.dealSlapDamage('right');
+                    this.performSlap('right');
                 }
                 break;
             case 'right':
                 if (this.slapPhaseTimer >= 0.12) { // 从 0.2 加快到 0.12
                     this.slapPhaseTimer = 0;
                     this.slapRound++;
-                    if (this.slapRound >= 4) { // 从 3 轮（6下）提升到 4 轮（8下）
+                    if (this.slapHitCount >= this.slapHitLimit) {
                         this.endSlapping();
                     } else {
                         this.slapPhase = 'round_pause';
@@ -537,7 +549,7 @@ export class QueenS extends Hero {
                 if (this.slapPhaseTimer >= 0.15) { // 轮间停顿从 0.3 加快到 0.15
                     this.slapPhaseTimer = 0;
                     this.slapPhase = 'left';
-                    this.dealSlapDamage('left');
+                    this.performSlap('left');
                 }
                 break;
         }

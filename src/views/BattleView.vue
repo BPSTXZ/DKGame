@@ -345,7 +345,8 @@ onMounted(async () => {
     () => {
       cheerAudio.currentTime = 0;
       cheerAudio.play().catch(e => console.warn('Cheer audio play failed:', e));
-    }
+    },
+    (!isReplayMode.value && store.isDebug) ? { enabled: true, ...store.debugConfig } : null
   );
 
   readParamsFromGame();
@@ -448,6 +449,8 @@ const restartBattle = () => {
 };
 
 const backToSelect = () => {
+  store.isTraining = false;
+  store.isDebug = false;
   router.push('/');
 };
 

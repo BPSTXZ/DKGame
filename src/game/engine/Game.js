@@ -17,7 +17,7 @@ function mulberry32(a) {
 }
 
 export class Game {
-    constructor(canvas, p1Class, p2Class, isTraining = false, onStateUpdate, onGameOver, onVictory, seed = Date.now(), isReplay = false, p1ClassName = '', p2ClassName = '', onCelebration = null) {
+    constructor(canvas, p1Class, p2Class, isTraining = false, onStateUpdate, onGameOver, onVictory, seed = Date.now(), isReplay = false, p1ClassName = '', p2ClassName = '', onCelebration = null, debugConfig = null) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         
@@ -30,6 +30,7 @@ export class Game {
         this.onGameOver = onGameOver;
         this.onVictory = onVictory;
         this.onCelebration = onCelebration;
+        this.debugConfig = debugConfig;
         
         this.p1Class = p1Class;
         this.p2Class = p2Class;
@@ -99,6 +100,11 @@ export class Game {
         this.awakenRadius = 0;
         this.screenShakeTimer = 0;
         this.screenShakeIntensity = 0;
+        this.debugAutoAwakenTriggered = { p1: false, p2: false };
+        
+        if (this.debugConfig?.enabled) {
+            this.applyDebugInitialSetup();
+        }
         
         if (this.onStateUpdate) {
             this.onStateUpdate(this.p1, this.p2);
@@ -142,8 +148,118 @@ export class Game {
     }
     
     logEvent(type, data) {
-        if (this.isReplay || this.isTraining) return;
+        if (this.isReplay || this.isTraining || this.debugConfig?.enabled) return;
         this.events.push({ time: parseFloat(this.gameTime.toFixed(2)), type, ...data });
+    }
+
+    applyDebugInitialSetup() {
+        this.awakenStoneSpawned = true;
+        this.awakenStone = null;
+
+        const applyHp = (hero, hp) => {
+            const safeHp = Math.max(1, Math.min(9999999, Math.round(hp || 100)));
+            hero.debugPassiveBaseMaxHp = hero.maxHp;
+            hero.debugPassiveStartHp = safeHp;
+            hero.maxHp = safeHp;
+            hero.hp = safeHp;
+        };
+
+        applyHp(this.p1, this.debugConfig.p1Hp);
+        applyHp(this.p2, this.debugConfig.p2Hp);
+        this.applyDebugHeroTuning(this.p1);
+        this.applyDebugHeroTuning(this.p2);
+        this.applyDebugFixedMode();
+    }
+
+    applyDebugHeroTuning(hero) {
+        if (!this.debugConfig?.enabled || !hero || hero.isDead) return;
+
+        const tuning = hero.playerId === 1
+            ? this.debugConfig.skillTuning?.p1
+            : this.debugConfig.skillTuning?.p2;
+        if (!tuning) return;
+
+        const heroClassName = hero.playerId === 1 ? this.p1ClassName : this.p2ClassName;
+        const getFloat = (value, fallback) => {
+            const next = Number(value);
+            if (!Number.isFinite(next)) return fallback;
+            return Math.max(0.1, Math.round(next * 10) / 10);
+        };
+        const getCount = (value, fallback) => {
+            const next = Number(value);
+            if (!Number.isFinite(next)) return fallback;
+            return Math.max(1, Math.round(next));
+        };
+
+        switch (heroClassName) {
+            case 'QueenS':
+                hero.slapHitLimit = getCount(tuning.slapHitLimit, hero.slapHitLimit);
+                break;
+            case 'Vampire':
+                hero.suckDuration = getFloat(tuning.suckDuration, hero.suckDuration);
+                hero.awakenShotCount = getCount(tuning.awakenShotCount, hero.awakenShotCount);
+                hero.awakenShotInterval = getFloat(tuning.awakenShotInterval, hero.awakenShotInterval);
+                break;
+            case 'HuaQiang':
+                hero.macheteInterval = getFloat(tuning.macheteInterval, hero.macheteInterval);
+                hero.macheteTimer = hero.macheteInterval;
+                break;
+            case 'Van':
+                hero.gayAttackDuration = getFloat(tuning.gayAttackDuration, hero.gayAttackDuration);
+                hero.gayHitInterval = getFloat(tuning.gayHitInterval, hero.gayHitInterval);
+                hero.noContactTriggerTime = getFloat(tuning.noContactTriggerTime, hero.noContactTriggerTime);
+                hero.desperateDuration = getFloat(tuning.desperateDuration, hero.desperateDuration);
+                hero.forceFieldWarmupDuration = getFloat(tuning.forceFieldWarmupDuration, hero.forceFieldWarmupDuration);
+                hero.awakenForceFieldDuration = getFloat(tuning.awakenForceFieldDuration, hero.awakenForceFieldDuration);
+                break;
+            case 'MaLaoshi':
+                hero.nutBeanInterval = getFloat(tuning.nutBeanInterval, hero.nutBeanInterval);
+                hero.nutBeanTimer = hero.nutBeanInterval;
+                hero.whipMaxCount = getCount(tuning.whipMaxCount, hero.whipMaxCount);
+                hero.whipInterval = getFloat(tuning.whipInterval, hero.whipInterval);
+                break;
+            case 'DragonKing':
+                hero.needleFireInterval = getFloat(tuning.needleFireInterval, hero.needleFireInterval);
+                hero.needleFireTimer = hero.needleFireInterval;
+                hero.enduranceThreshold = getCount(tuning.enduranceThreshold, hero.enduranceThreshold);
+                hero.enduranceValue = Math.min(hero.enduranceValue, hero.enduranceThreshold);
+                hero.ultimateRotateDuration = getFloat(tuning.ultimateRotateDuration, hero.ultimateRotateDuration);
+                break;
+            case 'Spider':
+                hero.passiveSpeedBonus = getFloat(tuning.passiveSpeedBonus, hero.passiveSpeedBonus);
+                break;
+        }
+    }
+
+    applyDebugFixedMode() {
+        if (!this.debugConfig?.enabled || this.debugConfig.mode !== 'fixed') return;
+
+        const fixedHero = this.debugConfig.fixedPlayer === 1 ? this.p1 : this.p2;
+        if (!fixedHero || fixedHero.isDead) return;
+
+        fixedHero.x = this.width / 2;
+        fixedHero.y = this.height / 2;
+        fixedHero.vx = 0;
+        fixedHero.vy = 0;
+        fixedHero.knockbackTimer = 0;
+        fixedHero.knockbackVx = 0;
+        fixedHero.knockbackVy = 0;
+    }
+
+    handleDebugAutoAwaken(hero, key) {
+        if (!this.debugConfig?.enabled || !hero || hero.isDead || hero.isAwakened) return;
+        if (this.debugAutoAwakenTriggered[key]) return;
+
+        const rawTime = key === 'p1' ? this.debugConfig.p1AutoAwakenTime : this.debugConfig.p2AutoAwakenTime;
+        if (rawTime === null || rawTime === '' || rawTime === undefined) return;
+
+        const awakenTime = Number(rawTime);
+        if (!Number.isFinite(awakenTime) || awakenTime < 0) return;
+        if (this.gameTime < awakenTime) return;
+
+        this.debugAutoAwakenTriggered[key] = true;
+        hero.playAwakenAudio();
+        hero.triggerAwaken();
     }
     
     /**
@@ -232,8 +348,13 @@ export class Game {
         }
         
         // 检查觉醒石生成条件
-        if (!this.awakenStoneSpawned && (this.p1.hp <= 25 || this.p2.hp <= 25)) {
+        if (!this.debugConfig?.enabled && !this.awakenStoneSpawned && (this.p1.hp <= 25 || this.p2.hp <= 25)) {
             this.spawnAwakenStone();
+        }
+
+        if (this.debugConfig?.enabled) {
+            this.handleDebugAutoAwaken(this.p1, 'p1');
+            this.handleDebugAutoAwaken(this.p2, 'p2');
         }
         
         // Update entities
@@ -246,6 +367,10 @@ export class Game {
         // Hero-Hero collision
         if (!this.p1.isDead && !this.p2.isDead) {
             this.physics.checkHeroCollision(this.p1, this.p2);
+        }
+
+        if (this.debugConfig?.enabled) {
+            this.applyDebugFixedMode();
         }
         
         // Awaken Stone update and collision
@@ -409,7 +534,7 @@ export class Game {
             this.isGameOver = true;
             
             // 保存战斗记录
-            if (!this.isReplay && !this.isTraining) {
+            if (!this.isReplay && !this.isTraining && !this.debugConfig?.enabled) {
                 const record = {
                     id: Date.now().toString(),
                     timestamp: Date.now(),

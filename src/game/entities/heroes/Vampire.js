@@ -22,7 +22,9 @@ export class Vampire extends Hero {
         
         // Awaken specific
         this.awakenShotsLeft = 0;
+        this.awakenShotCount = 3;
         this.awakenShotTimer = 0;
+        this.awakenShotInterval = 0.5;
         this.fangs = [];
         
         // Audio specific
@@ -147,7 +149,7 @@ export class Vampire extends Hero {
                 if (this.awakenShotTimer <= 0 && !this.isSuppressed) {
                     this.shootFang();
                     this.awakenShotsLeft--;
-                    this.awakenShotTimer = 0.5; // 每0.5秒发射一次
+                    this.awakenShotTimer = this.awakenShotInterval;
                 }
             } else {
                 // 当牙齿发射完毕，且场上没有存活的飞行牙齿时，延迟一帧结束觉醒状态以避免竞争条件
@@ -281,7 +283,7 @@ export class Vampire extends Hero {
     }
     
     onAwaken() {
-        this.awakenShotsLeft = 3;
+        this.awakenShotsLeft = this.awakenShotCount;
         this.awakenShotTimer = 0; // shoot immediately
     }
     

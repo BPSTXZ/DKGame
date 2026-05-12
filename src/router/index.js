@@ -15,6 +15,11 @@ const router = createRouter({
       component: () => import('../views/BattleView.vue')
     },
     {
+      path: '/debug-config',
+      name: 'debug-config',
+      component: () => import('../views/DebugConfigView.vue')
+    },
+    {
       path: '/records',
       name: 'records',
       component: () => import('../views/RecordView.vue')
@@ -26,7 +31,7 @@ const router = createRouter({
 import { useGameStore } from '../store/gameStore.js';
 
 router.beforeEach((to, from, next) => {
-  if (to.name === 'battle' && !to.query.replayId) {
+  if ((to.name === 'battle' || to.name === 'debug-config') && !to.query.replayId) {
     const store = useGameStore();
     if (!store.p1Selection || !store.p2Selection) {
       next({ name: 'select' });

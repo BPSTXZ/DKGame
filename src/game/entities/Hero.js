@@ -53,6 +53,27 @@ export class Hero {
     getSpeed() {
         return this.baseSpeed * 8 * this.speedMultiplier; // 乘以 5 放大至适合屏幕的像素级速度
     }
+
+    /**
+     * 获取用于被动计算的当前生命值。
+     * 调试模式下允许把“展示/承伤血量”和“被动叠层血量”拆开，避免超高测试血量稀释受伤型被动。
+     */
+    getPassiveCurrentHp() {
+        if (this.debugPassiveBaseMaxHp !== undefined && this.debugPassiveStartHp !== undefined) {
+            const initialPassiveHp = Math.min(this.debugPassiveStartHp, this.debugPassiveBaseMaxHp);
+            const lostHp = Math.max(0, this.debugPassiveStartHp - this.hp);
+            return Math.max(0, initialPassiveHp - lostHp);
+        }
+
+        return this.hp;
+    }
+
+    /**
+     * 获取用于被动计算的最大生命值。
+     */
+    getPassiveMaxHp() {
+        return this.debugPassiveBaseMaxHp !== undefined ? this.debugPassiveBaseMaxHp : this.maxHp;
+    }
     
     /**
      * 规范化当前速度向量，确保合速度等于设定的速度值
