@@ -128,6 +128,10 @@ export class Hero {
             
             // 击退期间仍在更新特殊逻辑（如施法、状态倒计时等）
             this.updateSpecific(dt);
+
+            // 击退期间也要先重置并重算移速倍率，避免受伤型被动在多帧内重复叠乘，
+            // 导致 BattleView 中的移速展示出现激增后恢复的跳变。
+            this.speedMultiplier = 1.0;
             this.applyPassives();
             
             // 处理 Buff 倒计时
