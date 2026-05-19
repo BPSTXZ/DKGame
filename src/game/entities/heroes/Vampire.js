@@ -47,10 +47,10 @@ export class Vampire extends Hero {
         }
         
         if (this.isSucking) {
-            // 被动打断检测：如果敌方身上有了强制免疫状态（比如马老师的混元劲清除了 vampire_drain 或者给予了无敌），我们要主动结束吸附
+            // 被动打断检测：如果敌方身上有了强制免疫状态（比如马老师的混元劲清除了 vampire_drain 或者给予了无敌/霸体），我们要主动结束吸附
             // 另外，如果任意一方被强控（如击退），也应强制结束吸附
             // 不过 Vampire 自身是主动贴合逻辑（this.isSucking），所以我们要检查如果目标死亡或不可选，就断开
-            if (!this.enemy || this.enemy.isDead || this.enemy.invincibleTime > 0 || this.knockbackTimer > 0 || this.enemy.knockbackTimer > 0) {
+            if (!this.enemy || this.enemy.isDead || this.enemy.invincibleTime > 0 || this.enemy.isSuperArmor || this.knockbackTimer > 0 || this.enemy.knockbackTimer > 0) {
                 this.isSucking = false;
                 this.suckTime = this.suckDuration; // 强制结束
                 this.suckCooldown = 2.0; // 被打断时进入 2 秒冷却
@@ -255,8 +255,8 @@ export class Vampire extends Hero {
     onHeroCollision(other) {
         if (this.isDead || other.isDead) return;
         
-        // 目标处于无敌/无法选中状态时，或者任意一方正在被击退时，或者吸附技能在冷却中，无法触发吸附
-        if (other.invincibleTime > 0 || this.knockbackTimer > 0 || other.knockbackTimer > 0 || this.suckCooldown > 0) return;
+        // 目标处于无敌/无法选中状态或霸体状态时，或者任意一方正在被击退时，或者吸附技能在冷却中，无法触发吸附
+        if (other.invincibleTime > 0 || other.isSuperArmor || this.knockbackTimer > 0 || other.knockbackTimer > 0 || this.suckCooldown > 0) return;
         
         // 触发吸附
         if (!this.isSucking) {

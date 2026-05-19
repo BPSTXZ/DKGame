@@ -112,6 +112,16 @@ export const heroConfig = [
     isSpecial: true
   },
   {
+    id: 'thunderflash', name: '雷霆闪', class: 'ThunderFlash',
+    iconColor: '#1a237e',
+    quote: '"雷鸣电闪，一瞬之间！"',
+    traits: '极速、贯穿 | 蓄力弹射与八连绝杀',
+    stats: 'HP: 100 | 移速: 60',
+    skill: { name: '雷霆一闪', desc: '碰壁时不反弹而是蓄力0.3秒，随后朝敌方超高速弹射并贯穿，造成8点伤害，弹射与蓄力期间处于霸体(免控但受伤)。弹射结束后冷却1秒。连续3秒未蓄力则移速翻倍。觉醒：霹雳一闪·八连，立刻开始蓄力弹射，碰壁后瞬间再次蓄力，连续弹射8次，每次造成5点伤害！' },
+    audioSrc: null,
+    isSpecial: false
+  },
+  {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',
     quote: '"神秘的力量正在苏醒..."',
     traits: '未知 | ???',

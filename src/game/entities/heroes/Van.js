@@ -187,7 +187,7 @@ export class Van extends Hero {
             if (this.forceFieldWarmup > 0) {
                 // 前摇期间只展示特效，不触发攻击
                 this.forceFieldWarmup -= dt;
-            } else if (!this.hasTriggeredAwakenAttack && this.enemy && !this.enemy.isDead) {
+            } else if (!this.hasTriggeredAwakenAttack && this.enemy && !this.enemy.isDead && !this.enemy.isSuperArmor) {
                 // 检测敌方是否进入力场
                 const dx = this.enemy.x - this.x;
                 const dy = this.enemy.y - this.y;
@@ -247,6 +247,12 @@ export class Van extends Hero {
                 if (this.hitAudio) {
                     this.hitAudio.currentTime = 0;
                     this.hitAudio.play().catch(e => console.warn('Hit audio play failed:', e));
+                }
+                
+                // 如果敌方处于霸体，则跳过强制吸附与受击位移动画，转而中断打桩
+                if (this.enemy.isSuperArmor) {
+                    this.endGayAttack(true);
+                    return;
                 }
                 
                 // 触发敌方的受击后仰与滑行反应 (滑行0.3个身位，身宽80，约24px，分布在0.15s内)
@@ -422,6 +428,11 @@ export class Van extends Hero {
             this.game.logEvent('skill', { heroId: this.playerId, skill: isAwakenAttack ? 'Awaken: Force Field Attack' : 'Gay Attack' });
         }
         this.resetContact(); // 触发攻击重置接触
+        
+        // 如果目标处于霸体/无敌状态，禁止起手发动打桩
+        if (this.enemy && (this.enemy.isSuperArmor || this.enemy.invincibleTime > 0)) {
+            return;
+        }
         
         this.isGayAttacking = true;
         this.gayAttackTimer = 0;

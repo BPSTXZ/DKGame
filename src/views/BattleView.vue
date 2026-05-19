@@ -142,6 +142,7 @@ import { T1000 } from '@/game/entities/heroes/T1000.js';
 import { OnePunchMan } from '@/game/entities/heroes/OnePunchMan.js';
 import { QueenS } from '@/game/entities/heroes/QueenS.js';
 import { DragonKing } from '@/game/entities/heroes/DragonKing.js';
+import { ThunderFlash } from '@/game/entities/heroes/ThunderFlash.js';
 import { BattleRecordManager } from '@/utils/BattleRecordManager.js';
 import { heroConfig } from '@/config/heroes.js';
 
@@ -160,7 +161,8 @@ const classes = {
   'T1000': T1000,
   'OnePunchMan': OnePunchMan,
   'QueenS': QueenS,
-  'DragonKing': DragonKing
+  'DragonKing': DragonKing,
+  'ThunderFlash': ThunderFlash
 };
 
 const store = useGameStore();
@@ -219,8 +221,8 @@ const updateBattleState = (state, hero) => {
     state.awakenTimer = hero.awakenTimer || 0;
   } else if (hero.name === '蜘蛛') {
     state.awakenTimer = hero.isAwakened ? (hero.awakenTimer || 0) : 0;
-  } else if (hero.name === '马老师') {
-    state.awakenTimer = 0; // 马老师觉醒不需要显示时长，随技能释放完毕自动结束
+  } else if (hero.name === '马老师' || hero.name === '雷霆闪') {
+    state.awakenTimer = 0; // 马老师和雷霆闪觉醒不需要显示时长，随技能释放完毕自动结束
   } else if (hero.name === '吸血鬼') {
     state.awakenTimer = 0;
   } else if (hero.name === '赌徒') {

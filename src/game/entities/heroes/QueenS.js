@@ -364,7 +364,7 @@ export class QueenS extends Hero {
                     this.timeSinceLastSlap += dt;
                 }
 
-                if (this.slapCooldown <= 0 && this.enemy && !this.enemy.isDead) {
+                if (this.slapCooldown <= 0 && this.enemy && !this.enemy.isDead && !this.enemy.isSuperArmor) {
                     const dist = Math.hypot(this.enemy.x - this.x, this.enemy.y - this.y);
                     const engageTotalDist = this.radius + this.enemy.radius + this.engageDistance;
                     if (dist <= engageTotalDist) {
@@ -419,6 +419,9 @@ export class QueenS extends Hero {
 
     forceEnemyPosition(targetGap) {
         if (!this.enemy || this.enemy.isDead) return false;
+        
+        // 目标处于霸体时，无法强行锁定坐标
+        if (this.enemy.isSuperArmor) return false;
         
         const angle = Math.atan2(this.enemy.y - this.y, this.enemy.x - this.x);
         
@@ -475,8 +478,8 @@ export class QueenS extends Hero {
     }
 
     updateSlapping(dt) {
-        // 如果敌方死亡，立即停止扇耳光
-        if (!this.enemy || this.enemy.isDead) {
+        // 如果敌方死亡，或敌方突然进入霸体状态，立即停止扇耳光
+        if (!this.enemy || this.enemy.isDead || this.enemy.isSuperArmor) {
             this.endSlapping();
             return;
         }
@@ -591,7 +594,7 @@ export class QueenS extends Hero {
         const throwSpeed = 1200; // 链条甩出速度
         this.chain.length += throwSpeed * dt;
         
-        if (this.chain.targetEnemy && this.enemy && !this.enemy.isDead) {
+        if (this.chain.targetEnemy && this.enemy && !this.enemy.isDead && !this.enemy.isSuperArmor) {
             // 追踪必中：不断修正角度
             this.chain.throwAngle = Math.atan2(this.enemy.y - this.y, this.enemy.x - this.x);
         }
@@ -600,7 +603,7 @@ export class QueenS extends Hero {
         const chainTipY = this.y + Math.sin(this.chain.throwAngle) * this.chain.length;
         
         // 命中判定
-        if (this.enemy && !this.enemy.isDead) {
+        if (this.enemy && !this.enemy.isDead && !this.enemy.isSuperArmor) {
             const dist = Math.hypot(this.enemy.x - chainTipX, this.enemy.y - chainTipY);
             if (dist <= this.enemy.radius + 20) {
                 // 狗绳命中瞬间造成 5 点爆发伤害
@@ -695,7 +698,7 @@ export class QueenS extends Hero {
     }
     
     updateChainDelay(dt) {
-        if (!this.enemy || this.enemy.isDead) {
+        if (!this.enemy || this.enemy.isDead || this.enemy.isSuperArmor) {
             this.state = 'normal';
             this.chain.active = false;
             return;
@@ -738,8 +741,8 @@ export class QueenS extends Hero {
     }
 
     updateWhipping(dt) {
-        // 如果敌方死亡，停止鞭笞
-        if (!this.enemy || this.enemy.isDead) {
+        // 如果敌方死亡，或突然进入霸体状态，停止鞭笞
+        if (!this.enemy || this.enemy.isDead || this.enemy.isSuperArmor) {
             this.endAwaken();
             return;
         }

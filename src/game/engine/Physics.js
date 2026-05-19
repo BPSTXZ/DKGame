@@ -152,7 +152,15 @@ export class Physics {
             // 检查吸血鬼是否正处于黏附吸血状态，如果是，则取消速度反弹，让它们保持贴合
             let shouldBounce = true;
             if ((h1.name === 'Vampire' && h1.isSucking) || (h2.name === 'Vampire' && h2.isSucking)) {
-                shouldBounce = false;
+                // 如果被吸血的目标处于霸体，则不能贴合（因为吸附被弹开了）
+                // 这里的逻辑在吸血鬼内部处理（断开 isSucking），但如果是刚碰撞还没断开，我们也先不阻止反弹
+                if (h1.name === 'Vampire' && h2.isSuperArmor) {
+                    shouldBounce = true;
+                } else if (h2.name === 'Vampire' && h1.isSuperArmor) {
+                    shouldBounce = true;
+                } else {
+                    shouldBounce = false;
+                }
             }
             
             if (shouldBounce) {
