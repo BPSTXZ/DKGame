@@ -3,12 +3,12 @@ import { Hero } from '../Hero.js';
 export class ThunderFlash extends Hero {
     constructor(x, y, playerId) {
         super(x, y, playerId);
-        this.name = '雷霆闪';
+        this.name = '霹雳闪';
         this.maxHp = 100;
         this.hp = 100;
         this.baseSpeed = 60;
-        this.color = '#1a237e'; // 深蓝靛青球体
-        this.strokeColor = '#00ffff'; // 电蓝描边
+        this.color = '#f9a825'; // 主题色改为橙黄
+        this.strokeColor = '#ffffff'; // 描边色改为白色
         
         // Skill 1: Thunder Flash
         this.isCharging = false;
@@ -38,8 +38,15 @@ export class ThunderFlash extends Hero {
         // Disable regular hero collision bounce when dashing
         this.ignoreHeroCollisionBounce = false;
         
-        // Audio (if needed, but not specified, so we'll use common or none)
-        // this.chargeAudio = ...
+        // Lightning trail history
+        this.trailPoints = []; 
+        this.maxTrailPoints = 12; // 稍微减少采样点数，避免短距离折线过于密集
+        this.trailDistanceThreshold = 15; // 限制采样距离，避免移动过慢时堆积点
+        
+        // Audio
+        this.chargeAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/thunderflash/霹雳一闪.mp3');
+        this.pierceAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/thunderflash/贯穿.mp3');
+        this.hasPlayedPierceAudio = false; // 用于标记单次冲刺是否已提前播放过贯穿音效
     }
     
     isCurrentlyControlled() {
@@ -110,6 +117,15 @@ export class ThunderFlash extends Hero {
         this.maxChargeTime = this.chargeTimer;
         this.chargeFlash = false;
         this.isDashing = false;
+        this.hasPlayedPierceAudio = false; // 重置提前播放贯穿音效的标记
+        
+        // 播放蓄力/弹射音效
+        if (this.chargeAudio) {
+            // 为避免八连闪时音效重叠过分嘈杂，也可以选择只在未觉醒或首发时播放
+            // 但既然是雷霆一闪的核心音效，我们每次起手都重置并播放
+            this.chargeAudio.currentTime = 0;
+            this.chargeAudio.play().catch(e => console.warn('ThunderFlash charge audio play failed:', e));
+        }
         
         // Reset free acceleration
         this.timeSinceLastChargeStart = 0;
@@ -163,6 +179,11 @@ export class ThunderFlash extends Hero {
             this.dashCooldown = 0.15;
             this.skillCooldown = 1.0; // 技能一改为 1 秒冷却时间
             
+            // 将当前的电弧作为残影保留下来渐隐，停止采集新点
+            if (this.trailPoints.length > 0) {
+                // 不清空 trailPoints，而是让它在 updateSpecific 里自然生命周期衰减
+            }
+            
             // Spark visual
             this.createSparks(cx, cy, nx, ny);
             
@@ -210,13 +231,28 @@ export class ThunderFlash extends Hero {
             const damage = this.isAwakenCombo ? 5 : 8; // 觉醒5点，未觉醒8点
             other.takeDamage(damage * this.damageMultiplier, this.x, this.y);
             
-            // Speed decays
-            this.dashSpeedMult = 3.0 + Math.random() * 0.5;
+            // 如果因为距离太近导致提前判定没有成功播放，这里做个兜底播放
+            if (this.pierceAudio && !this.hasPlayedPierceAudio) {
+                this.pierceAudio.currentTime = 0;
+                this.pierceAudio.play().catch(e => console.warn('ThunderFlash pierce audio play failed:', e));
+                this.hasPlayedPierceAudio = true;
+            }
             
-            // Visual: electric slash mark
+            // 在敌方身上留下一条刀痕特效 (可叠加，持续 1.2s)
+            const slashAngle = Math.atan2(this.vy, this.vx);
+            // 给刀痕稍微加一点随机的倾斜偏移，看起来更像多段切割
+            const randomOffset = (Math.random() - 0.5) * (Math.PI / 4); 
+            // 增加中心位置的随机偏移量，避免所有刀痕都死板地交汇在一个中心点
+            const offsetX = (Math.random() - 0.5) * this.radius * 1.5;
+            const offsetY = (Math.random() - 0.5) * this.radius * 1.5;
+            // 长度拉长一点(radius * 4)，加粗(width: 8)，外层颜色青色(#00ffff)，持续 1.2s
+            other.addSlashMark(slashAngle + randomOffset, this.radius * 4, 8, '#00ffff', 1.2, offsetX, offsetY);
+            
+            // Visual: electric slash mark (额外的散落电光粒子)
             this.createSlashMark(other.x, other.y);
             
-            // Custom "-5" pop is handled by takeDamage already, but maybe we can add a slash particle
+            // Speed decays
+            this.dashSpeedMult = 3.0 + Math.random() * 0.5;
         }
         
         if (!this.isDashing && !this.isCharging) {
@@ -234,7 +270,7 @@ export class ThunderFlash extends Hero {
     updateSpecific(dt) {
         if (this.isDead) return;
         
-        // 确保雷霆闪始终面朝敌人
+        // 确保霹雳闪始终面朝敌人
         if (this.enemy && !this.enemy.isDead && !this.isDashing && !this.isCharging) {
             this.visualRotation = Math.atan2(this.enemy.y - this.y, this.enemy.x - this.x);
         }
@@ -311,7 +347,7 @@ export class ThunderFlash extends Hero {
                     y: this.y + Math.sin(angle) * dist,
                     vx: -Math.cos(angle) * 100,
                     vy: -Math.sin(angle) * 100,
-                    color: '#00ffff',
+                    color: '#00ffff', // 还原青色
                     size: 2,
                     life: 0.2,
                     target: this
@@ -349,9 +385,65 @@ export class ThunderFlash extends Hero {
         }
         
         if (this.isDashing) {
-            // Afterimages
+            // 提前播放贯穿音效判断 (预计撞击前 0.5s)
+            // 根据当前速度和与敌方的距离估算时间
+            if (this.enemy && !this.enemy.isDead && !this.hasPlayedPierceAudio && this.pierceAudio) {
+                const dx = this.enemy.x - this.x;
+                const dy = this.enemy.y - this.y;
+                const dist = Math.hypot(dx, dy);
+                const currentSpeed = Math.hypot(this.vx, this.vy);
+                
+                if (currentSpeed > 0) {
+                    const timeToHit = dist / currentSpeed;
+                    if (timeToHit <= 0.5) {
+                        this.pierceAudio.currentTime = 0;
+                        this.pierceAudio.play().catch(e => console.warn('ThunderFlash pierce audio early play failed:', e));
+                        this.hasPlayedPierceAudio = true;
+                    }
+                }
+            }
+            
+            // 记录电弧拖尾路径点
+            // 每帧记录当前位置，并稍微加入一点横向抖动偏移，用来在绘制时产生闪电的折线感
+            const currentSpeed = Math.hypot(this.vx, this.vy);
+            
+            // 只有当距离上一个采样点足够远时才添加新点，防止短距离抖动点堆积
+            let shouldAddPoint = true;
+            if (this.trailPoints.length > 0) {
+                const lastPoint = this.trailPoints[0];
+                const distToLast = Math.hypot(this.x - lastPoint.x, this.y - lastPoint.y);
+                if (distToLast < this.trailDistanceThreshold) {
+                    shouldAddPoint = false;
+                }
+            }
+            
+            if (currentSpeed > 0 && shouldAddPoint) {
+                const dirX = this.vx / currentSpeed;
+                const dirY = this.vy / currentSpeed;
+                // 计算垂直于运动方向的法向量
+                const perpX = -dirY;
+                const perpY = dirX;
+                
+                // 缩小随机横向抖动范围，限制角度过大
+                // 原来是 this.radius * 1.5，改为 this.radius * 0.5
+                const jitter = (Math.random() - 0.5) * this.radius * 0.5;
+                
+                this.trailPoints.unshift({
+                    x: this.x + perpX * jitter,
+                    y: this.y + perpY * jitter,
+                    life: 1.0 // 记录初始生命值用于透明度衰减
+                });
+                
+                // 限制采样点数量
+                if (this.trailPoints.length > this.maxTrailPoints) {
+                    this.trailPoints.pop();
+                }
+            }
+            
+            // Afterimages (点状残影)
             if (Math.random() < 0.5) {
                 this.afterImages.push({
+                    isLongTrail: false,
                     x: this.x, y: this.y,
                     life: 0.2,
                     maxLife: 0.2,
@@ -362,12 +454,37 @@ export class ThunderFlash extends Hero {
             }
         }
         
+        // 更新电弧拖尾生命周期
+        if (!this.isDashing && this.trailPoints.length > 0) {
+            for (let i = this.trailPoints.length - 1; i >= 0; i--) {
+                this.trailPoints[i].life -= dt * 3; // 非弹射状态下快速消散
+                if (this.trailPoints[i].life <= 0) {
+                    this.trailPoints.splice(i, 1);
+                }
+            }
+        } else if (this.isDashing && this.trailPoints.length > 0) {
+             for (let i = this.trailPoints.length - 1; i >= 0; i--) {
+                this.trailPoints[i].life -= dt * 2; // 弹射状态下自然消散
+             }
+        }
+        
         // Update afterimages
         for (let i = this.afterImages.length - 1; i >= 0; i--) {
             this.afterImages[i].life -= dt;
             if (this.afterImages[i].life <= 0) {
                 this.afterImages.splice(i, 1);
             }
+        }
+    }
+    
+    stopAllAudio() {
+        if (this.chargeAudio) {
+            this.chargeAudio.pause();
+            this.chargeAudio.currentTime = 0;
+        }
+        if (this.pierceAudio) {
+            this.pierceAudio.pause();
+            this.pierceAudio.currentTime = 0;
         }
     }
     
@@ -393,7 +510,7 @@ export class ThunderFlash extends Hero {
                 x: px, y: py,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed,
-                color: Math.random() > 0.5 ? '#00ffff' : '#ffffff',
+                color: Math.random() > 0.5 ? '#00ffff' : '#ffffff', // 还原青白火花
                 size: Math.random() * 3 + 1,
                 life: 0.3 + Math.random() * 0.2
             });
@@ -408,10 +525,10 @@ export class ThunderFlash extends Hero {
                 y: y + (Math.random() - 0.5) * 20,
                 vx: Math.cos(angle) * 100 * (Math.random() > 0.5 ? 1 : -1),
                 vy: Math.sin(angle) * 100 * (Math.random() > 0.5 ? 1 : -1),
-                color: '#00ffff',
+                color: '#00ffff', // 还原青色
                 size: 2,
                 life: 0.2,
-                isLine: true // Assuming game engine supports this or we just use normal particles
+                isLine: true
             });
         }
     }
@@ -424,7 +541,7 @@ export class ThunderFlash extends Hero {
                 x: this.x, y: this.y,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed,
-                color: '#00ffff',
+                color: '#00ffff', // 还原青色
                 size: Math.random() * 4 + 2,
                 life: 0.5
             });
@@ -432,14 +549,13 @@ export class ThunderFlash extends Hero {
         this.game.addParticle({
             x: this.x, y: this.y,
             vx: 0, vy: 0,
-            color: 'rgba(0, 255, 255, 0.5)',
+            color: 'rgba(0, 255, 255, 0.5)', // 还原青色外圈
             size: this.radius * 4,
             life: 0.3
         });
     }
 
     createAccelEndEffect() {
-        // "电光快速收缩消失" -> particles moving towards center
         for (let i = 0; i < 15; i++) {
             const angle = Math.random() * Math.PI * 2;
             const dist = this.radius * 2;
@@ -448,7 +564,7 @@ export class ThunderFlash extends Hero {
                 y: this.y + Math.sin(angle) * dist,
                 vx: -Math.cos(angle) * 150,
                 vy: -Math.sin(angle) * 150,
-                color: '#00ffff',
+                color: '#00ffff', // 还原青色
                 size: Math.random() * 2 + 1,
                 life: 0.2
             });
@@ -456,29 +572,92 @@ export class ThunderFlash extends Hero {
     }
     
     draw(ctx) {
-        if (!this.isDead && this.afterImages.length > 0) {
-            for (const img of this.afterImages) {
+        if (!this.isDead) {
+            // 绘制闪电电弧长拖尾
+            if (this.trailPoints.length > 1) {
                 ctx.save();
-                ctx.globalAlpha = (img.life / img.maxLife) * 0.5;
-                ctx.translate(img.x, img.y);
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'miter'; // 折线连接处尖锐，更像闪电
                 
-                if (img.angle !== undefined && img.speedBonus !== undefined) {
-                    ctx.rotate(img.angle);
-                    const scaleX = 1 + (img.speedBonus * 0.1);
-                    const scaleY = 1 / scaleX;
-                    ctx.scale(scaleX, scaleY);
-                }
+                // 为了让电弧更生动，绘制两层：外层宽且模糊，内层细且亮白
+                
+                // 第一层：外层青色光晕
+                ctx.shadowColor = '#00ffff';
+                ctx.shadowBlur = 20;
+                ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
                 
                 ctx.beginPath();
-                ctx.arc(0, 0, img.radius, 0, Math.PI * 2);
+                // 强制将当前真实坐标作为电弧起点连接上去，保证电弧不脱节
+                ctx.moveTo(this.x, this.y);
                 
-                // Gradient for trail
-                const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, img.radius);
-                grad.addColorStop(0, '#ffffff');
-                grad.addColorStop(1, '#00ffff');
-                ctx.fillStyle = grad;
-                ctx.fill();
+                for (let i = 0; i < this.trailPoints.length; i++) {
+                    const p = this.trailPoints[i];
+                    // 随着距离拉远，线条变细 (模拟闪电的尖端)
+                    const progress = 1 - (i / this.trailPoints.length);
+                    ctx.lineTo(p.x, p.y);
+                    ctx.lineWidth = this.radius * 1.5 * progress;
+                }
+                ctx.stroke();
+                
+                // 第二层：内层纯白高亮核心
+                ctx.shadowBlur = 10;
+                ctx.strokeStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                for (let i = 0; i < this.trailPoints.length; i++) {
+                    const p = this.trailPoints[i];
+                    const progress = 1 - (i / this.trailPoints.length);
+                    ctx.lineTo(p.x, p.y);
+                    ctx.lineWidth = this.radius * 0.5 * progress;
+                }
+                ctx.stroke();
+                
+                // 可选：再画一条稍微错开的细小分支闪电，增加随机感
+                if (this.isDashing && Math.random() > 0.3 && this.trailPoints.length > 3) {
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.lineWidth = 2;
+                    ctx.shadowBlur = 5;
+                    
+                    let branchLen = Math.floor(this.trailPoints.length / 2);
+                    for (let i = 0; i < branchLen; i++) {
+                        const p = this.trailPoints[i];
+                        // 在主电弧基础上再做一次随机偏移
+                        ctx.lineTo(p.x + (Math.random() - 0.5) * 15, p.y + (Math.random() - 0.5) * 15);
+                    }
+                    ctx.stroke();
+                }
+                
                 ctx.restore();
+            }
+
+            // 绘制残影
+            if (this.afterImages.length > 0) {
+                for (const img of this.afterImages) {
+                    ctx.save();
+                    ctx.globalAlpha = (img.life / img.maxLife) * 0.6;
+                    
+                    // 绘制点状残影
+                    ctx.translate(img.x, img.y);
+                    
+                    if (img.angle !== undefined && img.speedBonus !== undefined) {
+                        ctx.rotate(img.angle);
+                        const scaleX = 1 + (img.speedBonus * 0.1);
+                        const scaleY = 1 / scaleX;
+                        ctx.scale(scaleX, scaleY);
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.arc(0, 0, img.radius, 0, Math.PI * 2);
+                    
+                    const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, img.radius);
+                    grad.addColorStop(0, '#ffffff');
+                    grad.addColorStop(1, '#00ffff'); // 还原青色
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                    ctx.restore();
+                }
             }
         }
         
@@ -524,72 +703,72 @@ export class ThunderFlash extends Hero {
         }
         
         // Electric glow
-        ctx.shadowColor = '#00ffff';
+        ctx.shadowColor = '#f9a825';
         ctx.shadowBlur = this.isFreeAccel ? 20 : (this.isDashing ? 30 : 10);
         
-        // Body
-        ctx.fillStyle = this.color;
+        // Body Background (Orange to White Gradient)
+        const bodyGrad = ctx.createLinearGradient(-this.radius, -this.radius, this.radius, this.radius);
+        bodyGrad.addColorStop(0, '#f57f17'); // 深橙
+        bodyGrad.addColorStop(0.6, '#fbc02d'); // 明黄
+        bodyGrad.addColorStop(1, '#ffffff'); // 渐变至白
+        
+        ctx.fillStyle = bodyGrad;
         ctx.beginPath();
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fill();
         
-        // Stroke
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = this.strokeColor;
-        ctx.stroke();
-        
-        // 绘制佩剑 (别在身边)
+        // 使用 clip() 进行裁切，使得超出的花纹不会画到球体外面
         ctx.save();
-        // 取消外发光避免佩剑糊成一团
-        ctx.shadowBlur = 0;
-        
-        // 固定在身侧（右侧），这里因为通过 visualRotation 已经让主体面向敌人
-        // 所以 x 轴正方向就是敌人的方向，我们把剑挂在下方（y 为正）或上方
-        // 挂在“腰部”（y轴正方向为右侧身旁）
-        ctx.translate(0, this.radius + 5);
-        
-        // 调整佩剑角度：现在 x轴正方向 是前方，所以剑应该指向前方，剑柄在后方
-        // 旋转让剑身与 x 轴大致平行，剑尖指向 x 正方向
-        ctx.rotate(-Math.PI / 2); // 把原来向上的剑转到向右
-        
-        // 进一步稍微倾斜，让它像斜跨在腰间，而不是完全笔直向前
-        ctx.rotate(-Math.PI / 6); 
-        
-        // 绘制剑柄 (柄在下方，y为正方向，但这里局部坐标系是朝向 -y 为剑尖)
-        // 所以剑柄在 +y 方向
-        ctx.fillStyle = '#b8860b'; // 暗金色剑柄
-        ctx.fillRect(-5, 0, 10, 20); // 从 0 到 20 是剑柄
-        
-        // 绘制剑格 (护手)
-        ctx.fillStyle = '#ffd700'; // 金色护手
-        ctx.fillRect(-12, -4, 24, 6);
-        
-        // 绘制剑刃 (向 -y 方向延伸)
-        // 使用渐变表现金属和电光质感
-        const bladeGrad = ctx.createLinearGradient(0, -4, 0, -45);
-        bladeGrad.addColorStop(0, '#ffffff');
-        bladeGrad.addColorStop(0.5, '#00ffff');
-        bladeGrad.addColorStop(1, '#0088ff');
-        
-        ctx.fillStyle = bladeGrad;
         ctx.beginPath();
-        ctx.moveTo(-4, -4);
-        ctx.lineTo(-2, -40);
-        ctx.lineTo(0, -48); // 剑尖
-        ctx.lineTo(2, -40);
-        ctx.lineTo(4, -4);
-        ctx.closePath();
-        ctx.fill();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.clip();
         
-        // 绘制剑刃中线
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, -4);
-        ctx.lineTo(0, -45);
-        ctx.stroke();
+        // Draw White Triangles Pattern (Regular Pattern)
+        ctx.fillStyle = '#ffffff';
+        // 绘制单个三角形
+        const drawTriangle = (tx, ty, scale, rot) => {
+            ctx.save();
+            ctx.translate(tx, ty);
+            ctx.rotate(rot);
+            ctx.scale(scale, scale);
+            ctx.beginPath();
+            ctx.moveTo(0, -6);
+            ctx.lineTo(5, 4);
+            ctx.lineTo(-5, 4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        };
         
+        // 生成规则的网格排列三角形，参考我妻善逸羽织的花纹（鳞纹）
+        // 放大间距和三角形尺寸
+        const spacingX = 22;
+        const spacingY = 19;
+        
+        for (let row = -3; row <= 3; row++) {
+            for (let col = -3; col <= 3; col++) {
+                // 交错排列
+                const offsetX = (row % 2 === 0) ? 0 : spacingX / 2;
+                const tx = col * spacingX + offsetX;
+                const ty = row * spacingY;
+                
+                // 放大的三角形 (从 0.8 改为 1.3)
+                drawTriangle(tx, ty, 1.3, 0); 
+            }
+        }
+        
+        // 结束 clip
         ctx.restore();
+        
+        // 重新绘制一个圆形路径用于描边
+        // 因为之前的 clip() 或三角形绘制可能会干扰当前的 path
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        
+        // Stroke (Player ID border)
+        ctx.lineWidth = 4; // 加粗一点使阵营更清晰
+        ctx.strokeStyle = '#f5e1b2ff';
+        ctx.stroke();
         
         ctx.restore();
         

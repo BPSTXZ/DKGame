@@ -7,8 +7,23 @@
       <div v-for="hero in filteredHeroPool" :key="hero.id" class="hero-card"
         :class="{ 'selected-p1': store.p1Selection?.id === hero.id, 'selected-p2': store.p2Selection?.id === hero.id, 'disabled': hero.disabled }"
         @click.stop="handleCardClick(hero, $event)" @contextmenu.prevent>
-        <div class="hero-icon" :class="{ 'hero-icon--van': hero.class === 'Van' }" :style="{ background: hero.iconColor }">
+        <div class="hero-icon" :class="{ 'hero-icon--van': hero.class === 'Van', 'hero-icon--thunderflash': hero.class === 'ThunderFlash' }" :style="{ background: hero.iconColor }">
           <div v-if="hero.class === 'Van'" class="hero-icon-sock"></div>
+          <div v-if="hero.class === 'ThunderFlash'" class="hero-icon-thunderflash-pattern">
+            <!-- 规则排列的善逸羽织三角形鳞纹 -->
+            <div class="tf-tri-row tf-row-1">
+              <div class="tf-tri"></div><div class="tf-tri"></div><div class="tf-tri"></div>
+            </div>
+            <div class="tf-tri-row tf-row-2">
+              <div class="tf-tri"></div><div class="tf-tri"></div>
+            </div>
+            <div class="tf-tri-row tf-row-3">
+              <div class="tf-tri"></div><div class="tf-tri"></div><div class="tf-tri"></div>
+            </div>
+            <div class="tf-tri-row tf-row-4">
+              <div class="tf-tri"></div><div class="tf-tri"></div>
+            </div>
+          </div>
           <span v-if="hero.disabled"
             style="display: flex; justify-content: center; align-items: center; height: 100%; font-size: 2rem; color: #888;">?</span>
         </div>
@@ -267,5 +282,35 @@ const startDebugMode = () => {
   background: #ffffff;
   border-top: 2px solid rgba(220, 220, 220, 0.95);
   pointer-events: none;
+}
+
+.hero-icon--thunderflash {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f57f17 0%, #fbc02d 60%, #ffffff 100%) !important;
+}
+
+.hero-icon-thunderflash-pattern {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; /* 行间距 */
+}
+
+.tf-tri-row {
+  display: flex;
+  gap: 12px; /* 三角形之间的水平间距 */
+}
+
+.tf-tri {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 8px solid rgba(255, 255, 255, 0.9);
 }
 </style>

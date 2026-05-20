@@ -228,6 +228,16 @@ export class Hero {
             this.shakeTimer -= dt;
         }
         
+        // 更新附加在身上的斩痕特效
+        if (this.slashMarks) {
+            for (let i = this.slashMarks.length - 1; i >= 0; i--) {
+                this.slashMarks[i].life -= dt;
+                if (this.slashMarks[i].life <= 0) {
+                    this.slashMarks.splice(i, 1);
+                }
+            }
+        }
+        
         // 更新位置
         this.x += this.vx * dt;
         this.y += this.vy * dt;
@@ -245,6 +255,25 @@ export class Hero {
     triggerShake(duration, intensity) {
         this.shakeTimer = duration;
         this.shakeIntensity = intensity;
+    }
+    
+    /**
+     * 在英雄身上添加一道刀痕特效
+     */
+    addSlashMark(angle, length, width, color, life, offsetX = 0, offsetY = 0) {
+        if (!this.slashMarks) {
+            this.slashMarks = [];
+        }
+        this.slashMarks.push({
+            angle: angle,
+            length: length,
+            width: width,
+            color: color,
+            life: life,
+            maxLife: life,
+            offsetX: offsetX,
+            offsetY: offsetY
+        });
     }
     
     // 子类钩子函数（待覆盖）
@@ -472,7 +501,76 @@ export class Hero {
      * 主体绘制后的附加覆盖层
      * 供子类在所有英雄绘制完成后追加渲染特殊覆盖效果
      */
-    drawOverlay(ctx) {}
+    drawOverlay(ctx) {
+        // 绘制斩痕特效 (如雷霆闪造成的叠加刀痕) - 移到 overlay 中以确保在所有英雄之上显示
+        if (this.slashMarks && this.slashMarks.length > 0) {
+            ctx.save();
+            ctx.translate(this.x, this.y); // overlay 是在全局坐标系调用的，所以需要平移
+            // 不使用 lineCap round，改用多边形绘制以呈现中间粗两头尖的剑气形状
+            for (const mark of this.slashMarks) {
+                const alpha = Math.max(0, mark.life / mark.maxLife);
+                // 采用 ease-out 的透明度衰减，让刀光一开始非常亮
+                const visualAlpha = Math.pow(alpha, 0.5); 
+                
+                ctx.save();
+                // 在原本英雄中心的坐标基础上，加上刀痕特有的随机偏移
+                ctx.translate(mark.offsetX || 0, mark.offsetY || 0);
+                ctx.rotate(mark.angle);
+                
+                const halfLen = mark.length / 2;
+                const halfWidth = (mark.width || 8) / 2; // 默认加粗
+                
+                // 1. 绘制最外层大范围的发光晕染 (Glow)
+                ctx.globalAlpha = visualAlpha * 0.4;
+                ctx.shadowColor = mark.color || '#00ffff';
+                ctx.shadowBlur = 30; // 夸张的辉光
+                ctx.fillStyle = mark.color || '#00ffff';
+                
+                ctx.beginPath();
+                ctx.moveTo(-halfLen * 1.2, 0);
+                ctx.lineTo(0, halfWidth * 3);
+                ctx.lineTo(halfLen * 1.2, 0);
+                ctx.lineTo(0, -halfWidth * 3);
+                ctx.closePath();
+                ctx.fill();
+                
+                // 2. 绘制中层高亮刀光本体 (Color Core)
+                ctx.globalAlpha = visualAlpha * 0.8;
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.moveTo(-halfLen, 0);
+                // 制作中间粗两头尖的流线型剑气
+                ctx.quadraticCurveTo(0, halfWidth * 1.5, halfLen, 0);
+                ctx.quadraticCurveTo(0, -halfWidth * 1.5, -halfLen, 0);
+                ctx.closePath();
+                ctx.fill();
+                
+                // 3. 绘制最内层极细的纯白高光刃线 (White Edge)
+                ctx.globalAlpha = visualAlpha;
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.moveTo(-halfLen * 0.9, 0);
+                ctx.quadraticCurveTo(0, halfWidth * 0.4, halfLen * 0.9, 0);
+                ctx.quadraticCurveTo(0, -halfWidth * 0.4, -halfLen * 0.9, 0);
+                ctx.closePath();
+                ctx.fill();
+                
+                // 4. 添加一些沿刀痕方向的拉丝电光线
+                if (alpha > 0.5) { // 只在刚产生时绘制拉丝
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(-halfLen * 0.8, (Math.random() - 0.5) * halfWidth);
+                    ctx.lineTo(halfLen * 0.8, (Math.random() - 0.5) * halfWidth);
+                    ctx.stroke();
+                }
+                
+                ctx.restore();
+            }
+            ctx.restore();
+        }
+    }
     
     /**
      * 添加状态 Buff
