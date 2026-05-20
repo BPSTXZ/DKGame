@@ -653,7 +653,7 @@ export class ThunderFlash extends Hero {
                     
                     const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, img.radius);
                     grad.addColorStop(0, '#ffffff');
-                    grad.addColorStop(1, '#00ffff'); // 还原青色
+                    grad.addColorStop(1, '#fbc02d'); // 橙色颜色
                     ctx.fillStyle = grad;
                     ctx.fill();
                     ctx.restore();
