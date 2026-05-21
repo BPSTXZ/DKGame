@@ -147,6 +147,11 @@ export class Game {
         window.removeEventListener('resize', this.resizeHandler);
     }
     
+    shakeScreen(intensity, duration) {
+        this.screenShakeIntensity = intensity * 100; // 放大系数，使参数保持在 0.1-1.0 量级
+        this.screenShakeTimer = duration * 0.1;      // 将参数转换为秒 (通常传入 5-10 代表 0.5-1.0秒)
+    }
+
     logEvent(type, data) {
         if (this.isReplay || this.isTraining || this.debugConfig?.enabled) return;
         this.events.push({ time: parseFloat(this.gameTime.toFixed(2)), type, ...data });

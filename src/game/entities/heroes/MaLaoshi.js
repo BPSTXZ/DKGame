@@ -14,9 +14,9 @@ export class MaLaoshi extends Hero {
         this.maxHp = 100;
         this.baseSpeed = 60;
         
-        // 攻击机制一：松果糖豆劲 (每 2 秒一次)
-        this.nutBeanInterval = 2.0;
-        this.nutBeanTimer = 2.0;
+        // 攻击机制一：松果糖豆劲
+        this.nutBeanInterval = 1.5; // 改为 1.5s 发射一次
+        this.nutBeanTimer = 1.5;
         this.projectiles = []; // 存储场上的松果和糖豆
         
         // 攻击机制二：三维立体混元劲 (血量阈值触发)
@@ -24,13 +24,18 @@ export class MaLaoshi extends Hero {
         this.hunyuanWaves = []; // 场上扩算的能量波
         
         // 觉醒机制：闪电五连鞭
+        this.whipCount = 0;
         this.whipMaxCount = 5;
-        this.whipCurrentCount = 0;
-        this.whipInterval = 1.5;
         this.whipTimer = 0;
+        this.whipInterval = 1.5;
+        this.whipDamage = 7; // 改为 7 点伤害
         this.isWhipping = false;
+        this.whipVisuals = []; // 存储强化的闪电鞭特效线条
         this.recentHitWindow = 0;
         this.recentHitCount = 0;
+        
+        // 视觉旋转
+        this.taijiAngle = 0;
         
         // 专属音效
         this.nutBeanFirstAudioSrc = import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/松果糖豆劲.mp3';
@@ -54,6 +59,11 @@ export class MaLaoshi extends Hero {
             import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/五鞭.mp3'
         ];
         this.currentWhipAudio = null;
+        
+        // 闪电鞭叠加音效
+        this.whipThunderAudioSrc = import.meta.env.BASE_URL + 'assets/audio/thunderflash/霹雳一闪.mp3';
+        this.currentWhipThunderAudio = null;
+        
         this.whipHitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/common/碰撞.mp3');
         this.tingtingHitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/婷婷.mp3');
         
@@ -72,11 +82,29 @@ export class MaLaoshi extends Hero {
                 this.currentWhipAudio.pause();
                 this.currentWhipAudio = null;
             }
+            if (this.currentWhipThunderAudio) {
+                this.currentWhipThunderAudio.pause();
+                this.currentWhipThunderAudio = null;
+            }
             if (this.tingtingHitAudio) {
                 this.tingtingHitAudio.pause();
                 this.tingtingHitAudio.currentTime = 0;
             }
             return;
+        }
+
+        // 持续更新太极图的旋转角度
+        // 常态速度为每秒转 2 弧度，觉醒状态下加速到每秒 12 弧度
+        // 修改为减去 spinSpeed * dt，实现逆时针(经典太极)旋转方向
+        const spinSpeed = this.isWhipping ? 12 : 2;
+        this.taijiAngle -= spinSpeed * dt;
+
+        // Update active whip visuals
+        for (let i = this.whipVisuals.length - 1; i >= 0; i--) {
+            this.whipVisuals[i].life -= dt;
+            if (this.whipVisuals[i].life <= 0) {
+                this.whipVisuals.splice(i, 1);
+            }
         }
         
         if (this.recentHitWindow > 0) {
@@ -188,7 +216,16 @@ export class MaLaoshi extends Hero {
                         this.hasDealtWhipDamage = true;
                         if (this.enemy && !this.enemy.isDead) {
                             // 100% 必中
-                            this.enemy.takeDamage(5, this.x, this.y);
+                            this.enemy.takeDamage(this.whipDamage * this.damageMultiplier, this.x, this.y);
+                            
+                            // 强力屏幕震动
+                            if (this.game) {
+                                this.game.screenShakeTimer = Math.max(this.game.screenShakeTimer || 0, 0.2);
+                                this.game.screenShakeIntensity = 0.5;
+                            }
+                            
+                            // 生成闪电鞭视觉特效
+                            this.createWhipVisuals(this.x, this.y, this.enemy.x, this.enemy.y);
                             
                             // 施加麻痹效果：降低 80% 移速，持续 2 秒
                             this.enemy.addBuff('malaoshi_paralyze', 'paralyze', 0.8, 2.0);
@@ -385,6 +422,12 @@ export class MaLaoshi extends Hero {
             this.currentWhipAudio = new Audio(this.whipAudioSrcs[this.whipCurrentCount]);
             this.currentWhipAudio.play().catch(e => {});
         }
+        
+        // 叠加霹雳一闪雷电音效增强气势
+        if (this.whipThunderAudioSrc) {
+            this.currentWhipThunderAudio = new Audio(this.whipThunderAudioSrc);
+            this.currentWhipThunderAudio.play().catch(e => console.warn('MaLaoshi thunder whip audio play failed:', e));
+        }
     }
 
     onCollide(other) {
@@ -450,6 +493,11 @@ export class MaLaoshi extends Hero {
             this.tingtingHitAudio.pause();
             this.tingtingHitAudio.currentTime = 0;
         }
+        if (this.currentWhipThunderAudio) {
+            this.currentWhipThunderAudio.pause();
+            this.currentWhipThunderAudio.currentTime = 0;
+            this.currentWhipThunderAudio = null;
+        }
     }
 
     stopAwakenAudio() {
@@ -458,8 +506,85 @@ export class MaLaoshi extends Hero {
             this.currentWhipAudio.currentTime = 0;
             this.currentWhipAudio = null;
         }
+        if (this.currentWhipThunderAudio) {
+            this.currentWhipThunderAudio.pause();
+            this.currentWhipThunderAudio.currentTime = 0;
+            this.currentWhipThunderAudio = null;
+        }
     }
 
+    createWhipVisuals(startX, startY, endX, endY) {
+        // 生成一条主闪电链
+        const segments = 8;
+        const mainWhip = {
+            life: 0.3,
+            maxLife: 0.3,
+            points: [],
+            color: '#00ffff',
+            width: 8
+        };
+        
+        // 增加折线抖动产生闪电感
+        for (let i = 0; i <= segments; i++) {
+            const t = i / segments;
+            const baseX = startX + (endX - startX) * t;
+            const baseY = startY + (endY - startY) * t;
+            
+            // 首尾不偏移，中间随机偏移
+            let offsetX = 0;
+            let offsetY = 0;
+            if (i > 0 && i < segments) {
+                offsetX = (Math.random() - 0.5) * 60;
+                offsetY = (Math.random() - 0.5) * 60;
+            }
+            
+            mainWhip.points.push({ x: baseX + offsetX, y: baseY + offsetY });
+        }
+        this.whipVisuals.push(mainWhip);
+        
+        // 生成 2~3 条较细的分支闪电
+        const branchCount = 2 + Math.floor(Math.random() * 2);
+        for (let b = 0; b < branchCount; b++) {
+            const branchWhip = {
+                life: 0.2,
+                maxLife: 0.2,
+                points: [],
+                color: '#ffffff',
+                width: 3
+            };
+            
+            for (let i = 0; i <= segments; i++) {
+                const t = i / segments;
+                const baseX = startX + (endX - startX) * t;
+                const baseY = startY + (endY - startY) * t;
+                
+                let offsetX = 0;
+                let offsetY = 0;
+                if (i > 0 && i < segments) {
+                    offsetX = (Math.random() - 0.5) * 100;
+                    offsetY = (Math.random() - 0.5) * 100;
+                }
+                
+                branchWhip.points.push({ x: baseX + offsetX, y: baseY + offsetY });
+            }
+            this.whipVisuals.push(branchWhip);
+        }
+        
+        // 敌方身上爆发出电光火花
+        for (let i = 0; i < 20; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 300 + 100;
+            this.game.addParticle({
+                x: endX, y: endY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                color: Math.random() > 0.5 ? '#00ffff' : '#ffffff',
+                size: Math.random() * 4 + 2,
+                life: 0.4
+            });
+        }
+    }
+    
     draw(ctx) {
         // 先画能量波（在底层）
         for (const wave of this.hunyuanWaves) {
@@ -645,5 +770,106 @@ export class MaLaoshi extends Hero {
         }
         
         ctx.restore();
+    }
+
+    drawBody(ctx) {
+        // 画出灰色外边框和底色
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = this.playerId === 1 ? '#ff4444' : '#4444ff';
+        ctx.stroke();
+        
+        // 绘制太极图案（经典的黑白阴阳鱼）
+        ctx.save();
+        // 使用累加的平滑角度，避免暂停或时间缩放时的跳动
+        ctx.rotate(this.taijiAngle);
+        
+        const taijiRadius = this.radius * 0.85; // 太极图的半径
+        const halfRadius = taijiRadius / 2; // 阴阳鱼眼和半圆的半径
+        
+        // 1. 绘制右半边黑色大半圆 (阳)
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(0, 0, taijiRadius, -Math.PI / 2, Math.PI / 2);
+        ctx.fill();
+        
+        // 2. 绘制左半边白色大半圆 (阴)
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(0, 0, taijiRadius, Math.PI / 2, -Math.PI / 2);
+        ctx.fill();
+        
+        // 3. 绘制上方黑色中圆 (盖住白色大半圆的上半部分，形成阳鱼的头部)
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(0, -halfRadius, halfRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 4. 绘制下方白色中圆 (盖住黑色大半圆的下半部分，形成阴鱼的头部)
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(0, halfRadius, halfRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 5. 绘制上方白色小圆眼 (阳中之阴)
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(0, -halfRadius, halfRadius * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 6. 绘制下方黑色小圆眼 (阴中之阳)
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(0, halfRadius, halfRadius * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 绘制太极图最外圈黑线描边，增加立体感
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, taijiRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.restore();
+    }
+    
+    drawOverlay(ctx) {
+        // 绘制强化的闪电五连鞭特效
+        if (this.whipVisuals && this.whipVisuals.length > 0) {
+            ctx.save();
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'miter';
+            
+            for (const whip of this.whipVisuals) {
+                if (whip.points.length < 2) continue;
+                
+                const alpha = Math.max(0, whip.life / whip.maxLife);
+                ctx.globalAlpha = alpha;
+                
+                // 外层辉光
+                ctx.shadowColor = whip.color;
+                ctx.shadowBlur = 25;
+                ctx.strokeStyle = whip.color;
+                ctx.lineWidth = whip.width;
+                
+                ctx.beginPath();
+                ctx.moveTo(whip.points[0].x, whip.points[0].y);
+                for (let i = 1; i < whip.points.length; i++) {
+                    ctx.lineTo(whip.points[i].x, whip.points[i].y);
+                }
+                ctx.stroke();
+                
+                // 内层高亮核心
+                ctx.shadowBlur = 10;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = whip.width * 0.4;
+                ctx.stroke();
+            }
+            
+            ctx.restore();
+        }
     }
 }

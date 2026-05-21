@@ -40,7 +40,7 @@ export const heroConfig = [
     quote: '"年轻人不讲武德，来，骗！来，偷袭！"',
     traits: '宗师、化劲 | 多段弹幕与全屏控制',
     stats: 'HP: 100 | 移速: 60',
-    skill: { name: '混元太极', desc: '周期发射松果糖豆。阶段性掉血时释放全图混元劲击退敌人。觉醒：触发闪电五连鞭，必中且高额减速。' },
+    skill: { name: '混元太极', desc: '每1.5秒发射松果糖豆。阶段性掉血时释放全图混元劲击退敌人。觉醒：触发闪电五连鞭，必中且高额减速，每次造成7点伤害。' },
     audioSrc: import.meta.env.BASE_URL + 'assets/audio/MaLaoshi/耗子尾汁.mp3',
     isSpecial: false
   },

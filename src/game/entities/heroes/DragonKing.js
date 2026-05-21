@@ -30,9 +30,9 @@ export class DragonKing extends Hero {
         // 觉醒状态
         this.isUltimateActive = false;
         this.ultimateNeedles = [];
-        this.ultimatePhase = 0; // 0: none, 1: rotating, 2: firing
-        this.ultimateRotateDuration = 1.0;
-        this.ultimateRotateTimer = 0;
+        this.ultimatePhase = 0; // 0: none, 1: active
+        this.ultimateGenerateCount = 0;
+        this.ultimateGenerateTimer = 0;
         
         // 演出状态
         this.sidekickBalls = [];
@@ -48,8 +48,30 @@ export class DragonKing extends Hero {
         this.freezeTimer = 0;
         this.slowTimer = 0;
         
-        // 额外音效可以这里预留，当前没有实际音频
-        // this.awakenAudio = new Audio(...);
+        // 音效配置
+        this.needleFireAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/DragonKing/发射.mp3');
+        this.needleHitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/DragonKing/命中.mp3');
+        this.needleHealAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/DragonKing/治疗.mp3');
+        this.needleAppearAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/DragonKing/五针出现.mp3');
+    }
+    
+    stopAllAudio() {
+        if (this.needleFireAudio) {
+            this.needleFireAudio.pause();
+            this.needleFireAudio.currentTime = 0;
+        }
+        if (this.needleHitAudio) {
+            this.needleHitAudio.pause();
+            this.needleHitAudio.currentTime = 0;
+        }
+        if (this.needleHealAudio) {
+            this.needleHealAudio.pause();
+            this.needleHealAudio.currentTime = 0;
+        }
+        if (this.needleAppearAudio) {
+            this.needleAppearAudio.pause();
+            this.needleAppearAudio.currentTime = 0;
+        }
     }
     
     // 应用被动和自身的Buff
@@ -135,34 +157,14 @@ export class DragonKing extends Hero {
         }
         
         this.mouthState = 'smile';
-        
-        // 生成五针
-        const types = [
-            { id: 'fire', color: '#ff4500', name: '烧山火' },
-            { id: 'ice', color: '#00ffff', name: '透心凉' },
-            { id: 'ghost', color: '#800080', name: '鬼敲门' },
-            { id: 'gold', color: '#fffff0', name: '观音手' },
-            { id: 'life', color: '#32cd32', name: '太乙针' }
-        ];
-        
         this.ultimateNeedles = [];
-        for (let i = 0; i < 5; i++) {
-            this.ultimateNeedles.push({
-                type: types[i].id,
-                color: types[i].color,
-                angle: (i / 5) * Math.PI * 2,
-                dist: 60,
-                x: 0, y: 0,
-                vx: 0, vy: 0,
-                bounceCount: 0,
-                maxBounceCount: 5,
-                active: true,
-                trail: []
-            });
-        }
-        
         this.ultimatePhase = 1;
-        this.ultimateRotateTimer = this.ultimateRotateDuration;
+        this.ultimateGenerateCount = 0;
+        this.ultimateGenerateTimer = 0; // 立即生成第一针
+    }
+    
+    onVictory() {
+        this.mouthState = 'smile'; // 胜利时歪嘴笑
     }
     
     fireNormalNeedle() {
@@ -184,6 +186,23 @@ export class DragonKing extends Hero {
             active: true,
             trail: []
         });
+        
+        // 播放发射音效
+        if (this.needleFireAudio) {
+            this.needleFireAudio.currentTime = 0;
+            this.needleFireAudio.play().catch(e => console.warn('DragonKing fire audio play failed:', e));
+        }
+        
+        // 发射特效
+        for(let i=0; i<10; i++) {
+            this.game.addParticle({
+                x: this.x + Math.cos(angle) * this.radius, 
+                y: this.y + Math.sin(angle) * this.radius,
+                vx: (Math.random()-0.5)*150 + Math.cos(angle) * 100, 
+                vy: (Math.random()-0.5)*150 + Math.sin(angle) * 100,
+                color: '#ffd700', life: 0.4, size: 3
+            });
+        }
     }
     
     updateSpecific(dt) {
@@ -195,7 +214,7 @@ export class DragonKing extends Hero {
         
         if (this.smileTimer > 0) {
             this.smileTimer -= dt;
-            if (this.smileTimer <= 0 && !this.dragonAwakened && !this.isUltimateActive) {
+            if (this.smileTimer <= 0 && !this.dragonAwakened && !this.isUltimateActive && !this.isVictorious) {
                 this.mouthState = 'normal';
             }
         }
@@ -236,34 +255,115 @@ export class DragonKing extends Hero {
         // 更新所有神针
         this.updateNeedles(dt, this.activeNeedles);
         
-        // 更新觉醒五针
+        if (this.healRings) {
+            for (let i = this.healRings.length - 1; i >= 0; i--) {
+                this.healRings[i].life -= dt;
+                if (this.healRings[i].life <= 0) {
+                    this.healRings.splice(i, 1);
+                }
+            }
+        }
+        
+        // 觉醒五针
         if (this.isUltimateActive) {
             if (this.ultimatePhase === 1) {
-                this.ultimateRotateTimer -= dt;
-                const rotateDuration = Math.max(0.1, this.ultimateRotateDuration);
-                const rotationSpeed = (Math.PI * 2) / rotateDuration;
-                
-                for (const n of this.ultimateNeedles) {
-                    n.angle += rotationSpeed * dt;
-                    n.x = this.x + Math.cos(n.angle) * n.dist;
-                    n.y = this.y + Math.sin(n.angle) * n.dist;
-                    n.trail.push({ x: n.x, y: n.y, life: 0.2 });
+                // 生成阶段：每 0.5s 生成一针
+                this.ultimateGenerateTimer -= dt;
+                if (this.ultimateGenerateTimer <= 0 && this.ultimateGenerateCount < 5) {
+                    const types = [
+                        { id: 'fire', color: '#ff4500', name: '烧山火' },
+                        { id: 'ice', color: '#00ffff', name: '透心凉' },
+                        { id: 'ghost', color: '#800080', name: '鬼敲门' },
+                        { id: 'gold', color: '#fffff0', name: '观音手' },
+                        { id: 'life', color: '#32cd32', name: '太乙针' }
+                    ];
+                    
+                    const i = this.ultimateGenerateCount;
+                    // 为了保证 5 针最终均匀分布（72度一个），第 i 针的初始角度分配
+                    // 让神针朝着敌方方向或者随机方向作为基准发射角
+                    const baseAngle = this.enemy ? Math.atan2(this.enemy.y - this.y, this.enemy.x - this.x) : 0;
+                    const targetAngle = baseAngle + (i / 5) * Math.PI * 2;
+                    
+                    this.ultimateNeedles.push({
+                        type: types[i].id,
+                        color: types[i].color,
+                        angle: targetAngle, // 当前旋转角度
+                        targetAngle: targetAngle, // 发射时的目标角度
+                        rotatedAngle: 0, // 记录已经旋转过的弧度
+                        state: 'rotating', // 'rotating' | 'firing'
+                        dist: 60,
+                        x: this.x + Math.cos(targetAngle) * 60,
+                        y: this.y + Math.sin(targetAngle) * 60,
+                        vx: 0, vy: 0,
+                        bounceCount: 0,
+                        maxBounceCount: 10, // 觉醒神针可弹射 10 次
+                        active: true,
+                        trail: []
+                    });
+                    
+                    // 生成特效
+                    for(let p=0; p<10; p++) {
+                        this.game.addParticle({
+                            x: this.x + Math.cos(targetAngle) * 60, 
+                            y: this.y + Math.sin(targetAngle) * 60,
+                            vx: (Math.random()-0.5)*100, vy: (Math.random()-0.5)*100,
+                            color: types[i].color, life: 0.5, size: 3
+                        });
+                    }
+                    
+                    // 播放五针出现音效
+                    if (this.needleAppearAudio) {
+                        this.needleAppearAudio.currentTime = 0;
+                        this.needleAppearAudio.play().catch(e => console.warn('DragonKing needle appear audio play failed:', e));
+                    }
+                    
+                    this.ultimateGenerateCount++;
+                    this.ultimateGenerateTimer = 0.5; // 下一针间隔
                 }
+
+                // 更新所有觉醒针
+                const rotationSpeed = Math.PI * 2; // 每秒一圈
+                const fireSpeed = 100 * 8;
                 
-                if (this.ultimateRotateTimer <= 0) {
-                    this.ultimatePhase = 2;
-                    const speed = 100 * 8;
-                    for (const n of this.ultimateNeedles) {
-                        n.vx = Math.cos(n.angle) * speed;
-                        n.vy = Math.sin(n.angle) * speed;
+                for (let j = 0; j < this.ultimateNeedles.length; j++) {
+                    const n = this.ultimateNeedles[j];
+                    
+                    if (n.state === 'rotating') {
+                        const rotateDelta = rotationSpeed * dt;
+                        n.angle += rotateDelta;
+                        n.rotatedAngle += rotateDelta;
+                        
+                        n.x = this.x + Math.cos(n.angle) * n.dist;
+                        n.y = this.y + Math.sin(n.angle) * n.dist;
+                        n.trail.push({ x: n.x, y: n.y, life: 0.2 });
+                        
+                        // 环绕一周后直接发射 (旋转超过 2PI 弧度)
+                        if (n.rotatedAngle >= Math.PI * 2) {
+                            n.state = 'firing';
+                            n.vx = Math.cos(n.targetAngle) * fireSpeed;
+                            n.vy = Math.sin(n.targetAngle) * fireSpeed;
+                            
+                            // 播放发射音效
+                            if (this.needleFireAudio) {
+                                this.needleFireAudio.currentTime = 0;
+                                this.needleFireAudio.play().catch(e => console.warn('DragonKing fire audio play failed:', e));
+                            }
+                        }
                     }
                 }
-            } else if (this.ultimatePhase === 2) {
-                this.updateNeedles(dt, this.ultimateNeedles);
-                if (this.ultimateNeedles.length === 0) {
+                
+                // 已经发射的觉醒针会走统一的 updateNeedles 更新物理和碰撞
+                // 注意：updateNeedles 内部会把命中的针标记为 n.active = false
+                this.updateNeedles(dt, this.ultimateNeedles.filter(n => n.state === 'firing'));
+                
+                // 如果五针全部生成且全部发射完毕（或者命中死掉被标记为 active=false），结束觉醒状态
+                // 因为清理死针的逻辑在最下面执行，这里判断 active 状态更准确
+                const hasActiveUltimateNeedles = this.ultimateNeedles.some(n => n.active);
+                if (this.ultimateGenerateCount >= 5 && !hasActiveUltimateNeedles) {
                     this.isUltimateActive = false;
+                    this.isAwakened = false; // 关闭觉醒状态
                     this.ultimatePhase = 0;
-                    if (!this.dragonAwakened) {
+                    if (!this.dragonAwakened && !this.isVictorious) {
                         this.mouthState = 'normal';
                     }
                 }
@@ -331,6 +431,12 @@ export class DragonKing extends Hero {
                     const dmg = this.dragonAwakened ? 7 : 5;
                     this.enemy.takeDamage(dmg * this.damageMultiplier, n.x, n.y);
                     n.active = false;
+                    
+                    // 播放命中音效
+                    if (this.needleHitAudio) {
+                        this.needleHitAudio.currentTime = 0;
+                        this.needleHitAudio.play().catch(e => console.warn('DragonKing hit audio play failed:', e));
+                    }
                 } else if (hitSelf && n.bounceCount > 0) {
                     // 反弹后命中自身
                     this.heal(5);
@@ -339,15 +445,46 @@ export class DragonKing extends Hero {
                     }
                     this.mouthState = 'smile';
                     this.smileTimer = 0.5;
-                    // 回流特效
-                    for(let i=0; i<5; i++) {
+                    
+                    // 回流爆炸特效
+                    for(let i=0; i<20; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = Math.random() * 150 + 50;
                         this.game.addParticle({
                             x: this.x, y: this.y,
-                            vx: (Math.random()-0.5)*50, vy: (Math.random()-0.5)*50,
-                            color: '#32cd32', life: 0.5, size: 3
+                            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                            color: '#32cd32', life: 0.6, size: Math.random() * 4 + 2
                         });
                     }
+                    
+                    // 多层发光光环
+                    if (!this.healRings) this.healRings = [];
+                    this.healRings.push({
+                        minRadius: this.radius,
+                        maxRadius: this.radius + 60,
+                        width: 8,
+                        color: '#32cd32',
+                        life: 0.4,
+                        maxLife: 0.4,
+                        hasSparks: true
+                    });
+                    this.healRings.push({
+                        minRadius: this.radius,
+                        maxRadius: this.radius + 100,
+                        width: 3,
+                        color: '#7fff00',
+                        life: 0.3,
+                        maxLife: 0.3,
+                        hasSparks: false
+                    });
+                    
                     n.active = false;
+                    
+                    // 播放治疗音效
+                    if (this.needleHealAudio) {
+                        this.needleHealAudio.currentTime = 0;
+                        this.needleHealAudio.play().catch(e => console.warn('DragonKing heal audio play failed:', e));
+                    }
                 }
             } else {
                 // 觉醒神针
@@ -357,17 +494,84 @@ export class DragonKing extends Hero {
                 if (hitEnemy && canHitEnemy) {
                     this.applyUltimateNeedleEffect(n.type, this.enemy);
                     n.active = false;
-                } else if (hitSelf && canHitSelf) {
-                    this.heal(10);
-                    // 特效
-                    for(let i=0; i<10; i++) {
+                    
+                    // 觉醒命中震动
+                    if (this.game) {
+                        this.game.shakeScreen(0.15, 5);
+                    }
+                    
+                    // 不同神针命中敌方时的回流爆炸特效
+                    for(let i=0; i<30; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = Math.random() * 150 + 50;
                         this.game.addParticle({
-                            x: this.x, y: this.y,
-                            vx: (Math.random()-0.5)*80, vy: (Math.random()-0.5)*80,
-                            color: '#32cd32', life: 0.8, size: 4
+                            x: this.enemy.x, y: this.enemy.y,
+                            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                            color: n.color, life: 0.6, size: Math.random() * 4 + 2
                         });
                     }
+                    
+                    // 敌方身上的多层受击光环特效
+                    if (!this.enemy.hitRings) this.enemy.hitRings = [];
+                    this.enemy.hitRings.push({
+                        x: this.enemy.x,
+                        y: this.enemy.y,
+                        minRadius: this.enemy.radius,
+                        maxRadius: this.enemy.radius + 80,
+                        width: 8,
+                        color: n.color,
+                        life: 0.4,
+                        maxLife: 0.4,
+                        hasSparks: true
+                    });
+                    
+                    // 播放命中音效
+                    if (this.needleHitAudio) {
+                        this.needleHitAudio.currentTime = 0;
+                        this.needleHitAudio.play().catch(e => console.warn('DragonKing hit audio play failed:', e));
+                    }
+                } else if (hitSelf && canHitSelf) {
+                    this.heal(10);
+                    
+                    // 觉醒回流爆炸特效
+                    for(let i=0; i<40; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = Math.random() * 200 + 80;
+                        this.game.addParticle({
+                            x: this.x, y: this.y,
+                            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                            color: '#32cd32', life: 0.8, size: Math.random() * 5 + 3
+                        });
+                    }
+                    
+                    // 强力多层发光光环
+                    if (!this.healRings) this.healRings = [];
+                    this.healRings.push({
+                        minRadius: this.radius,
+                        maxRadius: this.radius + 100,
+                        width: 15,
+                        color: '#32cd32',
+                        life: 0.6,
+                        maxLife: 0.6,
+                        hasSparks: true
+                    });
+                    this.healRings.push({
+                        minRadius: this.radius,
+                        maxRadius: this.radius + 150,
+                        width: 5,
+                        color: '#00ff7f',
+                        life: 0.4,
+                        maxLife: 0.4,
+                        hasSparks: true
+                    });
+                    
                     n.active = false;
+                    
+                    // 播放治疗音效
+                    if (this.needleHealAudio) {
+                        this.needleHealAudio.currentTime = 0;
+                        this.needleHealAudio.play().catch(e => console.warn('DragonKing heal audio play failed:', e));
+                    }
                 }
             }
         }
@@ -471,14 +675,22 @@ export class DragonKing extends Hero {
         ctx.save();
         ctx.strokeStyle = '#ffd700'; // 金色嘴巴
         ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
         ctx.beginPath();
         if (this.mouthState === 'smile') {
-            // 上扬弧线 (耐克嘴)
-            ctx.arc(0, 10, 15, 0, Math.PI, false);
+            // 龙王歪嘴：整体向右上方偏移，减轻倾斜角度使之更自然
+            ctx.translate(5, 12); 
+            ctx.rotate(-5 * Math.PI / 180); // 减轻逆时针倾斜
+            
+            // 左半边平直，右嘴角上扬（减轻上扬幅度）
+            ctx.moveTo(-15, 0);
+            ctx.lineTo(2, 0);
+            ctx.quadraticCurveTo(10, 0, 15, -8);
         } else {
-            // 横线
-            ctx.moveTo(-15, 10);
-            ctx.lineTo(15, 10);
+            // 横线，调整了 y 坐标使其偏下一点
+            ctx.moveTo(-15, 15);
+            ctx.lineTo(15, 15);
         }
         ctx.stroke();
         ctx.restore();
@@ -511,9 +723,14 @@ export class DragonKing extends Hero {
                         ctx.lineTo(n.trail[i].x, n.trail[i].y);
                     }
                 }
+                // 拖尾更粗更亮
                 ctx.strokeStyle = n.color;
-                ctx.globalAlpha = 0.5;
-                ctx.lineWidth = 2;
+                ctx.shadowColor = n.color;
+                ctx.shadowBlur = 15;
+                ctx.globalAlpha = 0.7;
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
                 ctx.stroke();
                 ctx.restore();
                 
@@ -521,18 +738,102 @@ export class DragonKing extends Hero {
                 if (n.active) {
                     ctx.save();
                     ctx.translate(n.x, n.y);
-                    const angle = n.vx !== 0 || n.vy !== 0 ? Math.atan2(n.vy, n.vx) : n.angle || 0;
-                    ctx.rotate(angle);
+                    
+                    // 计算针的朝向：
+                    // 如果有速度，则朝向运动方向
+                    // 如果在环绕 (vx/vy == 0)，则让针呈现水平环绕姿态 (切线方向：angle + PI/2)
+                    let drawAngle = 0;
+                    if (n.vx !== 0 || n.vy !== 0) {
+                        drawAngle = Math.atan2(n.vy, n.vx);
+                    } else if (n.angle !== undefined) {
+                        drawAngle = n.angle + Math.PI / 2;
+                    }
+                    
+                    ctx.rotate(drawAngle);
+                    
+                    // 外发光层
                     ctx.fillStyle = n.color;
                     ctx.shadowColor = n.color;
+                    ctx.shadowBlur = 15;
+                    ctx.globalAlpha = 0.8;
+                    // 加长加粗：长度 40，宽度 6 (原20x3)
+                    ctx.fillRect(-20, -3, 40, 6); 
+                    
+                    // 内核纯白高亮，表现法宝质感
                     ctx.shadowBlur = 5;
-                    ctx.fillRect(-10, -1.5, 20, 3); // 细长针
+                    ctx.globalAlpha = 1.0;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(-16, -1.5, 32, 3);
+                    
+                    // 针尖锐化处理 (画一个小三角形)
+                    ctx.beginPath();
+                    ctx.moveTo(20, -3);
+                    ctx.lineTo(26, 0);
+                    ctx.lineTo(20, 3);
+                    ctx.closePath();
+                    ctx.fillStyle = n.color;
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(16, -1.5);
+                    ctx.lineTo(24, 0);
+                    ctx.lineTo(16, 1.5);
+                    ctx.closePath();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                    
                     ctx.restore();
                 }
             };
             
             this.activeNeedles.forEach(drawNeedle);
             this.ultimateNeedles.forEach(drawNeedle);
+        }
+    }
+    
+    drawOverlay(ctx) {
+        super.drawOverlay(ctx);
+        
+        // 渲染治疗波纹/阵法特效等
+        if (this.healRings && this.healRings.length > 0) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            
+            for (let i = this.healRings.length - 1; i >= 0; i--) {
+                const ring = this.healRings[i];
+                const alpha = Math.max(0, ring.life / ring.maxLife);
+                // 非线性衰减：让光环迅速扩大，后期缓慢消散 (ease-out)
+                const progress = 1 - Math.pow(alpha, 3);
+                const currentRadius = ring.minRadius + (ring.maxRadius - ring.minRadius) * progress;
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = ring.color || '#32cd32';
+                ctx.lineWidth = ring.width * alpha;
+                ctx.globalAlpha = alpha;
+                ctx.shadowColor = ring.color || '#32cd32';
+                ctx.shadowBlur = 15;
+                ctx.stroke();
+                
+                // 动漫感随机电弧
+                if (ring.hasSparks && alpha > 0.3) {
+                    ctx.save();
+                    ctx.globalAlpha = alpha * 0.8;
+                    ctx.lineWidth = 2;
+                    for (let j = 0; j < 5; j++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const r1 = currentRadius * 0.9;
+                        const r2 = currentRadius * 1.1;
+                        ctx.beginPath();
+                        ctx.moveTo(Math.cos(angle) * r1, Math.sin(angle) * r1);
+                        ctx.lineTo(Math.cos(angle + 0.1) * currentRadius, Math.sin(angle + 0.1) * currentRadius);
+                        ctx.lineTo(Math.cos(angle + 0.2) * r2, Math.sin(angle + 0.2) * r2);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+            }
+            ctx.restore();
         }
     }
 }

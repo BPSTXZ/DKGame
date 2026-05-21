@@ -221,8 +221,8 @@ const updateBattleState = (state, hero) => {
     state.awakenTimer = hero.awakenTimer || 0;
   } else if (hero.name === '蜘蛛') {
     state.awakenTimer = hero.isAwakened ? (hero.awakenTimer || 0) : 0;
-  } else if (hero.name === '马老师' || hero.name === '霹雳闪') {
-    state.awakenTimer = 0; // 马老师和霹雳闪觉醒不需要显示时长，随技能释放完毕自动结束
+  } else if (hero.name === '马老师' || hero.name === '雷霆闪' || hero.name === '龙王赘婿') {
+    state.awakenTimer = 0; // 觉醒不需要显示时长，随技能释放完毕自动结束
   } else if (hero.name === '吸血鬼') {
     state.awakenTimer = 0;
   } else if (hero.name === '赌徒') {

@@ -238,6 +238,16 @@ export class Hero {
             }
         }
         
+        // 更新附加在身上的受击光环特效
+        if (this.hitRings) {
+            for (let i = this.hitRings.length - 1; i >= 0; i--) {
+                this.hitRings[i].life -= dt;
+                if (this.hitRings[i].life <= 0) {
+                    this.hitRings.splice(i, 1);
+                }
+            }
+        }
+        
         // 更新位置
         this.x += this.vx * dt;
         this.y += this.vy * dt;
@@ -567,6 +577,47 @@ export class Hero {
                 }
                 
                 ctx.restore();
+            }
+            ctx.restore();
+        }
+
+        // 渲染受击光环/阵法特效等 (由子类施加的特效)
+        if (this.hitRings && this.hitRings.length > 0) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            
+            for (let i = this.hitRings.length - 1; i >= 0; i--) {
+                const ring = this.hitRings[i];
+                const alpha = Math.max(0, ring.life / ring.maxLife);
+                const progress = 1 - Math.pow(alpha, 3);
+                const currentRadius = ring.minRadius + (ring.maxRadius - ring.minRadius) * progress;
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = ring.color || '#ffffff';
+                ctx.lineWidth = ring.width * alpha;
+                ctx.globalAlpha = alpha;
+                ctx.shadowColor = ring.color || '#ffffff';
+                ctx.shadowBlur = 15;
+                ctx.stroke();
+                
+                // 动漫感随机电弧
+                if (ring.hasSparks && alpha > 0.3) {
+                    ctx.save();
+                    ctx.globalAlpha = alpha * 0.8;
+                    ctx.lineWidth = 2;
+                    for (let j = 0; j < 5; j++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const r1 = currentRadius * 0.9;
+                        const r2 = currentRadius * 1.1;
+                        ctx.beginPath();
+                        ctx.moveTo(Math.cos(angle) * r1, Math.sin(angle) * r1);
+                        ctx.lineTo(Math.cos(angle + 0.1) * currentRadius, Math.sin(angle + 0.1) * currentRadius);
+                        ctx.lineTo(Math.cos(angle + 0.2) * r2, Math.sin(angle + 0.2) * r2);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
             }
             ctx.restore();
         }

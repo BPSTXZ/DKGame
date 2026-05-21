@@ -7,8 +7,29 @@
       <div v-for="hero in filteredHeroPool" :key="hero.id" class="hero-card"
         :class="{ 'selected-p1': store.p1Selection?.id === hero.id, 'selected-p2': store.p2Selection?.id === hero.id, 'disabled': hero.disabled }"
         @click.stop="handleCardClick(hero, $event)" @contextmenu.prevent>
-        <div class="hero-icon" :class="{ 'hero-icon--van': hero.class === 'Van', 'hero-icon--thunderflash': hero.class === 'ThunderFlash' }" :style="{ background: hero.iconColor }">
+        <div class="hero-icon" :class="{ 'hero-icon--van': hero.class === 'Van', 'hero-icon--thunderflash': hero.class === 'ThunderFlash', 'hero-icon--malaoshi': hero.class === 'MaLaoshi', 'hero-icon--dragonking': hero.class === 'DragonKing', 'is-selected': store.p1Selection?.id === hero.id || store.p2Selection?.id === hero.id }" :style="{ background: hero.iconColor }">
           <div v-if="hero.class === 'Van'" class="hero-icon-sock"></div>
+          
+          <div v-if="hero.class === 'DragonKing'" class="hero-icon-dragonking-mouth">
+            <svg viewBox="0 0 40 40" width="100%" height="100%">
+              <!-- 稍微缩放一点嘴巴，通过 transform 的 scale 实现，并向下偏移 -->
+              <g transform="translate(4, 10) scale(0.8)">
+                <path class="dk-mouth-normal" d="M 10 25 L 30 25" stroke="#ffd700" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                <!-- 使用 transform 旋转以还原游戏中倾斜的 √ 形歪嘴，稍微减轻倾斜和上扬幅度 -->
+                <g class="dk-mouth-smile" transform="translate(4, 5) rotate(-5 20 20)">
+                  <path d="M 5 20 L 22 20 Q 28 20 32 14" stroke="#ffd700" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                </g>
+              </g>
+            </svg>
+          </div>
+
+          <div v-if="hero.class === 'MaLaoshi'" class="hero-icon-taiji">
+            <div class="taiji-left"></div>
+            <div class="taiji-right"></div>
+            <div class="taiji-top"></div>
+            <div class="taiji-bottom"></div>
+          </div>
+          
           <div v-if="hero.class === 'ThunderFlash'" class="hero-icon-thunderflash-pattern">
             <!-- 规则排列的善逸羽织三角形鳞纹 -->
             <div class="tf-tri-row tf-row-1">
@@ -284,6 +305,93 @@ const startDebugMode = () => {
   pointer-events: none;
 }
 
+.hero-icon--malaoshi {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-icon-taiji {
+  position: absolute;
+  top: 7.5%;
+  left: 7.5%;
+  width: 85%;
+  height: 85%;
+  border-radius: 50%;
+  border: 1px solid #000;
+  box-sizing: border-box;
+  pointer-events: none;
+  animation: spin 4s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+.taiji-left {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background-color: #ffffff;
+  border-radius: 100px 0 0 100px;
+}
+
+.taiji-right {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  background-color: #000000;
+  border-radius: 0 100px 100px 0;
+}
+
+.taiji-top {
+  position: absolute;
+  top: 0;
+  left: 25%;
+  width: 50%;
+  height: 50%;
+  background-color: #000000;
+  border-radius: 50%;
+}
+
+.taiji-top::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30%;
+  height: 30%;
+  background-color: #ffffff;
+  border-radius: 50%;
+}
+
+.taiji-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 25%;
+  width: 50%;
+  height: 50%;
+  background-color: #ffffff;
+  border-radius: 50%;
+}
+
+.taiji-bottom::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30%;
+  height: 30%;
+  background-color: #000000;
+  border-radius: 50%;
+}
+
 .hero-icon--thunderflash {
   position: relative;
   overflow: hidden;
@@ -312,5 +420,33 @@ const startDebugMode = () => {
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
   border-top: 8px solid rgba(255, 255, 255, 0.9);
+}
+
+.hero-icon--dragonking {
+  position: relative;
+}
+
+.hero-icon-dragonking-mouth {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dk-mouth-normal {
+  transition: opacity 0.3s ease;
+  opacity: 1;
+}
+
+.dk-mouth-smile {
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+.hero-icon.is-selected .dk-mouth-normal {
+  opacity: 0;
+}
+
+.hero-icon.is-selected .dk-mouth-smile {
+  opacity: 1;
 }
 </style>
