@@ -53,6 +53,8 @@ export class DragonKing extends Hero {
         this.needleHitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/DragonKing/命中.mp3');
         this.needleHealAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/DragonKing/治疗.mp3');
         this.needleAppearAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/DragonKing/五针出现.mp3');
+        this.ultimateNeedleHitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/DragonKing/神针命中.mp3');
+        this.dragonReturnAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/DragonKing/三年已到.mp3');
     }
     
     stopAllAudio() {
@@ -71,6 +73,14 @@ export class DragonKing extends Hero {
         if (this.needleAppearAudio) {
             this.needleAppearAudio.pause();
             this.needleAppearAudio.currentTime = 0;
+        }
+        if (this.ultimateNeedleHitAudio) {
+            this.ultimateNeedleHitAudio.pause();
+            this.ultimateNeedleHitAudio.currentTime = 0;
+        }
+        if (this.dragonReturnAudio) {
+            this.dragonReturnAudio.pause();
+            this.dragonReturnAudio.currentTime = 0;
         }
     }
     
@@ -127,6 +137,12 @@ export class DragonKing extends Hero {
             this.game.awakenCenter = { x: this.x, y: this.y };
             this.game.awakenRadius = 0;
             this.game.addFloatingText(this.x, this.y - 60, "三年之期已到！", '#ffd700');
+        }
+        
+        // 播放回归音效
+        if (this.dragonReturnAudio) {
+            this.dragonReturnAudio.currentTime = 0;
+            this.dragonReturnAudio.play().catch(e => console.warn('DragonKing return audio play failed:', e));
         }
         
         this.mouthState = 'smile';
@@ -525,10 +541,10 @@ export class DragonKing extends Hero {
                         hasSparks: true
                     });
                     
-                    // 播放命中音效
-                    if (this.needleHitAudio) {
-                        this.needleHitAudio.currentTime = 0;
-                        this.needleHitAudio.play().catch(e => console.warn('DragonKing hit audio play failed:', e));
+                    // 播放觉醒神针命中音效
+                    if (this.ultimateNeedleHitAudio) {
+                        this.ultimateNeedleHitAudio.currentTime = 0;
+                        this.ultimateNeedleHitAudio.play().catch(e => console.warn('DragonKing ultimate needle hit audio play failed:', e));
                     }
                 } else if (hitSelf && canHitSelf) {
                     this.heal(10);
