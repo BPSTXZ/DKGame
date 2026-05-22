@@ -230,6 +230,11 @@ export class Game {
                 hero.enduranceValue = Math.min(hero.enduranceValue, hero.enduranceThreshold);
                 hero.ultimateRotateDuration = getFloat(tuning.ultimateRotateDuration, hero.ultimateRotateDuration);
                 break;
+            case 'ThunderFlash':
+                hero.maxChargeTime = getFloat(tuning.maxChargeTime, hero.maxChargeTime);
+                hero.skillCooldown = getFloat(tuning.skillCooldown, hero.skillCooldown);
+                hero.maxCombo = getCount(tuning.maxCombo, hero.maxCombo);
+                break;
             case 'Spider':
                 hero.passiveSpeedBonus = getFloat(tuning.passiveSpeedBonus, hero.passiveSpeedBonus);
                 break;

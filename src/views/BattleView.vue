@@ -28,15 +28,8 @@
               <span v-if="store.battleState.p1.isAwakened" class="buff-icon" style="background: #ffd700; color: #000;">觉醒 <span v-if="store.battleState.p1.awakenTimer > 0">({{ store.battleState.p1.awakenTimer.toFixed(1) }}s)</span></span>
               <span v-if="store.battleState.p1.invincibleTime > 0" class="buff-icon" style="background: #ffd700; color: #000;">无敌 ({{ store.battleState.p1.invincibleTime.toFixed(1) }}s)</span>
               <span v-for="(buff, i) in store.battleState.p1.buffs.filter(buff => buff.type !== 'suppress_damage')" :key="i" class="buff-icon" 
-                    :style="{ background: buff.id === 'dk_freeze' ? '#00ffff' : (buff.type === 'slow' ? '#ff4444' : (buff.type === 'vampire_drain' ? '#8b0000' : (buff.type === 'paralyze' ? '#9932cc' : (buff.type === 'van_suppressed' ? '#ff69b4' : (buff.type === 'burn' ? '#ff4500' : (buff.type === 'combo' ? '#800080' : '#444')))))), color: buff.id === 'dk_freeze' ? '#000' : '#fff' }">
-                {{ buff.id === 'dk_freeze' ? `冻结 (${buff.time.toFixed(1)}s)` :
-                   buff.type === 'slow' ? `减速 (${buff.time.toFixed(1)}s)` : 
-                   buff.type === 'vampire_drain' ? `被吸血 (${buff.time.toFixed(1)}s)` : 
-                   buff.type === 'paralyze' ? `麻痹 (${buff.time.toFixed(1)}s)` :
-                   buff.type === 'van_suppressed' ? `压制 (${buff.time.toFixed(1)}s)` :
-                   buff.type === 'burn' ? `灼烧 (${buff.time.toFixed(1)}s)` :
-                   buff.type === 'combo' ? `连击 (${buff.time.toFixed(1)}s)` :
-                   buff.type }}
+                    :style="{ background: getBuffConfig(buff).bg, color: getBuffConfig(buff).color }">
+                {{ getBuffConfig(buff).label }} ({{ buff.time.toFixed(1) }}s)
               </span>
             </div>
             <!-- 训练场觉醒提示 -->
@@ -65,15 +58,8 @@
               <span v-if="store.battleState.p2.isAwakened" class="buff-icon" style="background: #ffd700; color: #000;">觉醒 <span v-if="store.battleState.p2.awakenTimer > 0">({{ store.battleState.p2.awakenTimer.toFixed(1) }}s)</span></span>
               <span v-if="store.battleState.p2.invincibleTime > 0" class="buff-icon" style="background: #ffd700; color: #000;">无敌 ({{ store.battleState.p2.invincibleTime.toFixed(1) }}s)</span>
               <span v-for="(buff, i) in store.battleState.p2.buffs.filter(buff => buff.type !== 'suppress_damage')" :key="i" class="buff-icon" 
-                    :style="{ background: buff.id === 'dk_freeze' ? '#00ffff' : (buff.type === 'slow' ? '#ff4444' : (buff.type === 'vampire_drain' ? '#8b0000' : (buff.type === 'paralyze' ? '#9932cc' : (buff.type === 'van_suppressed' ? '#ff69b4' : (buff.type === 'burn' ? '#ff4500' : (buff.type === 'combo' ? '#800080' : '#444')))))), color: buff.id === 'dk_freeze' ? '#000' : '#fff' }">
-                {{ buff.id === 'dk_freeze' ? `冻结 (${buff.time.toFixed(1)}s)` :
-                   buff.type === 'slow' ? `减速 (${buff.time.toFixed(1)}s)` : 
-                   buff.type === 'vampire_drain' ? `被吸血 (${buff.time.toFixed(1)}s)` : 
-                   buff.type === 'paralyze' ? `麻痹 (${buff.time.toFixed(1)}s)` :
-                   buff.type === 'van_suppressed' ? `压制 (${buff.time.toFixed(1)}s)` :
-                   buff.type === 'burn' ? `灼烧 (${buff.time.toFixed(1)}s)` :
-                   buff.type === 'combo' ? `连击 (${buff.time.toFixed(1)}s)` :
-                   buff.type }}
+                    :style="{ background: getBuffConfig(buff).bg, color: getBuffConfig(buff).color }">
+                {{ getBuffConfig(buff).label }} ({{ buff.time.toFixed(1) }}s)
               </span>
             </div>
             <!-- 训练场觉醒提示 -->
@@ -156,6 +142,24 @@ import { heroConfig } from '@/config/heroes.js';
 
 // 将 heroPool 抽离出来供回放使用
 const heroPool = heroConfig;
+
+// Buff UI Config mapping
+const buffConfig = {
+  'dk_freeze': { label: '冻结', bg: '#00ffff', color: '#000' },
+  'slow': { label: '减速', bg: '#ff4444', color: '#fff' },
+  'vampire_drain': { label: '被吸血', bg: '#8b0000', color: '#fff' },
+  'paralyze': { label: '麻痹', bg: '#9932cc', color: '#fff' },
+  'van_suppressed': { label: '压制', bg: '#ff69b4', color: '#fff' },
+  'burn': { label: '灼烧', bg: '#ff4500', color: '#fff' },
+  'combo': { label: '连击', bg: '#8b0000', color: '#fff' },
+  'default': { label: '未知状态', bg: '#444', color: '#fff' }
+};
+
+const getBuffConfig = (buff) => {
+  if (buffConfig[buff.id]) return buffConfig[buff.id];
+  if (buffConfig[buff.type]) return buffConfig[buff.type];
+  return { label: buff.type, ...buffConfig['default'] };
+};
 
 const classes = {
   'Vampire': Vampire,

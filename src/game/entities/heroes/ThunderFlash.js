@@ -17,7 +17,8 @@ export class ThunderFlash extends Hero {
         this.isDashing = false;
         this.dashSpeedMult = 1.0;
         this.dashCooldown = 0;
-        this.skillCooldown = 0; // 技能一冷却时间
+        this.skillCooldown = 1.0; // 技能一冷却时间配置（可调试）
+        this.currentSkillCooldown = 0; // 技能一当前冷却时间
         this.hasHitEnemy = false;
         this.wallNormal = { x: 0, y: 0 };
         this.timeSinceLastChargeStart = 0;
@@ -113,8 +114,7 @@ export class ThunderFlash extends Hero {
         }
 
         this.isCharging = true;
-        this.chargeTimer = isAwaken ? 0.1 : 0.3;
-        this.maxChargeTime = this.chargeTimer;
+        this.chargeTimer = isAwaken ? 0.1 : this.maxChargeTime;
         this.chargeFlash = false;
         this.isDashing = false;
         this.hasPlayedPierceAudio = false; // 重置提前播放贯穿音效的标记
@@ -177,7 +177,10 @@ export class ThunderFlash extends Hero {
         if (this.isDashing) {
             this.isDashing = false;
             this.dashCooldown = 0.15;
-            this.skillCooldown = 1.0; // 技能一改为 1 秒冷却时间
+            // 如果是觉醒期间，不要重置技能冷却，以免影响下一次连击判定
+            if (!this.isAwakenCombo) {
+                this.currentSkillCooldown = this.skillCooldown; // 使用独立的冷却计时器
+            }
             
             // 将当前的电弧作为残影保留下来渐隐，停止采集新点
             if (this.trailPoints.length > 0) {
@@ -204,7 +207,7 @@ export class ThunderFlash extends Hero {
         
         // If we can charge
         const isControlled = this.isCurrentlyControlled();
-        if (!this.isDashing && !this.isCharging && this.dashCooldown <= 0 && this.skillCooldown <= 0 && !isControlled && !this.isAwakenCombo) {
+        if (!this.isDashing && !this.isCharging && this.dashCooldown <= 0 && this.currentSkillCooldown <= 0 && !isControlled && !this.isAwakenCombo) {
             const chargeSuccess = this.startCharge(false);
             
             if (chargeSuccess) {
@@ -279,8 +282,8 @@ export class ThunderFlash extends Hero {
             this.dashCooldown -= dt;
         }
         
-        if (this.skillCooldown > 0) {
-            this.skillCooldown -= dt;
+        if (this.currentSkillCooldown > 0) {
+            this.currentSkillCooldown -= dt;
         }
         
         if (!this.isCharging && !this.isAwakenCombo) {

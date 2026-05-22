@@ -304,6 +304,35 @@ const skillTuningSchemas = {
       defaultValue: 0.2,
       hint: '按已损失血量比例结算的额外移速系数，0.2 表示最高 +20%。'
     }
+  ],
+  ThunderFlash: [
+    {
+      key: 'maxChargeTime',
+      label: '蓄力时间',
+      min: 0.1,
+      step: 0.1,
+      type: 'float',
+      defaultValue: 0.3,
+      hint: '霹雳一闪撞墙后的蓄力时长，最小 0.1 秒。'
+    },
+    {
+      key: 'skillCooldown',
+      label: '弹射冷却',
+      min: 0.1,
+      step: 0.1,
+      type: 'float',
+      defaultValue: 1.0,
+      hint: '每次弹射结束后的冷却时间，最小 0.1 秒。'
+    },
+    {
+      key: 'maxCombo',
+      label: '觉醒连击数',
+      min: 1,
+      step: 1,
+      type: 'integer',
+      defaultValue: 8,
+      hint: '霹雳一闪·八连的弹射次数，默认 8 次。'
+    }
   ]
 };
 
