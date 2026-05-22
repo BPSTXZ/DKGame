@@ -340,6 +340,13 @@ export class Game {
             this.globalFreezeTime -= dt;
             this.awakenRadius += 600 * dt; // 扩散特效
             
+            // 时停期间允许英雄执行特殊的觉醒演出特效更新
+            this.entities.forEach(e => {
+                if (!e.isDead && typeof e.updateAwakenAnimation === 'function') {
+                    e.updateAwakenAnimation(dt);
+                }
+            });
+            
             // 时停期间仍然更新粒子和飘字
             this.updateParticles(dt);
             this.updateFloatingTexts(dt);

@@ -27,15 +27,18 @@ export class DragonKing extends Hero {
         this.dragonAwakened = false;
         this.dragonAwakenLocked = false; // 是否已经触发过三年之期
         
+        // 觉醒演出相关的状态
+        this.returnParticleTimer = 0;
+        this.returnNeedles = [];
+        this.returnNeedlePhase = 0; // 0: none, 1: gathering, 2: firing
+        this.returnNeedleTimer = 0;
+        
         // 觉醒状态
         this.isUltimateActive = false;
         this.ultimateNeedles = [];
         this.ultimatePhase = 0; // 0: none, 1: active
         this.ultimateGenerateCount = 0;
         this.ultimateGenerateTimer = 0;
-        
-        // 演出状态
-        this.sidekickBalls = [];
         
         // 碰撞冷却
         this.lastCollisionTime = 0;
@@ -55,6 +58,8 @@ export class DragonKing extends Hero {
         this.needleAppearAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/DragonKing/五针出现.mp3');
         this.ultimateNeedleHitAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/DragonKing/神针命中.mp3');
         this.dragonReturnAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/DragonKing/三年已到.mp3');
+        this.burstAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/thunderflash/霹雳一闪.mp3');
+        this.awakenAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/DragonKing/觉醒.mp3');
     }
     
     stopAllAudio() {
@@ -81,6 +86,24 @@ export class DragonKing extends Hero {
         if (this.dragonReturnAudio) {
             this.dragonReturnAudio.pause();
             this.dragonReturnAudio.currentTime = 0;
+        }
+        if (this.burstAudio) {
+            this.burstAudio.pause();
+            this.burstAudio.currentTime = 0;
+        }
+    }
+    
+    stopAwakenAudio() {
+        if (this.awakenAudio) {
+            this.awakenAudio.pause();
+            this.awakenAudio.currentTime = 0;
+        }
+    }
+
+    playAwakenAudio() {
+        if (this.awakenAudio) {
+            this.awakenAudio.currentTime = 0;
+            this.awakenAudio.play().catch(e => console.warn('DragonKing awaken audio play failed:', e));
         }
     }
     
@@ -131,37 +154,38 @@ export class DragonKing extends Hero {
         if (this.dragonAwakenLocked) return;
         this.dragonAwakenLocked = true;
         
+        // 播放回归音效，重新定义演出时间轴
+        // 时停与能量汇聚时长一致（根据音效时长，若获取不到默认 2.5s）
+        let gatheringDuration = 2.5;
+        
+        if (this.dragonReturnAudio) {
+            this.dragonReturnAudio.currentTime = 0;
+            this.dragonReturnAudio.play().catch(e => console.warn('DragonKing return audio play failed:', e));
+            // 尝试获取实际音频时长
+            if (this.dragonReturnAudio.duration && !isNaN(this.dragonReturnAudio.duration)) {
+                gatheringDuration = this.dragonReturnAudio.duration;
+            }
+        }
+        
+        // 能量汇聚时长与时停时间一致，最长2.5s
+        gatheringDuration = Math.min(gatheringDuration, 2.5);
+        
         if (this.game) {
             this.game.logEvent('skill', { heroId: this.playerId, skill: '三年之期已到' });
-            this.game.globalFreezeTime = 0.8; // 全场短暂停顿
+            // 全场停顿时间与汇聚时间一致
+            this.game.globalFreezeTime = gatheringDuration; 
             this.game.awakenCenter = { x: this.x, y: this.y };
             this.game.awakenRadius = 0;
             this.game.addFloatingText(this.x, this.y - 60, "三年之期已到！", '#ffd700');
         }
         
-        // 播放回归音效
-        if (this.dragonReturnAudio) {
-            this.dragonReturnAudio.currentTime = 0;
-            this.dragonReturnAudio.play().catch(e => console.warn('DragonKing return audio play failed:', e));
-        }
-        
         this.mouthState = 'smile';
-        
-        // 生成配角球用于演出
-        const angle = this.enemy ? Math.atan2(this.enemy.y - this.y, this.enemy.x - this.x) : 0;
-        const frontX = this.x + Math.cos(angle) * 80;
-        const frontY = this.y + Math.sin(angle) * 80;
-        const pX = Math.cos(angle + Math.PI / 2);
-        const pY = Math.sin(angle + Math.PI / 2);
-        
-        this.sidekickBalls = [
-            { x: frontX, y: frontY, life: 0.8 },
-            { x: frontX + pX * 40, y: frontY + pY * 40, life: 0.8 },
-            { x: frontX - pX * 40, y: frontY - pY * 40, life: 0.8 }
-        ];
         
         // 强化效果延迟在 updateSpecific 中时停结束时应用
         this.pendingDragonAwaken = true;
+        this.returnParticleTimer = gatheringDuration; // 持续生成汇聚粒子的时间，和时停完全同步
+        this.returnParticleDuration = gatheringDuration; // 记录总时长，用于动画进度计算
+        this.returnNeedlePhase = 0; // 此时先只汇聚粒子
     }
     
     onAwaken() {
@@ -221,9 +245,52 @@ export class DragonKing extends Hero {
         }
     }
     
+    updateAwakenAnimation(dt) {
+        // 时停期间的特殊演出：汇聚粒子特效
+        if (this.returnParticleTimer > 0 && this.game) {
+            this.returnParticleTimer -= dt;
+            const duration = this.returnParticleDuration || 2.5;
+            // 进度 0 -> 1
+            const progress = 1 - Math.max(0, this.returnParticleTimer / duration);
+            
+            // 粒子生成数量随时间指数增加，营造最后的爆发感
+            const spawnCount = Math.floor(2 + Math.pow(progress, 2) * 12);
+            // 基础生成半径随时间收缩
+            const baseRadius = 400 - progress * 250; 
+
+            for (let i = 0; i < spawnCount; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const distance = baseRadius + Math.random() * 100; 
+                
+                const startX = this.x + Math.cos(angle) * distance;
+                const startY = this.y + Math.sin(angle) * distance;
+                
+                // 赋予一个强烈的切向初速度，配合 target 吸引形成向心螺旋
+                const spiralDir = i % 2 === 0 ? 1 : -1; 
+                const tangentAngle = angle + spiralDir * Math.PI / 2;
+                
+                // 随着进度增加，切向速度提升
+                const tangentSpeed = 300 + progress * 500; 
+                
+                const vx = Math.cos(tangentAngle) * tangentSpeed;
+                const vy = Math.sin(tangentAngle) * tangentSpeed;
+                
+                const isGold = Math.random() > (0.5 - progress * 0.3); // 后期金色更多
+                this.game.addParticle({
+                    x: startX, y: startY,
+                    vx: vx, vy: vy,
+                    color: isGold ? '#ffd700' : '#32cd32', 
+                    life: 0.4 - progress * 0.15, // 存活时间变短，显得吸收更快
+                    size: Math.random() * 3 + 2 + progress * 3, // 粒子逐渐变大
+                    target: this 
+                });
+            }
+        }
+    }
+
     updateSpecific(dt) {
         if (this.isDead) return;
-        
+
         if (this.enduranceGainCooldown > 0) {
             this.enduranceGainCooldown -= dt;
         }
@@ -235,26 +302,106 @@ export class DragonKing extends Hero {
             }
         }
         
-        // 三年之期演出结束判定
+        // 三年之期演出结束判定 (此时汇聚和时停正好结束)
         if (this.pendingDragonAwaken && (!this.game || this.game.globalFreezeTime <= 0)) {
             this.pendingDragonAwaken = false;
             this.dragonAwakened = true;
             this.enduranceValue = 0;
-            // 添加特效气场
-            for(let i=0; i<20; i++) {
-                this.game.addParticle({
-                    x: this.x, y: this.y,
-                    vx: (Math.random()-0.5)*150, vy: (Math.random()-0.5)*150,
-                    color: '#ffd700', life: 1.0, size: 4
+            
+            if (this.game) {
+                // 剧烈屏幕震动
+                this.game.shakeScreen(0.3, 8);
+                // 添加爆发特效气场
+                for(let i=0; i<40; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 200 + 100;
+                    this.game.addParticle({
+                        x: this.x, y: this.y,
+                        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                        color: Math.random() > 0.5 ? '#ffd700' : '#32cd32', 
+                        life: 0.8, size: Math.random() * 5 + 3
+                    });
+                }
+                // 终极爆发光环
+                if (!this.healRings) this.healRings = [];
+                this.healRings.push({
+                    minRadius: this.radius,
+                    maxRadius: this.radius + 400,
+                    width: 20,
+                    color: '#ffd700',
+                    life: 0.6,
+                    maxLife: 0.6,
+                    hasSparks: true
                 });
+                
+                // 播放爆炸冲击音效
+                if (this.burstAudio) {
+                    this.burstAudio.currentTime = 0;
+                    this.burstAudio.play().catch(e => console.warn('DragonKing burst audio play failed:', e));
+                }
+            }
+            
+            // 能量汇聚完毕且时停结束时，立刻生成 6 根普通神针悬停
+            this.returnNeedlePhase = 1; // gathering
+            this.returnNeedleTimer = 0.5; // 悬停 0.5 秒后发射
+            this.returnNeedles = [];
+            const count = 6;
+            for (let i = 0; i < count; i++) {
+                const angle = (i / count) * Math.PI * 2;
+                this.returnNeedles.push({
+                    type: 'normal',
+                    color: '#ffd700',
+                    angle: angle, // 发射角度
+                    dist: 40, // 初始生成在身旁
+                    x: this.x + Math.cos(angle) * 40,
+                    y: this.y + Math.sin(angle) * 40,
+                    vx: 0,
+                    vy: 0,
+                    bounceCount: 0,
+                    maxBounceCount: 5,
+                    active: true,
+                    trail: []
+                });
+                // 生成时的小光爆
+                for(let p=0; p<8; p++) {
+                    this.game.addParticle({
+                        x: this.x + Math.cos(angle) * 40, 
+                        y: this.y + Math.sin(angle) * 40,
+                        vx: (Math.random()-0.5)*80, vy: (Math.random()-0.5)*80,
+                        color: '#ffd700', life: 0.3, size: 3
+                    });
+                }
+            }
+            // 播放五针出现音效作为替代
+            if (this.needleAppearAudio) {
+                this.needleAppearAudio.currentTime = 0;
+                this.needleAppearAudio.play().catch(e => console.warn('DragonKing needle appear audio play failed:', e));
             }
         }
         
-        // 配角球更新
-        for (let i = this.sidekickBalls.length - 1; i >= 0; i--) {
-            this.sidekickBalls[i].life -= dt;
-            if (this.sidekickBalls[i].life <= 0) {
-                this.sidekickBalls.splice(i, 1);
+        // 处理回归发射的 6 根神针
+        if (this.returnNeedlePhase === 1) {
+            this.returnNeedleTimer -= dt;
+            // 让神针跟随英雄移动
+            for (let n of this.returnNeedles) {
+                n.x = this.x + Math.cos(n.angle) * n.dist;
+                n.y = this.y + Math.sin(n.angle) * n.dist;
+            }
+            if (this.returnNeedleTimer <= 0) {
+                this.returnNeedlePhase = 2; // firing
+                const speed = 80 * 8;
+                for (let n of this.returnNeedles) {
+                    n.vx = Math.cos(n.angle) * speed;
+                    n.vy = Math.sin(n.angle) * speed;
+                }
+                // 加入到全局的神针数组中统一管理
+                this.activeNeedles.push(...this.returnNeedles);
+                this.returnNeedles = [];
+                // 播放发射音效
+                if (this.needleFireAudio) {
+                    this.needleFireAudio.currentTime = 0;
+                    this.needleFireAudio.play().catch(e => console.warn('DragonKing fire audio play failed:', e));
+                }
             }
         }
         
@@ -613,6 +760,7 @@ export class DragonKing extends Hero {
         } else if (type === 'ghost') {
             // 鬼敲门
             target.takeDamage(5 * this.damageMultiplier, target.x, target.y);
+            target.addBuff('dk_ghost', 'combo', 0, 0.5); // 添加一个 buff 用于在 UI 上显示“连击”标签
             target.dkGhostTimer = 0.5;
             target.dkGhostCount = 2;
         } else if (type === 'gold') {
@@ -661,28 +809,58 @@ export class DragonKing extends Hero {
     drawBody(ctx) {
         super.drawBody(ctx);
         
-        // 隐忍值 UI
+        // 隐忍值进度条 UI
         if (!this.dragonAwakened && !this.isDead) {
             ctx.save();
+            
+            // 底槽外边框
             ctx.beginPath();
-            ctx.arc(0, 0, this.radius + 8, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            ctx.arc(0, 0, this.radius + 10, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.lineWidth = 8;
+            ctx.stroke();
+            
+            // 动态时间计算
+            const time = Date.now();
+            
+            // 底槽内轨（增加微弱的呼吸感）
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius + 10, 0, Math.PI * 2);
+            const emptyBreath = (Math.sin(time / 500) + 1) / 2;
+            ctx.strokeStyle = `rgba(150, 150, 150, ${0.3 + emptyBreath * 0.3})`;
             ctx.lineWidth = 4;
             ctx.stroke();
             
+            // 进度环
             if (this.enduranceValue > 0) {
                 ctx.beginPath();
                 const threshold = Math.max(1, this.enduranceThreshold);
-                const angle = (this.enduranceValue / threshold) * Math.PI * 2;
-                ctx.arc(0, 0, this.radius + 8, -Math.PI / 2, -Math.PI / 2 + angle);
-                ctx.strokeStyle = this.enduranceValue >= threshold ? '#ffd700' : '#ff9900';
-                ctx.lineWidth = 4;
-                if (this.enduranceValue >= threshold * 0.8) {
+                const progress = Math.min(1, this.enduranceValue / threshold);
+                const angle = progress * Math.PI * 2;
+                ctx.arc(0, 0, this.radius + 10, -Math.PI / 2, -Math.PI / 2 + angle);
+                
+                // 动态特效
+                if (progress >= 1) {
+                    // 满值：高频闪烁及光晕发光效果 (金色)
+                    const pulse = (Math.sin(time / 100) + 1) / 2;
+                    ctx.strokeStyle = `rgb(255, ${215 + Math.floor(pulse * 40)}, 0)`; // 金色高亮交替
+                    ctx.shadowColor = '#ffd700';
+                    ctx.shadowBlur = 10 + pulse * 15;
+                    ctx.lineWidth = 6 + pulse * 3; // 微微变粗
+                } else {
+                    // 攒值：平缓的呼吸光晕 (橙金色)
+                    const breath = (Math.sin(time / 300) + 1) / 2;
+                    ctx.strokeStyle = '#ff9900';
                     ctx.shadowColor = '#ff9900';
-                    ctx.shadowBlur = 5 + Math.sin(Date.now() / 100) * 5;
+                    ctx.shadowBlur = 5 + breath * 8;
+                    ctx.lineWidth = 6;
                 }
+                
                 ctx.lineCap = 'round';
                 ctx.stroke();
+                
+                // 清除阴影防止影响其他元素的绘制
+                ctx.shadowBlur = 0;
             }
             ctx.restore();
         }
@@ -716,18 +894,6 @@ export class DragonKing extends Hero {
         super.draw(ctx);
         
         if (!this.isDead) {
-            // 绘制配角球
-            for (const b of this.sidekickBalls) {
-                ctx.save();
-                ctx.translate(b.x, b.y);
-                ctx.globalAlpha = b.life / 0.8;
-                ctx.fillStyle = '#555';
-                ctx.beginPath();
-                ctx.arc(0, 0, 15, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-            
             // 绘制神针
             const drawNeedle = (n) => {
                 // 拖尾
@@ -804,6 +970,7 @@ export class DragonKing extends Hero {
             
             this.activeNeedles.forEach(drawNeedle);
             this.ultimateNeedles.forEach(drawNeedle);
+            this.returnNeedles.forEach(drawNeedle);
         }
     }
     
@@ -849,6 +1016,39 @@ export class DragonKing extends Hero {
                     ctx.restore();
                 }
             }
+            ctx.restore();
+        }
+
+        // 增加能量汇聚时的阵法与光球效果
+        if (this.returnParticleTimer > 0 && this.returnParticleDuration > 0) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            
+            const progress = 1 - Math.max(0, this.returnParticleTimer / this.returnParticleDuration);
+            
+            // 1. 底部旋转法阵 (逆时针加速收缩)
+            ctx.save();
+            ctx.rotate(-progress * Math.PI * 8); // 旋转四圈
+            ctx.beginPath();
+            const ringRadius = 150 - progress * 80; // 收缩的法阵
+            ctx.arc(0, 0, ringRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(255, 215, 0, ${0.2 + progress * 0.6})`;
+            ctx.lineWidth = 3 + progress * 4;
+            ctx.setLineDash([15, 15, 5, 15]);
+            ctx.stroke();
+            ctx.restore();
+            
+            // 2. 核心高光球 (随着汇聚越来越大，越来越亮)
+            const coreRadius = this.radius * (0.5 + progress * 1.2);
+            ctx.beginPath();
+            ctx.arc(0, 0, coreRadius, 0, Math.PI * 2);
+            const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, coreRadius);
+            grad.addColorStop(0, `rgba(255, 255, 255, ${progress})`);
+            grad.addColorStop(0.5, `rgba(255, 215, 0, ${progress * 0.8})`);
+            grad.addColorStop(1, 'rgba(255, 215, 0, 0)');
+            ctx.fillStyle = grad;
+            ctx.fill();
+            
             ctx.restore();
         }
     }

@@ -23,15 +23,19 @@
             </div>
             <div class="buffs">
               <span v-if="store.battleState.p1.rage > 0" class="buff-icon" :style="{ background: store.battleState.p1.rage >= 100 ? '#ff0000' : '#ff9900', color: '#fff' }">怒气 {{ store.battleState.p1.rage }}%</span>
+              <span v-if="store.battleState.p1.endurance > 0" class="buff-icon" :style="{ background: store.battleState.p1.endurance >= 100 ? '#ffd700' : '#8b8b00', color: '#fff' }">隐忍 {{ store.battleState.p1.endurance }}%</span>
               <span v-if="store.battleState.p1.damageReduction > 0" class="buff-icon" style="background: #4caf50; color: #fff;">减伤 {{ store.battleState.p1.damageReduction }}%</span>
               <span v-if="store.battleState.p1.isAwakened" class="buff-icon" style="background: #ffd700; color: #000;">觉醒 <span v-if="store.battleState.p1.awakenTimer > 0">({{ store.battleState.p1.awakenTimer.toFixed(1) }}s)</span></span>
               <span v-if="store.battleState.p1.invincibleTime > 0" class="buff-icon" style="background: #ffd700; color: #000;">无敌 ({{ store.battleState.p1.invincibleTime.toFixed(1) }}s)</span>
               <span v-for="(buff, i) in store.battleState.p1.buffs.filter(buff => buff.type !== 'suppress_damage')" :key="i" class="buff-icon" 
-                    :style="{ background: buff.type === 'slow' ? '#ff4444' : (buff.type === 'vampire_drain' ? '#8b0000' : (buff.type === 'paralyze' ? '#9932cc' : (buff.type === 'van_suppressed' ? '#ff69b4' : '#444'))) }">
-                {{ buff.type === 'slow' ? `减速 (${buff.time.toFixed(1)}s)` : 
+                    :style="{ background: buff.id === 'dk_freeze' ? '#00ffff' : (buff.type === 'slow' ? '#ff4444' : (buff.type === 'vampire_drain' ? '#8b0000' : (buff.type === 'paralyze' ? '#9932cc' : (buff.type === 'van_suppressed' ? '#ff69b4' : (buff.type === 'burn' ? '#ff4500' : (buff.type === 'combo' ? '#800080' : '#444')))))), color: buff.id === 'dk_freeze' ? '#000' : '#fff' }">
+                {{ buff.id === 'dk_freeze' ? `冻结 (${buff.time.toFixed(1)}s)` :
+                   buff.type === 'slow' ? `减速 (${buff.time.toFixed(1)}s)` : 
                    buff.type === 'vampire_drain' ? `被吸血 (${buff.time.toFixed(1)}s)` : 
                    buff.type === 'paralyze' ? `麻痹 (${buff.time.toFixed(1)}s)` :
                    buff.type === 'van_suppressed' ? `压制 (${buff.time.toFixed(1)}s)` :
+                   buff.type === 'burn' ? `灼烧 (${buff.time.toFixed(1)}s)` :
+                   buff.type === 'combo' ? `连击 (${buff.time.toFixed(1)}s)` :
                    buff.type }}
               </span>
             </div>
@@ -56,15 +60,19 @@
             </div>
             <div class="buffs">
               <span v-if="store.battleState.p2.rage > 0" class="buff-icon" :style="{ background: store.battleState.p2.rage >= 100 ? '#ff0000' : '#ff9900', color: '#fff' }">怒气 {{ store.battleState.p2.rage }}%</span>
+              <span v-if="store.battleState.p2.endurance > 0" class="buff-icon" :style="{ background: store.battleState.p2.endurance >= 100 ? '#ffd700' : '#8b8b00', color: '#fff' }">隐忍 {{ store.battleState.p2.endurance }}%</span>
               <span v-if="store.battleState.p2.damageReduction > 0" class="buff-icon" style="background: #4caf50; color: #fff;">减伤 {{ store.battleState.p2.damageReduction }}%</span>
               <span v-if="store.battleState.p2.isAwakened" class="buff-icon" style="background: #ffd700; color: #000;">觉醒 <span v-if="store.battleState.p2.awakenTimer > 0">({{ store.battleState.p2.awakenTimer.toFixed(1) }}s)</span></span>
               <span v-if="store.battleState.p2.invincibleTime > 0" class="buff-icon" style="background: #ffd700; color: #000;">无敌 ({{ store.battleState.p2.invincibleTime.toFixed(1) }}s)</span>
               <span v-for="(buff, i) in store.battleState.p2.buffs.filter(buff => buff.type !== 'suppress_damage')" :key="i" class="buff-icon" 
-                    :style="{ background: buff.type === 'slow' ? '#ff4444' : (buff.type === 'vampire_drain' ? '#8b0000' : (buff.type === 'paralyze' ? '#9932cc' : (buff.type === 'van_suppressed' ? '#ff69b4' : '#444'))) }">
-                {{ buff.type === 'slow' ? `减速 (${buff.time.toFixed(1)}s)` : 
+                    :style="{ background: buff.id === 'dk_freeze' ? '#00ffff' : (buff.type === 'slow' ? '#ff4444' : (buff.type === 'vampire_drain' ? '#8b0000' : (buff.type === 'paralyze' ? '#9932cc' : (buff.type === 'van_suppressed' ? '#ff69b4' : (buff.type === 'burn' ? '#ff4500' : (buff.type === 'combo' ? '#800080' : '#444')))))), color: buff.id === 'dk_freeze' ? '#000' : '#fff' }">
+                {{ buff.id === 'dk_freeze' ? `冻结 (${buff.time.toFixed(1)}s)` :
+                   buff.type === 'slow' ? `减速 (${buff.time.toFixed(1)}s)` : 
                    buff.type === 'vampire_drain' ? `被吸血 (${buff.time.toFixed(1)}s)` : 
                    buff.type === 'paralyze' ? `麻痹 (${buff.time.toFixed(1)}s)` :
                    buff.type === 'van_suppressed' ? `压制 (${buff.time.toFixed(1)}s)` :
+                   buff.type === 'burn' ? `灼烧 (${buff.time.toFixed(1)}s)` :
+                   buff.type === 'combo' ? `连击 (${buff.time.toFixed(1)}s)` :
                    buff.type }}
               </span>
             </div>
@@ -216,6 +224,13 @@ const updateBattleState = (state, hero) => {
   } else {
     state.rage = 0;
   }
+
+  // 同步龙王赘婿的隐忍值
+  if (hero.name === '龙王赘婿' && hero.enduranceValue !== undefined) {
+    state.endurance = Math.round(hero.enduranceValue);
+  } else {
+    state.endurance = 0;
+  }
   
   if (hero.name === '狂战士') {
     state.awakenTimer = hero.awakenTimer || 0;
@@ -232,7 +247,7 @@ const updateBattleState = (state, hero) => {
   }
 
   state.invincibleTime = hero.invincibleTime;
-  state.buffs = hero.buffs.map(b => ({ type: b.type, time: b.time }));
+  state.buffs = hero.buffs.map(b => ({ id: b.id, type: b.type, time: b.time }));
 };
 
 const readParamsFromGame = () => {
