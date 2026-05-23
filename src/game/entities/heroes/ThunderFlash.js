@@ -27,10 +27,10 @@ export class ThunderFlash extends Hero {
         this.isFreeAccel = false;
         this.freeAccelTimer = 0;
         
-        // Awakening: 8-Combo
+        // Awakening: 6-Combo
         this.isAwakenCombo = false;
         this.comboCount = 0;
-        this.maxCombo = 8;
+        this.maxCombo = 6;
         
         // Visuals
         this.afterImages = [];

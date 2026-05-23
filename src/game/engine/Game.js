@@ -90,7 +90,8 @@ export class Game {
         this.floatingTexts = [];
         
         this.awakenStone = null;
-        this.awakenStoneSpawned = false;
+        this.awakenStoneSpawnedByHp = false;
+        this.awakenStoneSpawnedByTime = false;
         
         this.isPaused = false;
         this.isGameOver = false;
@@ -158,7 +159,8 @@ export class Game {
     }
 
     applyDebugInitialSetup() {
-        this.awakenStoneSpawned = true;
+        this.awakenStoneSpawnedByHp = true;
+        this.awakenStoneSpawnedByTime = true;
         this.awakenStone = null;
 
         const applyHp = (hero, hp) => {
@@ -365,8 +367,23 @@ export class Game {
         }
         
         // 检查觉醒石生成条件
-        if (!this.debugConfig?.enabled && !this.awakenStoneSpawned && (this.p1.hp <= 25 || this.p2.hp <= 25)) {
-            this.spawnAwakenStone();
+        if (!this.debugConfig?.enabled) {
+            // 条件1：任意一方血量低于25
+            if (!this.awakenStoneSpawnedByHp && (this.p1.hp <= 25 || this.p2.hp <= 25)) {
+                this.awakenStoneSpawnedByHp = true;
+                // 如果当前没有觉醒石或者觉醒石已被捡起，才生成新的
+                if (!this.awakenStone || this.awakenStone.isCollected) {
+                    this.spawnAwakenStone();
+                }
+            }
+            
+            // 条件2：时间达到 15s
+            if (!this.awakenStoneSpawnedByTime && this.gameTime >= 15) {
+                this.awakenStoneSpawnedByTime = true;
+                if (!this.awakenStone || this.awakenStone.isCollected) {
+                    this.spawnAwakenStone();
+                }
+            }
         }
 
         if (this.debugConfig?.enabled) {
@@ -495,7 +512,6 @@ export class Game {
      * 生成觉醒石
      */
     spawnAwakenStone() {
-        this.awakenStoneSpawned = true;
         this.awakenStone = new AwakenStone(this.width / 2, this.height / 2);
     }
     

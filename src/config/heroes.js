@@ -115,9 +115,9 @@ export const heroConfig = [
     id: 'thunderflash', name: '霹雳闪', class: 'ThunderFlash',
     iconColor: '#f9a825',
     quote: '"集中一点,登峰造极！"',
-    traits: '极速、贯穿 | 蓄力弹射与八连绝杀',
+    traits: '极速、贯穿 | 蓄力弹射与六连绝杀',
     stats: 'HP: 100 | 移速: 60',
-    skill: { name: '壹之型·霹雳一闪', desc: '碰壁时蓄力0.3秒，随后朝敌方超高速弹射并贯穿，造成高额伤害，弹射与蓄力期间处于霸体。弹射结束后冷却1秒。觉醒：霹雳一闪·八连，立刻开始蓄力弹射，碰壁后瞬间再次蓄力，连续弹射8次，造成巨额伤害！' },
+    skill: { name: '壹之型·霹雳一闪', desc: '碰壁时蓄力0.3秒，随后朝敌方超高速弹射并贯穿，造成高额伤害，弹射与蓄力期间处于霸体。弹射结束后冷却1秒。觉醒：霹雳一闪·六连，立刻开始蓄力弹射，碰壁后瞬间再次蓄力，连续弹射6次，造成巨额伤害！' },
     audioSrc: import.meta.env.BASE_URL + 'assets/audio/thunderflash/霹雳一闪.mp3',
     isSpecial: false
   },

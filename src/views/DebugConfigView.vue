@@ -330,8 +330,8 @@ const skillTuningSchemas = {
       min: 1,
       step: 1,
       type: 'integer',
-      defaultValue: 8,
-      hint: '霹雳一闪·八连的弹射次数，默认 8 次。'
+      defaultValue: 6,
+      hint: '霹雳一闪·六连的弹射次数，默认 6 次。'
     }
   ]
 };
