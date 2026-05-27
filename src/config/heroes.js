@@ -122,6 +122,16 @@ export const heroConfig = [
     isSpecial: false
   },
   {
+    id: 'bomber', name: '炸弹人', class: 'Bomber',
+    iconColor: '#ff4500',
+    quote: '"艺术就是爆炸！"',
+    traits: '铺场控制型 | 持续压制与炸弹强化',
+    stats: 'HP: 100 | 移速: 60',
+    skill: { name: '高爆艺术', desc: '每2秒投掷一枚炸弹，命中敌方则粘附并短倒计时爆炸；未命中触壁后变为地雷炸弹并产生大范围减速警示圈。进入警示圈可强化地雷炸弹。觉醒：艺术就是爆炸，同时掷出3枚已强化2次的快速地雷炸弹。' },
+    audioSrc: null,
+    isSpecial: false
+  },
+  {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',
     quote: '"神秘的力量正在苏醒..."',
     traits: '未知 | ???',

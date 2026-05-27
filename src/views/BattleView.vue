@@ -137,6 +137,7 @@ import { OnePunchMan } from '@/game/entities/heroes/OnePunchMan.js';
 import { QueenS } from '@/game/entities/heroes/QueenS.js';
 import { DragonKing } from '@/game/entities/heroes/DragonKing.js';
 import { ThunderFlash } from '@/game/entities/heroes/ThunderFlash.js';
+import { Bomber } from '@/game/entities/heroes/Bomber.js';
 import { BattleRecordManager } from '@/utils/BattleRecordManager.js';
 import { heroConfig } from '@/config/heroes.js';
 
@@ -146,12 +147,13 @@ const heroPool = heroConfig;
 // Buff UI Config mapping
 const buffConfig = {
   'dk_freeze': { label: '冻结', bg: '#00ffff', color: '#000' },
+  'bomber_slow': { label: '减速', bg: '#ffaa00', color: '#000' },
   'slow': { label: '减速', bg: '#ff4444', color: '#fff' },
   'vampire_drain': { label: '被吸血', bg: '#8b0000', color: '#fff' },
   'paralyze': { label: '麻痹', bg: '#9932cc', color: '#fff' },
   'van_suppressed': { label: '压制', bg: '#ff69b4', color: '#fff' },
   'burn': { label: '灼烧', bg: '#ff4500', color: '#fff' },
-  'combo': { label: '连击', bg: '#8b0000', color: '#fff' },
+  'combo': { label: '连击', bg: '#800080', color: '#fff' },
   'default': { label: '未知状态', bg: '#444', color: '#fff' }
 };
 
@@ -162,20 +164,21 @@ const getBuffConfig = (buff) => {
 };
 
 const classes = {
-  'Vampire': Vampire,
-  'Spider': Spider,
-  'Berserker': Berserker,
-  'Gambler': Gambler,
-  'MaLaoshi': MaLaoshi,
-  'HuaQiang': HuaQiang,
-  'Van': Van,
-  'SunWukong': SunWukong,
-  'T1000': T1000,
-  'OnePunchMan': OnePunchMan,
-  'QueenS': QueenS,
-  'DragonKing': DragonKing,
-  'ThunderFlash': ThunderFlash
-};
+    'Vampire': Vampire,
+    'Spider': Spider,
+    'Berserker': Berserker,
+    'Gambler': Gambler,
+    'MaLaoshi': MaLaoshi,
+    'HuaQiang': HuaQiang,
+    'Van': Van,
+    'SunWukong': SunWukong,
+    'T1000': T1000,
+    'OnePunchMan': OnePunchMan,
+    'QueenS': QueenS,
+    'DragonKing': DragonKing,
+    'ThunderFlash': ThunderFlash,
+    'Bomber': Bomber
+  };
 
 const store = useGameStore();
 const router = useRouter();
