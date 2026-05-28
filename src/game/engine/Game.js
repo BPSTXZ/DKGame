@@ -239,6 +239,11 @@ export class Game {
                 hero.skillCooldown = getFloat(tuning.skillCooldown, hero.skillCooldown);
                 hero.maxCombo = getCount(tuning.maxCombo, hero.maxCombo);
                 break;
+            case 'FlameArtist':
+                hero.fireCooldown = getFloat(tuning.fireCooldown, hero.fireCooldown);
+                hero.fireDuration = getFloat(tuning.fireDuration, hero.fireDuration);
+                hero.fireDamagePerSec = getFloat(tuning.fireDamagePerSec, hero.fireDamagePerSec);
+                break;
             case 'Spider':
                 hero.passiveSpeedBonus = getFloat(tuning.passiveSpeedBonus, hero.passiveSpeedBonus);
                 break;

@@ -114,6 +114,7 @@ import { SunWukong } from '@/game/entities/heroes/SunWukong.js';
 import { T1000 } from '@/game/entities/heroes/T1000.js';
 import { OnePunchMan } from '@/game/entities/heroes/OnePunchMan.js';
 import { QueenS } from '@/game/entities/heroes/QueenS.js';
+import { FlameArtist } from '@/game/entities/heroes/FlameArtist.js';
 import { heroConfig } from '@/config/heroes.js';
 
 const store = useGameStore();

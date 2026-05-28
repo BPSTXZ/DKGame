@@ -132,6 +132,16 @@ export const heroConfig = [
     isSpecial: false
   },
   {
+    id: 'flameartist', name: '戏炎师', class: 'FlameArtist',
+    iconColor: '#ff4500',
+    quote: '"让火焰净化一切！"',
+    traits: '布场消耗 | 扇形喷火与火种引燃',
+    stats: 'HP: 100 | 移速: 60',
+    skill: { name: '戏炎弄火', desc: '每2秒喷火，在区域内生成火种。敌方触碰火种叠加标记，满4层触发引燃造成持续伤害。自身拾取火种回复生命。觉醒：焚天炼狱，双向全屏旋转喷火并大量生成火种。' },
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/FlameArtist/引燃.mp3',
+    isSpecial: false
+  },
+  {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',
     quote: '"神秘的力量正在苏醒..."',
     traits: '未知 | ???',

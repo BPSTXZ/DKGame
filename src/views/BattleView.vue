@@ -138,6 +138,7 @@ import { QueenS } from '@/game/entities/heroes/QueenS.js';
 import { DragonKing } from '@/game/entities/heroes/DragonKing.js';
 import { ThunderFlash } from '@/game/entities/heroes/ThunderFlash.js';
 import { Bomber } from '@/game/entities/heroes/Bomber.js';
+import { FlameArtist } from '@/game/entities/heroes/FlameArtist.js';
 import { BattleRecordManager } from '@/utils/BattleRecordManager.js';
 import { heroConfig } from '@/config/heroes.js';
 
@@ -177,7 +178,8 @@ const classes = {
     'QueenS': QueenS,
     'DragonKing': DragonKing,
     'ThunderFlash': ThunderFlash,
-    'Bomber': Bomber
+    'Bomber': Bomber,
+    'FlameArtist': FlameArtist
   };
 
 const store = useGameStore();

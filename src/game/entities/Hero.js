@@ -208,6 +208,24 @@ export class Hero {
                         this.game.addFloatingText(b.source.x, b.source.y - 30, `+${tickDamage}`, '#4caf50');
                     }
                 }
+            } else if (b.type === 'burn' || b.type === 'bleed') {
+                // 灼烧/流血持续伤害
+                let dotAmount = b.value * dt;
+                
+                // 计算自身减伤
+                const reduction = this.getDamageReduction();
+                dotAmount *= (1 - reduction);
+                
+                this.hp -= dotAmount;
+                
+                // 每0.5秒跳字
+                b.tickTimer = (b.tickTimer || 0) + dt;
+                if (b.tickTimer >= 0.5) {
+                    b.tickTimer -= 0.5;
+                    const tickDamage = (b.value * 0.5 * (1 - reduction)).toFixed(1);
+                    const color = b.type === 'burn' ? '#ff8c00' : '#ff0000';
+                    this.game.addFloatingText(this.x, this.y - 30, `-${tickDamage}`, color);
+                }
             }
             // 移除过期 Buff
             if (b.time <= 0) {
