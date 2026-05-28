@@ -139,7 +139,7 @@ export const heroConfig = [
     stats: 'HP: 100 | 移速: 60',
     skill: { name: '戏炎弄火', desc: '每2秒喷火，在区域内生成火种。敌方触碰火种叠加标记，满4层触发引燃造成持续伤害。自身拾取火种回复生命。觉醒：焚天炼狱，双向全屏旋转喷火并大量生成火种。' },
     audioSrc: import.meta.env.BASE_URL + 'assets/audio/FlameArtist/引燃.mp3',
-    isSpecial: false
+    isSpecial: true
   },
   {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',
