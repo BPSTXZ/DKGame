@@ -28,7 +28,7 @@ export class MaLaoshi extends Hero {
         this.whipMaxCount = 5;
         this.whipTimer = 0;
         this.whipInterval = 1.5;
-        this.whipDamage = 7; // 改为 7 点伤害
+        this.whipDamage = 8;
         this.isWhipping = false;
         this.whipVisuals = []; // 存储强化的闪电鞭特效线条
         this.recentHitWindow = 0;

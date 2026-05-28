@@ -95,6 +95,8 @@ export class Game {
         
         this.isPaused = false;
         this.isGameOver = false;
+        this.victoryDelayTimer = 0;
+        this.pendingVictor = null;
         
         this.globalFreezeTime = 0;
         this.awakenCenter = null;
@@ -327,6 +329,13 @@ export class Game {
         
         // 如果游戏结束，则停止英雄主体逻辑更新和碰撞，但保留退场动画及胜利者的视觉特效更新
         if (this.isGameOver) {
+            if (this.victoryDelayTimer > 0) {
+                this.victoryDelayTimer -= dt;
+                if (this.victoryDelayTimer <= 0) {
+                    this.victoryDelayTimer = 0;
+                    this.finalizeVictory();
+                }
+            }
             this.entities.forEach(e => {
                 if (e.isDead && e.deathTimer > 0) {
                     e.deathTimer -= dt; // 仅更新死亡动画计时器
@@ -566,7 +575,6 @@ export class Game {
         if (winner) {
             this.isGameOver = true;
             
-            // 保存战斗记录
             if (!this.isReplay && !this.isTraining && !this.debugConfig?.enabled) {
                 const record = {
                     id: Date.now().toString(),
@@ -582,87 +590,92 @@ export class Game {
                     module.BattleRecordManager.saveRecord(record);
                 }).catch(e => console.error("Failed to save battle record:", e));
             }
-            
-            // 触发游戏胜利瞬间的回调（如停止音效、播放喝彩等）
-            if (this.onVictory) {
-                this.onVictory(winner);
-            }
-            
+
             if (winner !== 'draw') {
                 winner.isVictorious = true;
-                const preservedAwakenAudioStates = typeof winner.captureAwakenAudioState === 'function'
-                    ? winner.captureAwakenAudioState()
-                    : [];
-                const awakenAudioDelay = typeof winner.getAwakenAudioRemainingTime === 'function'
-                    ? winner.getAwakenAudioRemainingTime(preservedAwakenAudioStates)
-                    : 0;
-                
-                // 停止失败者可能残留的所有音效
-                const loser = winner === this.p1 ? this.p2 : this.p1;
-                if (typeof loser.stopAllAudio === 'function') {
-                    loser.stopAllAudio();
-                }
-                if (typeof loser.stopAwakenAudio === 'function') {
-                    loser.stopAwakenAudio();
-                }
-
-                // 停止胜利者自身的普通音效，确保只留胜利语音
-                if (typeof winner.stopAllAudio === 'function') {
-                    winner.stopAllAudio();
-                }
-                if (preservedAwakenAudioStates.length > 0 && typeof winner.restoreAwakenAudioState === 'function') {
-                    winner.restoreAwakenAudioState(preservedAwakenAudioStates);
-                }
-                
-                // 触发胜利者的即时清理逻辑（如立刻中断正在释放的技能、特效）
-                if (typeof winner.onVictory === 'function') {
-                    winner.onVictory();
-                }
-                if (preservedAwakenAudioStates.length > 0 && typeof winner.restoreAwakenAudioState === 'function') {
-                    winner.restoreAwakenAudioState(preservedAwakenAudioStates);
-                }
-                
-                // 播放胜利音效的逻辑
-                // 如果英雄拥有 immediateVictoryAudio 标记（如 S女王），则立即播放胜利语音，无需等待 0.5 秒
-                let audioDuration = 0;
-                if (winner.immediateVictoryAudio) {
-                    setTimeout(() => {
-                        if (winner.playVictoryAudio) {
-                            audioDuration = winner.playVictoryAudio() || 0;
-                        }
-                        setTimeout(() => {
-                            this.triggerVictoryCelebration();
-                            if (this.onCelebration) {
-                                this.onCelebration();
-                            }
-                        }, audioDuration * 1000);
-                    }, awakenAudioDelay * 1000);
-                } else {
-                    // 为了让英雄在释放技能击杀对手时能自然播放完当前的技能音效，延迟播放胜利音效
-                    // 如果觉醒演出音效尚未结束，则至少等待它播放完毕
-                    const victoryDelay = Math.max(0.5, awakenAudioDelay);
-                    setTimeout(() => {
-                        if (winner.playVictoryAudio) {
-                            audioDuration = winner.playVictoryAudio() || 0;
-                        }
-                        
-                        // 胜利音效播放完毕（或没有音效）后，触发彩带和喝彩流程
-                        setTimeout(() => {
-                            this.triggerVictoryCelebration();
-                            if (this.onCelebration) {
-                                this.onCelebration();
-                            }
-                        }, audioDuration * 1000);
-                    }, victoryDelay * 1000);
-                }
-            } else {
-                // 平局直接触发UI，无彩带
-                setTimeout(() => {
-                    if (this.onGameOver) {
-                        this.onGameOver('平局！');
-                    }
-                }, 2500);
             }
+
+            if (this.victoryDelayTimer > 0) {
+                this.pendingVictor = winner;
+                return;
+            }
+
+            this.pendingVictor = winner;
+            this.finalizeVictory();
+        }
+    }
+
+    finalizeVictory() {
+        const winner = this.pendingVictor;
+        this.pendingVictor = null;
+
+        if (this.onVictory) {
+            this.onVictory(winner);
+        }
+
+        if (winner !== 'draw') {
+            const preservedAwakenAudioStates = typeof winner.captureAwakenAudioState === 'function'
+                ? winner.captureAwakenAudioState()
+                : [];
+            const awakenAudioDelay = typeof winner.getAwakenAudioRemainingTime === 'function'
+                ? winner.getAwakenAudioRemainingTime(preservedAwakenAudioStates)
+                : 0;
+
+            const loser = winner === this.p1 ? this.p2 : this.p1;
+            if (typeof loser.stopAllAudio === 'function') {
+                loser.stopAllAudio();
+            }
+            if (typeof loser.stopAwakenAudio === 'function') {
+                loser.stopAwakenAudio();
+            }
+
+            if (typeof winner.stopAllAudio === 'function') {
+                winner.stopAllAudio();
+            }
+            if (preservedAwakenAudioStates.length > 0 && typeof winner.restoreAwakenAudioState === 'function') {
+                winner.restoreAwakenAudioState(preservedAwakenAudioStates);
+            }
+
+            if (typeof winner.onVictory === 'function') {
+                winner.onVictory();
+            }
+            if (preservedAwakenAudioStates.length > 0 && typeof winner.restoreAwakenAudioState === 'function') {
+                winner.restoreAwakenAudioState(preservedAwakenAudioStates);
+            }
+
+            let audioDuration = 0;
+            if (winner.immediateVictoryAudio) {
+                setTimeout(() => {
+                    if (winner.playVictoryAudio) {
+                        audioDuration = winner.playVictoryAudio() || 0;
+                    }
+                    setTimeout(() => {
+                        this.triggerVictoryCelebration();
+                        if (this.onCelebration) {
+                            this.onCelebration();
+                        }
+                    }, audioDuration * 1000);
+                }, awakenAudioDelay * 1000);
+            } else {
+                const victoryDelay = Math.max(0.5, awakenAudioDelay);
+                setTimeout(() => {
+                    if (winner.playVictoryAudio) {
+                        audioDuration = winner.playVictoryAudio() || 0;
+                    }
+                    setTimeout(() => {
+                        this.triggerVictoryCelebration();
+                        if (this.onCelebration) {
+                            this.onCelebration();
+                        }
+                    }, audioDuration * 1000);
+                }, victoryDelay * 1000);
+            }
+        } else {
+            setTimeout(() => {
+                if (this.onGameOver) {
+                    this.onGameOver('平局！');
+                }
+            }, 2500);
         }
     }
     

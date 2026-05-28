@@ -24,6 +24,21 @@ export class Bomber extends Hero {
         this.warningAudio.loop = true;
         this.explodeAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/Bomber/爆炸.mp3');
         this.upgradeAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/Bomber/升级.mp3');
+        this.awakenAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/Bomber/艺术爆炸.mp3');
+    }
+
+    playAwakenAudio() {
+        if (this.awakenAudio) {
+            this.awakenAudio.currentTime = 0;
+            this.awakenAudio.play().catch(e => console.warn('Bomber awaken audio play failed:', e));
+        }
+    }
+
+    stopAwakenAudio() {
+        if (this.awakenAudio) {
+            this.awakenAudio.pause();
+            this.awakenAudio.currentTime = 0;
+        }
     }
     
     stopAllAudio() {
@@ -31,18 +46,11 @@ export class Bomber extends Hero {
         if (this.warningAudio) { this.warningAudio.pause(); this.warningAudio.currentTime = 0; }
         if (this.explodeAudio) { this.explodeAudio.pause(); this.explodeAudio.currentTime = 0; }
         if (this.upgradeAudio) { this.upgradeAudio.pause(); this.upgradeAudio.currentTime = 0; }
+        if (this.awakenAudio) { this.awakenAudio.pause(); this.awakenAudio.currentTime = 0; }
     }
     
-    // 生成炸弹
     throwBomb(isAwaken = false, preUpgradeLevels = 0, angleOffset = 0) {
-        let angle = 0;
-        if (this.enemy && !this.enemy.isDead) {
-            angle = Math.atan2(this.enemy.y - this.y, this.enemy.x - this.x);
-        } else {
-            angle = Math.random() * Math.PI * 2;
-        }
-        
-        angle += angleOffset;
+        const angle = Math.random() * Math.PI * 2 + angleOffset;
         
         // 基础参数
         let baseDamage = 5;
@@ -76,7 +84,11 @@ export class Bomber extends Hero {
             
             // 视觉特效
             pulseTimer: 0,
-            pulseState: 0
+            pulseState: 0,
+
+            // 加速机制相关
+            accelerated: false, // 是否处于加速状态
+            accelerationCooldown: 0 // 加速冷却计时器
         };
         
         // 如果有预升级，应用升级效果
@@ -165,20 +177,18 @@ export class Bomber extends Hero {
         if (bomb.state === 'attached' && bomb.target && !bomb.target.isDead) {
             targetX = bomb.target.x + bomb.offsetX;
             targetY = bomb.target.y + bomb.offsetY;
-            // 粘附炸弹直接对目标造成伤害，不进行范围判定
             bomb.target.takeDamage(bomb.damage * this.damageMultiplier, targetX, targetY);
         } else if (bomb.state === 'armed') {
-            // 地雷炸弹爆炸，对范围内敌人造成伤害
-            // 实际上文档写的是：爆炸伤害直接作用，好像没提范围伤害，只提了地雷有减速圈。
-            // 重新看文档："爆炸伤害 4点"
-            // 我们给地雷炸弹加个范围判定，范围就用 warningRadius 的一半或者直接用 warningRadius
-            // 文档未明确地雷是否是全范围伤害，这里设定在 warningRadius 范围内的敌人都受伤害
             if (this.enemy && !this.enemy.isDead) {
                 const dist = Math.hypot(this.enemy.x - targetX, this.enemy.y - targetY);
                 if (dist <= bomb.warningRadius) {
                     this.enemy.takeDamage(bomb.damage * this.damageMultiplier, targetX, targetY);
                 }
             }
+        }
+
+        if (this.enemy && this.enemy.isDead && this.game) {
+            this.game.victoryDelayTimer = 1.5;
         }
         
         // 爆炸特效分档
@@ -332,18 +342,40 @@ export class Bomber extends Hero {
                 
             } else if (bomb.state === 'armed') {
                 // 地雷状态
-                bomb.countdown -= dt;
                 
-                // 检查敌方是否在减速圈内
+                // 更新加速冷却计时器
+                if (bomb.accelerationCooldown > 0) {
+                    bomb.accelerationCooldown -= dt;
+                }
+                
+                // 检查敌方是否在范围内
+                let enemyInRange = false;
                 if (this.enemy && !this.enemy.isDead) {
                     const distToEnemy = Math.hypot(this.enemy.x - bomb.x, this.enemy.y - bomb.y);
-                    if (distToEnemy <= bomb.warningRadius) {
+                    enemyInRange = distToEnemy <= bomb.warningRadius;
+                    
+                    if (enemyInRange) {
                         // 在圈内，施加减速 buff (基础40%，满级60%减速，不可叠加可刷新)
                         // 使用固定ID确保不可叠加，只刷新时间
                         const slowRatio = bomb.upgradeLevel >= 4 ? 0.8 : 0.5;
-                        this.enemy.addBuff('bomber_slow', 'slow', slowRatio, 0.2); 
+                        this.enemy.addBuff('bomber_slow', 'slow', slowRatio, 0.2);
+                        
+                        // 如果冷却结束且未处于加速状态，触发加速
+                        if (bomb.accelerationCooldown <= 0 && !bomb.accelerated) {
+                            bomb.accelerated = true;
+                        }
                     }
                 }
+                
+                // 如果敌方离开范围且处于加速状态，取消加速并开始冷却
+                if (!enemyInRange && bomb.accelerated) {
+                    bomb.accelerated = false;
+                    bomb.accelerationCooldown = 1.0; // 冷却1秒
+                }
+                
+                // 根据加速状态调整倒计时速度
+                const countdownSpeed = bomb.accelerated ? 1.5 : 1.0;
+                bomb.countdown -= dt * countdownSpeed;
                 
                 // 检查自己是否在圈内用于升级
                 const distToSelf = Math.hypot(this.x - bomb.x, this.y - bomb.y);

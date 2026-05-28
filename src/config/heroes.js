@@ -125,10 +125,10 @@ export const heroConfig = [
     id: 'bomber', name: '炸弹人', class: 'Bomber',
     iconColor: '#ff4500',
     quote: '"艺术就是爆炸！"',
-    traits: '铺场控制型 | 持续压制与炸弹强化',
+    traits: '地雷布设 | 炸弹强化与范围压制',
     stats: 'HP: 100 | 移速: 60',
-    skill: { name: '高爆艺术', desc: '每2秒投掷一枚炸弹，命中敌方则粘附并短倒计时爆炸；未命中触壁后变为地雷炸弹并产生大范围减速警示圈。进入警示圈可强化地雷炸弹。觉醒：艺术就是爆炸，同时掷出3枚已强化2次的快速地雷炸弹。' },
-    audioSrc: null,
+    skill: { name: '高爆艺术', desc: '每1.5秒投掷炸弹，命中粘附引爆，未命中变为减速地雷。踩圈升级，升级提升伤害、减速效果、爆炸范围，最多升级4次。觉醒：艺术就是爆炸，立即向四周掷出3枚强化地雷。' },
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/Bomber/艺术爆炸.mp3',
     isSpecial: false
   },
   {

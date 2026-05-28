@@ -103,21 +103,13 @@ export class HuaQiang extends Hero {
                     this.magnetAudio.play().catch(e => console.warn('Magnet audio play failed:', e));
                 }
                 
-                // 发射吸铁石向敌方
-                let magAngle = 0;
-                if (this.enemy) {
-                    const dx = this.enemy.x - this.x;
-                    const dy = this.enemy.y - this.y;
-                    magAngle = Math.atan2(dy, dx);
-                }
-                const magSpeed = this.baseSpeed * 5 * 1.5 * 1.5; // 吸铁石飞行速度提升约50%
                 this.magnet = {
                     x: this.x,
                     y: this.y,
-                    vx: Math.cos(magAngle) * magSpeed,
-                    vy: Math.sin(magAngle) * magSpeed,
+                    vx: 0,
+                    vy: 0,
                     active: true,
-                    attached: false // 是否已黏附在敌人身上
+                    attached: false
                 };
                 
                 // 将所有砍刀状态改为 wait_return，并分配一个随机的启动延迟 (0~2s)
@@ -131,33 +123,21 @@ export class HuaQiang extends Hero {
             // 更新吸铁石位置
             if (this.magnet && this.magnet.active) {
                 if (this.magnet.attached && this.enemy && !this.enemy.isDead) {
-                    // 黏附状态：随目标移动而同步位移
                     this.magnet.x = this.enemy.x;
                     this.magnet.y = this.enemy.y;
-                } else {
-                    // 飞行状态
-                    this.magnet.x += this.magnet.vx * dt;
-                    this.magnet.y += this.magnet.vy * dt;
-                    
-                    // 检查是否命中敌方单位（触发黏附）
-                    if (this.enemy && !this.enemy.isDead && this.enemy.invincibleTime <= 0) {
-                        if (this.game.physics.checkCircleCollision({x: this.magnet.x, y: this.magnet.y, radius: 15}, this.enemy)) {
-                            this.magnet.attached = true;
-                            this.magnet.vx = 0;
-                            this.magnet.vy = 0;
-                        }
-                    }
-                    
-                    // 检查吸铁石是否出界
-                    if (!this.magnet.attached) {
-                        const bounds = { w: this.game.width, h: this.game.height };
-                        if (this.magnet.x < 0 || this.magnet.x > bounds.w || this.magnet.y < 0 || this.magnet.y > bounds.h) {
-                            this.magnet.vx = 0;
-                            this.magnet.vy = 0;
-                            // 钳制在边界内一点
-                            this.magnet.x = Math.max(10, Math.min(bounds.w - 10, this.magnet.x));
-                            this.magnet.y = Math.max(10, Math.min(bounds.h - 10, this.magnet.y));
-                        }
+                } else if (this.enemy && !this.enemy.isDead) {
+                    const dx = this.enemy.x - this.magnet.x;
+                    const dy = this.enemy.y - this.magnet.y;
+                    const dist = Math.hypot(dx, dy);
+                    const magSpeed = this.baseSpeed * 5 * 2;
+
+                    if (dist < 20) {
+                        this.magnet.attached = true;
+                    } else {
+                        this.magnet.vx = (dx / dist) * magSpeed;
+                        this.magnet.vy = (dy / dist) * magSpeed;
+                        this.magnet.x += this.magnet.vx * dt;
+                        this.magnet.y += this.magnet.vy * dt;
                     }
                 }
             }
