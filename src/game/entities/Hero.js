@@ -759,7 +759,7 @@ export class Hero {
         ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(Math.floor(this.hp).toString(), 0, 0);
+        ctx.fillText(Math.ceil(this.hp).toString(), 0, 0);
         
         // 绘制附着的尖牙（针对 vampire_drain 状态）
         this.buffs.forEach(b => {

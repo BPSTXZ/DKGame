@@ -563,7 +563,7 @@ export class OnePunchMan extends Hero {
             ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(`${Math.floor(this.hp)}`, 0, 0);
+            ctx.fillText(`${Math.ceil(this.hp)}`, 0, 0);
             ctx.restore();
         }
         

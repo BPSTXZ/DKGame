@@ -127,7 +127,7 @@ export const heroConfig = [
     quote: '"艺术就是爆炸！"',
     traits: '地雷布设 | 炸弹强化与范围压制',
     stats: 'HP: 100 | 移速: 60',
-    skill: { name: '高爆艺术', desc: '每1.5秒投掷炸弹，命中粘附引爆，未命中变为减速地雷。踩圈升级，升级提升伤害、减速效果、爆炸范围，最多升级4次。觉醒：艺术就是爆炸，立即向四周掷出3枚强化地雷。' },
+    skill: { name: '高爆艺术', desc: '每1.5秒投掷炸弹，命中粘附引爆，未命中变为减速地雷(20%概率踩中即爆)。踩圈升级，升级提升伤害、减速效果、爆炸范围，最多升级4次。觉醒：艺术就是爆炸，立即向四周掷出3枚强化地雷。' },
     audioSrc: import.meta.env.BASE_URL + 'assets/audio/Bomber/艺术爆炸.mp3',
     isSpecial: false
   },

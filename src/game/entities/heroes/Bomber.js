@@ -364,6 +364,18 @@ export class Bomber extends Hero {
                         if (bomb.accelerationCooldown <= 0 && !bomb.accelerated) {
                             bomb.accelerated = true;
                         }
+
+                        // 新增：踩踏即刻爆炸判定 (20% 概率)
+                        if (!bomb.hasCheckedStepOn && this.game.physics.checkCircleCollision({ x: bomb.x, y: bomb.y, radius: bomb.radius }, this.enemy)) {
+                            bomb.hasCheckedStepOn = true;
+                            if (Math.random() < 0.2) {
+                                this.explodeBomb(bomb);
+                                shouldRemove = true;
+                            }
+                        } else if (!this.game.physics.checkCircleCollision({ x: bomb.x, y: bomb.y, radius: bomb.radius }, this.enemy)) {
+                            // 离开本体范围后重置判定标记，允许下次踩入再次判定
+                            bomb.hasCheckedStepOn = false;
+                        }
                     }
                 }
                 
