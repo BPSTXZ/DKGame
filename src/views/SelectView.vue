@@ -7,7 +7,7 @@
       <div v-for="hero in filteredHeroPool" :key="hero.id" class="hero-card"
         :class="{ 'selected-p1': store.p1Selection?.id === hero.id, 'selected-p2': store.p2Selection?.id === hero.id, 'disabled': hero.disabled }"
         @click.stop="handleCardClick(hero, $event)" @contextmenu.prevent>
-        <div class="hero-icon" :class="{ 'hero-icon--van': hero.class === 'Van', 'hero-icon--thunderflash': hero.class === 'ThunderFlash', 'hero-icon--malaoshi': hero.class === 'MaLaoshi', 'hero-icon--dragonking': hero.class === 'DragonKing', 'is-selected': store.p1Selection?.id === hero.id || store.p2Selection?.id === hero.id }" :style="{ background: hero.iconColor }">
+        <div class="hero-icon" :class="{ 'hero-icon--van': hero.class === 'Van', 'hero-icon--thunderflash': hero.class === 'ThunderFlash', 'hero-icon--malaoshi': hero.class === 'MaLaoshi', 'hero-icon--dragonking': hero.class === 'DragonKing', 'hero-icon--bomber': hero.class === 'Bomber', 'hero-icon--flameartist': hero.class === 'FlameArtist', 'is-selected': store.p1Selection?.id === hero.id || store.p2Selection?.id === hero.id }" :style="{ background: hero.iconColor }">
           <div v-if="hero.class === 'Van'" class="hero-icon-sock"></div>
           
           <div v-if="hero.class === 'DragonKing'" class="hero-icon-dragonking-mouth">
@@ -45,6 +45,14 @@
               <div class="tf-tri"></div><div class="tf-tri"></div>
             </div>
           </div>
+
+          <div v-if="hero.class === 'Bomber'" class="hero-icon-bomber-stripes"></div>
+
+          <div v-if="hero.class === 'FlameArtist'" class="hero-icon-flame-waves">
+            <div class="flame-wave wave-1"></div>
+            <div class="flame-wave wave-2"></div>
+          </div>
+
           <span v-if="hero.disabled"
             style="display: flex; justify-content: center; align-items: center; height: 100%; font-size: 2rem; color: #888;">?</span>
         </div>
@@ -449,5 +457,62 @@ const startDebugMode = () => {
 
 .hero-icon.is-selected .dk-mouth-smile {
   opacity: 1;
+}
+
+.hero-icon--bomber {
+  position: relative;
+  overflow: hidden;
+  background-color: #333333 !important;
+}
+
+.hero-icon-bomber-stripes {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    #ff4500 10px,
+    #ff4500 20px
+  );
+  opacity: 0.8;
+}
+
+.hero-icon--flameartist {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at center, #ff8c00 0%, #ff4500 100%) !important;
+  box-shadow: inset 0 0 15px rgba(255, 69, 0, 0.5);
+}
+
+.hero-icon-flame-waves {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.flame-wave {
+  position: absolute;
+  bottom: 0;
+  left: -50%;
+  width: 200%;
+  height: 60%;
+  background: rgba(255, 215, 0, 0.4);
+  border-radius: 40%;
+  animation: wave-animation 3s infinite linear;
+}
+
+.wave-2 {
+  height: 45%;
+  background: rgba(255, 140, 0, 0.5);
+  animation-duration: 2s;
+  animation-delay: -1s;
+}
+
+@keyframes wave-animation {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>

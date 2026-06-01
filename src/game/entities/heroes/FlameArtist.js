@@ -194,10 +194,10 @@ export class FlameArtist extends Hero {
         if (markBuff) markBuff.time = 0; // 移除标记
         
         // 触发引燃瞬间造成一段爆发伤害
-        target.takeDamage(5.0 * this.damageMultiplier, target.x, target.y);
+        target.takeDamage(3.0 * this.damageMultiplier, target.x, target.y);
 
-        // 触发引燃状态 (持续伤害由 8.0 降回 4.0)
-        target.addBuff('flame_ignite', 'burn', 4.0 * this.damageMultiplier, 3.0, { ignite: true });
+        // 触发引燃状态 (持续伤害由 4.0 降至 2.0)
+        target.addBuff('flame_ignite', 'burn', 2.0 * this.damageMultiplier, 3.0, { ignite: true });
         
         // 视觉表现
         if (this.game) {
@@ -241,7 +241,7 @@ export class FlameArtist extends Hero {
                 this.fireTickTimer = this.fireTickInterval;
                 
                 if (this.enemy && !this.enemy.isDead && this.enemy.invincibleTime <= 0) {
-                    const dmg = 8.0 * this.fireTickInterval * this.damageMultiplier; // 觉醒喷火伤害从 4.0 提升到 8.0
+                    const dmg = 15.0 * this.fireTickInterval * this.damageMultiplier; // 觉醒喷火伤害大幅提升至 15.0 DPS
                     
                     // 检查两个对称的扇形
                     const angle1 = this.awakenRotation;
@@ -355,7 +355,7 @@ export class FlameArtist extends Hero {
                         // 添加/刷新标记层数
                         let markBuff = this.enemy.buffs.find(b => b.id === 'flame_mark');
                         if (!markBuff) {
-                            this.enemy.addBuff('flame_mark', 'burn', 1.0 * this.damageMultiplier, 3.0, { stacks: 1 }); // 降低回单层1点
+                            this.enemy.addBuff('flame_mark', 'burn', 1.0 * this.damageMultiplier, 3.0, { stacks: 1 }); // 降低火种单层伤害至1.0点
                             markBuff = this.enemy.buffs.find(b => b.id === 'flame_mark');
                         } else {
                             markBuff.time = 3.0;
@@ -378,7 +378,8 @@ export class FlameArtist extends Hero {
                 if (distSq < (this.radius + 15) * (this.radius + 15)) {
                     if (now - this.lastHealTime > 100) { // 0.1s 冷却
                         this.sparks.splice(i, 1);
-                        this.heal(2);
+                        // 由回血改为增加移速：+20% 持续 2秒
+                        this.addBuff('flame_pickup_speed', 'speed', 0.2, 2.0);
                         this.lastHealTime = now;
                     }
                 }
@@ -429,6 +430,8 @@ export class FlameArtist extends Hero {
         
         // 摇曳纹理 (在球体内)
         ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.clip();
         
         ctx.fillStyle = '#ff8c00';
@@ -456,8 +459,10 @@ export class FlameArtist extends Hero {
         ctx.restore();
         
         // 边缘描边
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#ffff00';
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = this.playerId === 1 ? '#ff4444' : '#4444ff';
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.stroke();
 
         // 绘制血量数值 (强制水平显示)

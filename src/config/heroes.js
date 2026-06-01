@@ -123,7 +123,7 @@ export const heroConfig = [
   },
   {
     id: 'bomber', name: '炸弹人', class: 'Bomber',
-    iconColor: '#ff4500',
+    iconColor: '#333333',
     quote: '"艺术就是爆炸！"',
     traits: '地雷布设 | 炸弹强化与范围压制',
     stats: 'HP: 100 | 移速: 60',
@@ -137,9 +137,9 @@ export const heroConfig = [
     quote: '"让火焰净化一切！"',
     traits: '布场消耗 | 扇形喷火与火种引燃',
     stats: 'HP: 100 | 移速: 60',
-    skill: { name: '戏炎弄火', desc: '每2秒喷火，在区域内生成火种。敌方触碰火种叠加标记，满4层触发引燃造成持续伤害。自身拾取火种回复生命。觉醒：焚天炼狱，双向全屏旋转喷火并大量生成火种。' },
+    skill: { name: '戏炎弄火', desc: '每2秒喷火，在区域内生成火种。敌方触碰火种叠加标记，满4层触发引燃造成持续伤害。自身拾取火种获得移速加成。觉醒：焚天炼狱，双向全屏旋转喷火并大量生成火种。' },
     audioSrc: import.meta.env.BASE_URL + 'assets/audio/FlameArtist/引燃.mp3',
-    isSpecial: true
+    isSpecial: false
   },
   {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',
