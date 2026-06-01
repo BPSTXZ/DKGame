@@ -71,11 +71,15 @@ const heroNameClassMap = {
   '白袜尊者': 'Van',
   '猴哥': 'SunWukong',
   '一拳超人': 'OnePunchMan',
-  'T1000': 'T1000'
+  'T1000': 'T1000',
+  '龙王赘婿': 'DragonKing',
+  '霹雳闪': 'ThunderFlash',
+  '炸弹人': 'Bomber',
+  '戏炎师': 'FlameArtist'
 };
 
 const getHeroClass = (recordClass, heroName) => {
-  const validClasses = ['Vampire', 'Spider', 'Berserker', 'Gambler', 'MaLaoshi', 'HuaQiang', 'Van', 'SunWukong', 'T1000', 'OnePunchMan'];
+  const validClasses = ['Vampire', 'Spider', 'Berserker', 'Gambler', 'MaLaoshi', 'HuaQiang', 'Van', 'SunWukong', 'T1000', 'OnePunchMan', 'DragonKing', 'ThunderFlash', 'Bomber', 'FlameArtist'];
   if (validClasses.includes(recordClass)) {
     return recordClass;
   }

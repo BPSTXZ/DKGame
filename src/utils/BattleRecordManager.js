@@ -1,4 +1,4 @@
-const MAX_RECORDS = 5;
+const MAX_RECORDS = 20;
 const STORAGE_KEY = 'dkgame_battle_records';
 
 export const BattleRecordManager = {
