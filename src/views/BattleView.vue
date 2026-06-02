@@ -155,7 +155,7 @@ const buffConfig = {
   'van_suppressed': { label: '压制', bg: '#ff69b4', color: '#fff' },
   'burn': { label: '灼烧', bg: '#ff4500', color: '#fff' },
   'combo': { label: '连击', bg: '#800080', color: '#fff' },
-  'speed': { label: '加速', bg: '#00ff00', color: '#000' }
+  'speed': { label: '加速', bg: '#4caf50', color: '#fff' }
 };
 
 const getBuffConfig = (buff) => {
