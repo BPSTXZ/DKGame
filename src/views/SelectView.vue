@@ -3,11 +3,24 @@
   <div class="screen active" id="select-screen" @click="hideTooltip">
     <!-- 点击标题触发彩蛋 -->
     <h1 @click.stop="handleTitleClick">选择你的英雄</h1>
-    <div class="hero-pool" id="hero-pool">
+    <div class="hero-pool" id="hero-pool" ref="heroPoolRef" :class="{ 'is-shrunken': isShrinking }">
       <div v-for="hero in filteredHeroPool" :key="hero.id" class="hero-card"
-        :class="{ 'selected-p1': store.p1Selection?.id === hero.id, 'selected-p2': store.p2Selection?.id === hero.id, 'disabled': hero.disabled }"
+        :class="{ 
+          'selected-p1': store.p1Selection?.id === hero.id, 
+          'selected-p2': store.p2Selection?.id === hero.id, 
+          'disabled': hero.disabled,
+          'highlight-random': isRandomizing && (store.p1Selection?.id === hero.id || store.p2Selection?.id === hero.id)
+        }"
         @click.stop="handleCardClick(hero, $event)" @contextmenu.prevent>
-        <div class="hero-icon" :class="{ 'hero-icon--van': hero.class === 'Van', 'hero-icon--thunderflash': hero.class === 'ThunderFlash', 'hero-icon--malaoshi': hero.class === 'MaLaoshi', 'hero-icon--dragonking': hero.class === 'DragonKing', 'hero-icon--bomber': hero.class === 'Bomber', 'hero-icon--flameartist': hero.class === 'FlameArtist', 'is-selected': store.p1Selection?.id === hero.id || store.p2Selection?.id === hero.id }" :style="{ background: hero.iconColor }">
+        <div class="hero-icon" :class="{ 
+          'hero-icon--van': hero.class === 'Van', 
+          'hero-icon--thunderflash': hero.class === 'ThunderFlash', 
+          'hero-icon--malaoshi': hero.class === 'MaLaoshi', 
+          'hero-icon--dragonking': hero.class === 'DragonKing', 
+          'hero-icon--bomber': hero.class === 'Bomber', 
+          'hero-icon--flameartist': hero.class === 'FlameArtist', 
+          'is-selected': store.p1Selection?.id === hero.id || store.p2Selection?.id === hero.id 
+        }" :style="{ background: hero.iconColor }">
           <div v-if="hero.class === 'Van'" class="hero-icon-sock"></div>
           
           <div v-if="hero.class === 'DragonKing'" class="hero-icon-dragonking-mouth">
@@ -60,6 +73,65 @@
       </div>
     </div>
 
+    <!-- 随机对战 VS 弹出展示层 -->
+    <transition name="vs-zoom">
+      <div v-if="showVSOverlay" class="vs-overlay" @click.stop>
+        <div class="vs-content">
+          <div class="vs-hero p1-side">
+            <div class="vs-icon" :style="{ background: store.p1Selection.iconColor }">
+              <div v-if="store.p1Selection.class === 'Van'" class="hero-icon-sock"></div>
+              <div v-if="store.p1Selection.class === 'MaLaoshi'" class="hero-icon-taiji">
+                <div class="taiji-left"></div>
+                <div class="taiji-right"></div>
+                <div class="taiji-top"></div>
+                <div class="taiji-bottom"></div>
+              </div>
+              <div v-if="store.p1Selection.class === 'ThunderFlash'" class="hero-icon-thunderflash-pattern">
+                <div class="tf-tri-row tf-row-1">
+                  <div class="tf-tri"></div><div class="tf-tri"></div><div class="tf-tri"></div>
+                </div>
+                <div class="tf-tri-row tf-row-2">
+                  <div class="tf-tri"></div><div class="tf-tri"></div>
+                </div>
+              </div>
+              <div v-if="store.p1Selection.class === 'Bomber'" class="hero-icon-bomber-stripes"></div>
+              <div v-if="store.p1Selection.class === 'FlameArtist'" class="hero-icon-flame-waves">
+                <div class="flame-wave wave-1"></div>
+                <div class="flame-wave wave-2"></div>
+              </div>
+            </div>
+            <div class="vs-name">{{ store.p1Selection.name }}</div>
+          </div>
+          <div class="vs-divider">VS</div>
+          <div class="vs-hero p2-side">
+            <div class="vs-icon" :style="{ background: store.p2Selection.iconColor }">
+              <div v-if="store.p2Selection.class === 'Van'" class="hero-icon-sock"></div>
+              <div v-if="store.p2Selection.class === 'MaLaoshi'" class="hero-icon-taiji">
+                <div class="taiji-left"></div>
+                <div class="taiji-right"></div>
+                <div class="taiji-top"></div>
+                <div class="taiji-bottom"></div>
+              </div>
+              <div v-if="store.p2Selection.class === 'ThunderFlash'" class="hero-icon-thunderflash-pattern">
+                <div class="tf-tri-row tf-row-1">
+                  <div class="tf-tri"></div><div class="tf-tri"></div><div class="tf-tri"></div>
+                </div>
+                <div class="tf-tri-row tf-row-2">
+                  <div class="tf-tri"></div><div class="tf-tri"></div>
+                </div>
+              </div>
+              <div v-if="store.p2Selection.class === 'Bomber'" class="hero-icon-bomber-stripes"></div>
+              <div v-if="store.p2Selection.class === 'FlameArtist'" class="hero-icon-flame-waves">
+                <div class="flame-wave wave-1"></div>
+                <div class="flame-wave wave-2"></div>
+              </div>
+            </div>
+            <div class="vs-name">{{ store.p2Selection.name }}</div>
+          </div>
+        </div>
+      </div>
+    </transition>
+
     <!-- 英雄介绍悬浮窗 -->
     <transition name="fade">
       <div v-if="hoveredHero" class="hero-tooltip" ref="tooltipRef" @click.stop
@@ -93,17 +165,18 @@
 
     <div class="bottom-bar">
       <div class="selection-status">
-        <p>玩家 1: <span>{{ store.p1Selection ? store.p1Selection.name : '未选择' }}</span></p>
-        <p>玩家 2: <span>{{ store.p2Selection ? store.p2Selection.name : '未选择' }}</span></p>
+        <p>玩家 1: <span>{{ store.p1Selection ? store.p1Selection.name : (isRandomizing ? '抽取中...' : '未选择') }}</span></p>
+        <p>玩家 2: <span>{{ store.p2Selection ? store.p2Selection.name : (isRandomizing ? '抽取中...' : '未选择') }}</span></p>
       </div>
       <div class="action-buttons">
-        <button :disabled="!store.p1Selection || !store.p2Selection" @click="startGame(false)">开始对战</button>
+        <button class="primary-btn" :disabled="!store.p1Selection || !store.p2Selection || isRandomizing" @click="startGame(false)">开始对战</button>
+        <button class="random-btn" :disabled="isRandomizing" @click="startRandomBattle">
+          {{ isRandomizing ? '正在随机...' : '随机对战' }}
+        </button>
         <!-- 训练场按钮：只有在解锁后，并且选了两个英雄才能点击 -->
-        <button v-if="isTrainingUnlocked" :disabled="!store.p1Selection || !store.p2Selection" @click="startGame(true)"
-          style="background: #4caf50; color: white;">进入训练场</button>
-        <button v-if="isTrainingUnlocked" :disabled="!store.p1Selection || !store.p2Selection" @click="startDebugMode"
-          style="background: #9c27b0; color: white;">进入调试模式</button>
-        <button @click="router.push('/records')" style="background: #2196F3; color: white;">战斗记录</button>
+        <button v-if="isTrainingUnlocked" class="training-btn" :disabled="!store.p1Selection || !store.p2Selection || isRandomizing" @click="startGame(true)">进入训练场</button>
+        <button v-if="isTrainingUnlocked" class="debug-btn" :disabled="!store.p1Selection || !store.p2Selection || isRandomizing" @click="startDebugMode">调试模式</button>
+        <button class="records-btn" @click="router.push('/records')">战斗记录</button>
       </div>
     </div>
   </div>
@@ -113,7 +186,7 @@
 // Import store
 import { useGameStore } from '@/store/gameStore';
 import { useRouter } from 'vue-router';
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onUnmounted } from 'vue';
 
 import { MaLaoshi } from '@/game/entities/heroes/MaLaoshi.js';
 import { HuaQiang } from '@/game/entities/heroes/HuaQiang.js';
@@ -130,7 +203,13 @@ const router = useRouter();
 
 const heroPool = heroConfig;
 
+const heroPoolRef = ref(null);
+const isRandomizing = ref(false);
+const isShrinking = ref(false);
+const showVSOverlay = ref(false);
 let currentSelectAudio = null;
+let randomTickAudio = null; // 随机跳动音效
+const confirmAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/common/选中.mp3'); // 选中确认音效
 
 const tooltipRef = ref(null);
 const hoveredHero = ref(null);
@@ -275,6 +354,87 @@ const selectHero = (hero) => {
   }
 };
 
+const startRandomBattle = async () => {
+  if (isRandomizing.value) return;
+  
+  // 1. 开始缩小动画
+  isShrinking.value = true;
+  store.p1Selection = null;
+  store.p2Selection = null;
+  hideTooltip();
+  
+  // 等待缩小过渡完成
+  await new Promise(resolve => setTimeout(resolve, 400));
+
+  const availableHeroes = filteredHeroPool.value.filter(h => !h.disabled);
+  if (availableHeroes.length < 2) {
+    isShrinking.value = false;
+    return;
+  }
+
+  isRandomizing.value = true;
+
+  // 1.5秒的随机跳动动画
+  const duration = 1500;
+  const interval = 80;
+  const startTime = Date.now();
+
+  const shuffle = () => {
+    let idx1 = Math.floor(Math.random() * availableHeroes.length);
+    let idx2 = Math.floor(Math.random() * availableHeroes.length);
+    while (idx1 === idx2) {
+      idx2 = Math.floor(Math.random() * availableHeroes.length);
+    }
+    store.p1Selection = availableHeroes[idx1];
+    store.p2Selection = availableHeroes[idx2];
+
+    // 播放选中切换音效
+    if (confirmAudio) {
+      const tick = confirmAudio.cloneNode();
+      tick.volume = 0.3; // 过程中的声音小一点
+      tick.play().catch(() => {});
+    }
+  };
+
+  const timer = setInterval(() => {
+    shuffle();
+    
+    // 自动滚动逻辑
+    if (heroPoolRef.value) {
+      const el = heroPoolRef.value;
+      const scrollHeight = el.scrollHeight;
+      const clientHeight = el.clientHeight;
+      const maxScroll = scrollHeight - clientHeight;
+      
+      if (maxScroll > 0) {
+        const progress = (Date.now() - startTime) / duration;
+        // 使用 linear 或 ease-in-out 滚动
+        el.scrollTop = maxScroll * Math.min(progress, 1);
+      }
+    }
+
+    if (Date.now() - startTime > duration) {
+      clearInterval(timer);
+      isRandomizing.value = false;
+      
+      // 播放最终确认音效
+      if (confirmAudio) {
+        confirmAudio.volume = 1.0;
+        confirmAudio.currentTime = 0;
+        confirmAudio.play().catch(() => {});
+      }
+      
+      // 2. 展示 VS 弹出层
+      showVSOverlay.value = true;
+      
+      // 1S后进入对决
+      setTimeout(() => {
+        startGame(false);
+      }, 1000);
+    }
+  }, interval);
+};
+
 const startGame = (isTraining) => {
   if (currentSelectAudio) {
     currentSelectAudio.pause();
@@ -295,6 +455,12 @@ const startDebugMode = () => {
   store.resetDebugConfig();
   router.push('/debug-config');
 };
+
+onUnmounted(() => {
+  isShrinking.value = false;
+  showVSOverlay.value = false;
+  isRandomizing.value = false;
+});
 </script>
 
 <style scoped>
@@ -330,6 +496,141 @@ const startDebugMode = () => {
   box-sizing: border-box;
   pointer-events: none;
   animation: spin 4s linear infinite;
+}
+
+.hero-pool {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+  transition: all 0.4s ease;
+  overflow-y: auto; /* 确保有滚动条 */
+  max-height: calc(100vh - 250px); /* 限制高度以便内部滚动 */
+  scroll-behavior: smooth; /* 平滑滚动 */
+}
+
+/* 隐藏滚动条但保留功能 */
+.hero-pool::-webkit-scrollbar {
+  display: none;
+}
+.hero-pool {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hero-pool.is-shrunken {
+  /* 容器不再整体缩放，仅透明度微调 */
+  opacity: 0.9;
+}
+
+.hero-card {
+  width: 150px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.hero-pool.is-shrunken .hero-card {
+  width: 100px; /* 宽度缩小，使一行能容纳更多 */
+  padding: 8px;
+  font-size: 0.8rem;
+}
+
+.hero-pool.is-shrunken .hero-card h3 {
+  font-size: 0.8rem;
+  margin-top: 5px;
+}
+
+.hero-pool.is-shrunken .hero-icon {
+  width: 60px; /* 图标同步缩小 */
+  height: 60px;
+}
+
+.hero-pool.is-randomizing .hero-card:not(.highlight-random) {
+  opacity: 0.4;
+  filter: grayscale(0.5);
+  transform: scale(0.9);
+}
+
+.hero-card.highlight-random {
+  transform: scale(1.18);
+  border-color: #ff5722;
+  box-shadow: 0 0 30px rgba(255, 87, 34, 0.8);
+  z-index: 10;
+}
+
+.vs-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(5px);
+}
+
+.vs-content {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.vs-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.vs-icon {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+}
+
+.vs-name {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+.vs-divider {
+  font-size: 4rem;
+  font-weight: 900;
+  color: #fbd73a;
+  font-style: italic;
+  text-shadow: 0 0 20px rgba(251, 215, 58, 0.8);
+  animation: vs-pulse 0.5s infinite alternate;
+}
+
+@keyframes vs-pulse {
+  from { transform: scale(1); opacity: 0.8; }
+  to { transform: scale(1.2); opacity: 1; }
+}
+
+/* VS Zoom 动画 */
+.vs-zoom-enter-active {
+  animation: vs-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.vs-zoom-leave-active {
+  animation: vs-in 0.3s reverse ease-in;
+}
+
+@keyframes vs-in {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 @keyframes spin {
@@ -514,5 +815,177 @@ const startDebugMode = () => {
 @keyframes wave-animation {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 为底部固定栏留出空间 */
+#select-screen {
+  padding-bottom: 120px;
+}
+
+.selection-status {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.selection-status p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #aaa;
+}
+
+.selection-status span {
+  color: #fff;
+  font-weight: bold;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.action-buttons button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 100px;
+}
+
+.action-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.primary-btn {
+  background: #fbd73a;
+  color: #000;
+}
+
+.primary-btn:hover:not(:disabled) {
+  background: #ffe066;
+  transform: translateY(-2px);
+}
+
+.random-btn {
+  background: #ff5722;
+  color: white;
+}
+
+.random-btn:hover:not(:disabled) {
+  background: #ff7043;
+  transform: translateY(-2px);
+}
+
+.training-btn {
+  background: #4caf50;
+  color: white;
+}
+
+.training-btn:hover:not(:disabled) {
+  background: #66bb6a;
+  transform: translateY(-2px);
+}
+
+.debug-btn {
+  background: #9c27b0;
+  color: white;
+}
+
+.debug-btn:hover:not(:disabled) {
+  background: #ba68c8;
+  transform: translateY(-2px);
+}
+
+.records-btn {
+  background: #2196F3;
+  color: white;
+}
+
+.records-btn:hover {
+  background: #42a5f5;
+  transform: translateY(-2px);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .bottom-bar {
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px;
+  }
+  
+  #select-screen {
+    padding-bottom: 220px; /* 移动端底部栏更高 */
+  }
+
+  .selection-status {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-around;
+  }
+
+  .action-buttons {
+    width: 100%;
+    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .action-buttons button {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 5px;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .primary-btn, .random-btn {
+    font-size: 1.05rem;
+    padding: 14px 5px;
+  }
+  
+  .records-btn {
+    grid-column: span 2;
+    margin-top: 4px;
+    background: #444; /* 稍微低调一点 */
+  }
+
+  .vs-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .vs-divider {
+    font-size: 3rem;
+  }
+
+  .vs-name {
+    font-size: 1.5rem;
+  }
+
+  .vs-icon {
+    width: 100px;
+    height: 100px;
+  }
 }
 </style>
