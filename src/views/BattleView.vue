@@ -154,7 +154,8 @@ const buffConfig = {
   'paralyze': { label: '麻痹', bg: '#9932cc', color: '#fff' },
   'van_suppressed': { label: '压制', bg: '#ff69b4', color: '#fff' },
   'burn': { label: '灼烧', bg: '#ff4500', color: '#fff' },
-  'combo': { label: '连击', bg: '#800080', color: '#fff' }
+  'combo': { label: '连击', bg: '#800080', color: '#fff' },
+  'speed': { label: '加速', bg: '#00ff00', color: '#000' }
 };
 
 const getBuffConfig = (buff) => {
