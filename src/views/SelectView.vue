@@ -2,7 +2,7 @@
   <!-- 在根节点上监听点击事件，如果点到了卡片/浮窗外的地方，就会触发 hideTooltip -->
   <div class="screen active" id="select-screen" @click="hideTooltip">
     <!-- 点击标题触发彩蛋 -->
-    <h1 @click.stop="handleTitleClick">选择你的英雄</h1>
+    <h1 @click.stop="handleTitleClick(true)">选择你的英雄<span v-if="isTrainingUnlocked" @click.stop="handleTitleClick(false)">（开发版）</span></h1>
     <div class="hero-pool" id="hero-pool" ref="heroPoolRef" :class="{ 'is-shrunken': isShrinking }">
       <div v-for="hero in filteredHeroPool" :key="hero.id" class="hero-card"
         :class="{ 
@@ -233,7 +233,13 @@ const filteredHeroPool = computed(() => {
 let titleClickCount = 0;
 let titleClickTimer = null;
 
-const handleTitleClick = () => {
+const handleTitleClick = (isTrainingClick) => {
+  if (!isTrainingClick){
+    //关闭训练场彩蛋
+    isTrainingUnlocked.value = false;
+    localStorage.setItem('dkgame_training_unlocked', 'false');
+    return;
+  };
   if (isTrainingUnlocked.value) return; // 已经解锁就不处理了
 
   titleClickCount++;
