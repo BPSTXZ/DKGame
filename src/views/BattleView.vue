@@ -652,7 +652,7 @@ const handleMechanicDblClick = (playerIndex) => {
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 1.5rem;
-  color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.1);
   pointer-events: none;
   font-weight: bold;
   letter-spacing: 2px;
