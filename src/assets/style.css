@@ -497,7 +497,7 @@ button:disabled {
 }
 
 .arena-container {
-    position: relative;
+    position: relative; /* 添加 relative 以支持内部 absolute 元素（如水印）的定位 */
     width: 100%;
     max-width: 600px;
     aspect-ratio: 1 / 1;

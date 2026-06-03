@@ -68,6 +68,7 @@
         </div>
         <div class="arena-container">
           <canvas id="game-canvas" width="600" height="600"></canvas>
+          <div class="watermark">@Pun小球</div>
         </div>
         
         <!-- 英雄机制描述栏 -->
@@ -643,6 +644,20 @@ const handleMechanicDblClick = (playerIndex) => {
   height: 100%;
   background: #4caf50;
   transition: width 0.1s linear;
+}
+
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+  font-weight: bold;
+  letter-spacing: 2px;
+  z-index: 1; /* 确保在 canvas 上方但不会遮挡太多特效 */
+  user-select: none;
 }
 
 .replay-time {
