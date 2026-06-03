@@ -142,6 +142,16 @@ export const heroConfig = [
     isSpecial: false
   },
   {
+    id: 'crimson_blade', name: '绯刃煞客', class: 'CrimsonBlade',
+    iconColor: '#1a0b2e',
+    quote: '"绯红的线，织就终幕的重奏。"',
+    traits: '陷阱控制 | 瞬间爆发与持续连击',
+    stats: 'HP: 100 | 移速: 60',
+    skill: { name: '绯线斩', desc: '每4秒蓄力斩出一道延伸至边界的斩痕。直击造成高伤，未命中留下的斩痕若被触碰将触发刀气三连击。觉醒：终幕五重奏，扇形散射五道强化斩痕。' },
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/CrimsonBlade/选择.mp3',
+    isSpecial: false
+  },
+  {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',
     quote: '"神秘的力量正在苏醒..."',
     traits: '未知 | ???',

@@ -75,11 +75,12 @@ const heroNameClassMap = {
   '龙王赘婿': 'DragonKing',
   '霹雳闪': 'ThunderFlash',
   '炸弹人': 'Bomber',
-  '戏炎师': 'FlameArtist'
+  '戏炎师': 'FlameArtist',
+  '绯刃煞客': 'CrimsonBlade'
 };
 
 const getHeroClass = (recordClass, heroName) => {
-  const validClasses = ['Vampire', 'Spider', 'Berserker', 'Gambler', 'MaLaoshi', 'HuaQiang', 'Van', 'SunWukong', 'T1000', 'OnePunchMan', 'DragonKing', 'ThunderFlash', 'Bomber', 'FlameArtist'];
+  const validClasses = ['Vampire', 'Spider', 'Berserker', 'Gambler', 'MaLaoshi', 'HuaQiang', 'Van', 'SunWukong', 'T1000', 'OnePunchMan', 'DragonKing', 'ThunderFlash', 'Bomber', 'FlameArtist', 'CrimsonBlade'];
   if (validClasses.includes(recordClass)) {
     return recordClass;
   }

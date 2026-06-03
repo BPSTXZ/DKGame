@@ -19,6 +19,7 @@
           'hero-icon--dragonking': hero.class === 'DragonKing', 
           'hero-icon--bomber': hero.class === 'Bomber', 
           'hero-icon--flameartist': hero.class === 'FlameArtist', 
+          'hero-icon--crimsonblade': hero.class === 'CrimsonBlade',
           'is-selected': store.p1Selection?.id === hero.id || store.p2Selection?.id === hero.id 
         }" :style="{ background: hero.iconColor }">
           <div v-if="hero.class === 'Van'" class="hero-icon-sock"></div>
@@ -66,6 +67,10 @@
             <div class="flame-wave wave-2"></div>
           </div>
 
+          <div v-if="hero.class === 'CrimsonBlade'" class="hero-icon-blade-reflection">
+            <div class="blade-line"></div>
+          </div>
+
           <span v-if="hero.disabled"
             style="display: flex; justify-content: center; align-items: center; height: 100%; font-size: 2rem; color: #888;">?</span>
         </div>
@@ -99,6 +104,9 @@
                 <div class="flame-wave wave-1"></div>
                 <div class="flame-wave wave-2"></div>
               </div>
+              <div v-if="store.p1Selection.class === 'CrimsonBlade'" class="hero-icon-blade-reflection">
+                <div class="blade-line"></div>
+              </div>
             </div>
             <div class="vs-name">{{ store.p1Selection.name }}</div>
           </div>
@@ -124,6 +132,9 @@
               <div v-if="store.p2Selection.class === 'FlameArtist'" class="hero-icon-flame-waves">
                 <div class="flame-wave wave-1"></div>
                 <div class="flame-wave wave-2"></div>
+              </div>
+              <div v-if="store.p2Selection.class === 'CrimsonBlade'" class="hero-icon-blade-reflection">
+                <div class="blade-line"></div>
               </div>
             </div>
             <div class="vs-name">{{ store.p2Selection.name }}</div>
@@ -196,6 +207,7 @@ import { T1000 } from '@/game/entities/heroes/T1000.js';
 import { OnePunchMan } from '@/game/entities/heroes/OnePunchMan.js';
 import { QueenS } from '@/game/entities/heroes/QueenS.js';
 import { FlameArtist } from '@/game/entities/heroes/FlameArtist.js';
+import { CrimsonBlade } from '@/game/entities/heroes/CrimsonBlade.js';
 import { heroConfig } from '@/config/heroes.js';
 
 const store = useGameStore();
@@ -790,6 +802,33 @@ onUnmounted(() => {
   overflow: hidden;
   background: radial-gradient(circle at center, #ff8c00 0%, #ff4500 100%) !important;
   box-shadow: inset 0 0 15px rgba(255, 69, 0, 0.5);
+}
+
+.hero-icon--crimsonblade {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at center, #2e1a47 0%, #000000 100%) !important;
+}
+
+.hero-icon-blade-reflection {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.blade-line {
+  width: 140%;
+  height: 4px;
+  background: linear-gradient(to right, transparent, #fff, transparent);
+  transform: rotate(-45deg);
+  animation: blade-shine 2s infinite linear;
+}
+
+@keyframes blade-shine {
+  from { transform: rotate(-45deg) translateX(-100%); }
+  to { transform: rotate(-45deg) translateX(100%); }
 }
 
 .hero-icon-flame-waves {
