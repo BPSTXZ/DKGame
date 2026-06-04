@@ -191,14 +191,14 @@
         <p>玩家 2: <span>{{ store.p2Selection ? store.p2Selection.name : (isRandomizing ? '抽取中...' : '未选择') }}</span></p>
       </div>
       <div class="action-buttons">
-        <button class="primary-btn" :disabled="!store.p1Selection || !store.p2Selection || isRandomizing" @click="startGame(false)">开始对战</button>
-        <button class="random-btn" :disabled="isRandomizing" @click="startRandomBattle">
+        <button class="primary-btn" :disabled="!store.p1Selection || !store.p2Selection || isRandomizing || showVSOverlay" @click="startGame(false)">开始对战</button>
+        <button class="random-btn" :disabled="isRandomizing || showVSOverlay" @click="startRandomBattle">
           {{ isRandomizing ? '正在随机...' : '随机对战' }}
         </button>
         <!-- 训练场按钮：只有在解锁后，并且选了两个英雄才能点击 -->
-        <button v-if="isTrainingUnlocked" class="training-btn" :disabled="!store.p1Selection || !store.p2Selection || isRandomizing" @click="startGame(true)">进入训练场</button>
-        <button v-if="isTrainingUnlocked" class="debug-btn" :disabled="!store.p1Selection || !store.p2Selection || isRandomizing" @click="startDebugMode">调试模式</button>
-        <button class="records-btn" @click="router.push('/records')">战斗记录</button>
+        <button v-if="isTrainingUnlocked" class="training-btn" :disabled="!store.p1Selection || !store.p2Selection || isRandomizing || showVSOverlay" @click="startGame(true)">进入训练场</button>
+        <button v-if="isTrainingUnlocked" class="debug-btn" :disabled="!store.p1Selection || !store.p2Selection || isRandomizing || showVSOverlay" @click="startDebugMode">调试模式</button>
+        <button class="records-btn" :disabled="isRandomizing || showVSOverlay" @click="router.push('/records')">战斗记录</button>
       </div>
     </div>
   </div>
@@ -446,32 +446,37 @@ const startRandomBattle = async () => {
       clearInterval(timer);
       isRandomizing.value = false;
       
-      // 播放最终确认音效
-      if (confirmAudio) {
-        confirmAudio.volume = 1.0;
-        confirmAudio.currentTime = 0;
-        confirmAudio.play().catch(() => {});
-      }
-      
-      // 2. 展示 VS 弹出层
-      showVSOverlay.value = true;
-      
-      // 1S后进入对决
-      setTimeout(() => {
-        startGame(false);
-      }, 1000);
+      // 直接复用 startGame 的逻辑，它包含了展示 VS 动画和跳转
+      startGame(false);
     }
   }, interval);
 };
 
 const startGame = (isTraining) => {
+  // 如果已经在随机或准备阶段，阻止重复点击
+  if (isRandomizing.value || showVSOverlay.value) return;
+
   if (currentSelectAudio) {
     currentSelectAudio.pause();
     currentSelectAudio.currentTime = 0;
   }
-  store.isTraining = isTraining;
-  store.isDebug = false;
-  router.push('/battle');
+  
+  // 播放最终确认音效
+  if (confirmAudio) {
+    confirmAudio.volume = 1.0;
+    confirmAudio.currentTime = 0;
+    confirmAudio.play().catch(() => {});
+  }
+  
+  // 展示 VS 弹出层
+  showVSOverlay.value = true;
+  
+  // 1S后进入对决
+  setTimeout(() => {
+    store.isTraining = isTraining;
+    store.isDebug = false;
+    router.push('/battle');
+  }, 1000);
 };
 
 const startDebugMode = () => {

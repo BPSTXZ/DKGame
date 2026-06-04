@@ -142,7 +142,7 @@ export const heroConfig = [
     isSpecial: false
   },
   {
-    id: 'crimson_blade', name: '绯刃狂想', class: 'CrimsonBlade',
+    id: 'crimson_blade', name: '绯刃煞客', class: 'CrimsonBlade',
     iconColor: '#1a0b2e',
     quote: '"绯红的线，织就终幕的重奏。"',
     traits: '陷阱控制 | 瞬间爆发与持续连击',
