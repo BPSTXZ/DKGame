@@ -142,14 +142,24 @@ export const heroConfig = [
     isSpecial: false
   },
   {
-    id: 'crimson_blade', name: '绯刃煞客', class: 'CrimsonBlade',
+    id: 'crimson_blade', name: '绯刃狂想', class: 'CrimsonBlade',
     iconColor: '#1a0b2e',
     quote: '"绯红的线，织就终幕的重奏。"',
     traits: '陷阱控制 | 瞬间爆发与持续连击',
     stats: 'HP: 100 | 移速: 60',
-    skill: { name: '绯线斩', desc: '每4秒蓄力斩出一道延伸至边界的斩痕。直击造成高伤，未命中留下的斩痕若被触碰将触发刀气三连击。觉醒：终幕五重奏，扇形散射五道强化斩痕。' },
+    skill: { name: '绯线斩', desc: '每4秒蓄力斩出一道延伸至边界的斩痕。直击造成高伤，未命中留下的斩痕若被触碰将触发刀气三连击。觉醒：终幕五重奏，全场随机释放五道强化斩痕。' },
     audioSrc: import.meta.env.BASE_URL + 'assets/audio/CrimsonBlade/选择.mp3',
     isSpecial: false
+  },
+  {
+    id: 'jueshiyouwu', name: '绝世油物', class: 'JueShiYouWu',
+    iconColor: '#ffcc00',
+    quote: '"我要对你实行我的爱情专属权~"',
+    traits: '精神污染 | 无限追踪与分身满屏',
+    stats: 'HP: 100 | 移速: 60',
+    skill: { name: '如影随形', desc: '若2秒未造成碰撞伤害则进入追踪模式，速度线性递增，命中后恢复基础移速。觉醒：油物重奏，分裂4个同样具备追踪能力的分身，分身成功碰撞一次或5秒后消失。' },
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/JueShiYouWu/bgm.mp3',
+    isSpecial: true
   },
   {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',

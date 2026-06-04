@@ -141,6 +141,7 @@ import { ThunderFlash } from '@/game/entities/heroes/ThunderFlash.js';
 import { Bomber } from '@/game/entities/heroes/Bomber.js';
 import { FlameArtist } from '@/game/entities/heroes/FlameArtist.js';
 import { CrimsonBlade } from '@/game/entities/heroes/CrimsonBlade.js';
+import { JueShiYouWu } from '@/game/entities/heroes/JueShiYouWu.js';
 import { BattleRecordManager } from '@/utils/BattleRecordManager.js';
 import { heroConfig } from '@/config/heroes.js';
 
@@ -182,7 +183,8 @@ const classes = {
     'ThunderFlash': ThunderFlash,
     'Bomber': Bomber,
     'FlameArtist': FlameArtist,
-    'CrimsonBlade': CrimsonBlade
+    'CrimsonBlade': CrimsonBlade,
+    'JueShiYouWu': JueShiYouWu
   };
 
 const store = useGameStore();
