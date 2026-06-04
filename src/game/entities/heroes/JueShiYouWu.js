@@ -81,7 +81,7 @@ export class JueShiYouWu extends Hero {
     }
     
     triggerHit(target, hitX, hitY) {
-        target.takeDamage(6 * this.damageMultiplier, hitX, hitY);
+        target.takeDamage(8 * this.damageMultiplier, hitX, hitY);
         
         this.timeSinceLastHit = 0;
         if (this.isTracking) {
