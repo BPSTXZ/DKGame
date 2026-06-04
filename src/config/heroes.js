@@ -158,9 +158,9 @@ export const heroConfig = [
     quote: '"我要对你实行我的爱情专属权~"',
     traits: '精神污染 | 无限追踪与分身满屏',
     stats: 'HP: 100 | 移速: 60',
-    skill: { name: '如影随形', desc: '若2秒未造成碰撞伤害则进入追踪模式，速度线性递增，命中后恢复基础移速。觉醒：油物重奏，分裂4个同样具备追踪能力的分身，分身成功碰撞一次或5秒后消失。' },
+    skill: { name: '如影随形', desc: '若2秒未造成碰撞伤害则进入追踪模式，速度线性递增，命中后恢复基础移速。觉醒：油物五重奏，分裂4个同样具备追踪能力的分身，分身成功碰撞一次或5秒后消失。' },
     audioSrc: import.meta.env.BASE_URL + 'assets/audio/JueShiYouWu/bgm.mp3',
-    isSpecial: true
+    isSpecial: false
   },
   {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',

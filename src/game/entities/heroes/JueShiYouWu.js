@@ -34,6 +34,7 @@ export class JueShiYouWu extends Hero {
         
         this.hitVisuals = [];
         this.clones = [];
+        this.fleeEggEnabled = false; // 控制逃跑彩蛋是否开启
         
         this.bgmAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/JueShiYouWu/bgm.mp3');
         this.bgmAudio.loop = true;
@@ -164,6 +165,20 @@ export class JueShiYouWu extends Hero {
         if (this.timeSinceLastHit >= this.trackingTriggerTime && !this.isTracking) {
             this.isTracking = true;
             this.currentTrackingSpeed = this.getSpeed();
+            
+            // 彩蛋触发：吓跑对手 (仅当开关开启时)
+            if (this.fleeEggEnabled && this.enemy && !this.enemy.isDead) {
+                this.enemy.fleeTimer = 2.0;
+                this.enemy.fleeTarget = this;
+                
+                // 惊恐飘字
+                if (this.game && this.game.addFloatingText) {
+                    this.game.addFloatingText(this.enemy.x, this.enemy.y - 40, "不要过来啊！！", '#ffffff');
+                }
+                
+                // 触发一次后消耗掉
+                this.fleeEggEnabled = false;
+            }
         }
         
         if (this.isTracking) {
@@ -221,6 +236,19 @@ export class JueShiYouWu extends Hero {
             if (clone.timeSinceLastHit >= this.trackingTriggerTime && !clone.isTracking) {
                 clone.isTracking = true;
                 clone.currentTrackingSpeed = Math.hypot(clone.vx, clone.vy);
+                
+                // 分身追踪同样触发惊吓彩蛋 (仅当开关开启时)
+                if (this.fleeEggEnabled && this.enemy && !this.enemy.isDead && this.enemy.fleeTimer <= 0) {
+                    this.enemy.fleeTimer = 2.0;
+                    this.enemy.fleeTarget = clone;
+                    
+                    if (this.game && this.game.addFloatingText) {
+                        this.game.addFloatingText(this.enemy.x, this.enemy.y - 40, "救命！！！", '#ffffff');
+                    }
+                    
+                    // 触发一次后消耗掉
+                    this.fleeEggEnabled = false;
+                }
             }
             
             if (clone.isTracking) {

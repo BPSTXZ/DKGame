@@ -499,16 +499,21 @@ const handleMechanicDblClick = (playerIndex) => {
     (store.p1Selection.class === 'OnePunchMan' && store.p2Selection.class === 'SunWukong') ||
     (store.p1Selection.class === 'SunWukong' && store.p2Selection.class === 'OnePunchMan');
     
-  if (!isSpecialMatch) return;
-
-  // 双击猴哥机制描述
-  if (targetSelection.class === 'SunWukong') {
-    heroInstance.forceInvincibleOnPunch = true;
+  if (isSpecialMatch) {
+    // 双击猴哥机制描述
+    if (targetSelection.class === 'SunWukong') {
+      heroInstance.forceInvincibleOnPunch = true;
+    }
+    
+    // 双击一拳超人机制描述
+    if (targetSelection.class === 'OnePunchMan') {
+      heroInstance.forceFixedRageGain = true;
+    }
   }
   
-  // 双击一拳超人机制描述
-  if (targetSelection.class === 'OnePunchMan') {
-    heroInstance.forceFixedRageGain = true;
+  // 双击绝世油物机制描述，开启一次恐惧彩蛋
+  if (targetSelection.class === 'JueShiYouWu') {
+    heroInstance.fleeEggEnabled = true;
   }
 };
 </script>

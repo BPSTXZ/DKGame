@@ -31,6 +31,10 @@ export class Hero {
         // 视觉效果
         this.damageBlinkTime = 0; // 受击闪烁计时器
         
+        // 逃跑/恐惧机制 (彩蛋)
+        this.fleeTimer = 0;
+        this.fleeTarget = null;
+        
         // Buff与状态
         this.buffs = [];
         this.speedMultiplier = 1.0; // 当前移速倍率
@@ -272,6 +276,39 @@ export class Hero {
         
         // 执行子类的特殊逻辑更新
         this.updateSpecific(dt);
+        
+        // 处理逃跑机制（彩蛋：如影随形的恐惧）
+        if (this.fleeTimer > 0 && this.fleeTarget) {
+            this.fleeTimer -= dt;
+            
+            // 覆盖原有的移动逻辑，强制向反方向逃离
+            const dx = this.x - this.fleeTarget.x;
+            const dy = this.y - this.fleeTarget.y;
+            const dist = Math.hypot(dx, dy);
+            
+            if (dist > 0) {
+                // 将合速度设为背离目标的方向，并给予额外的移速加成 (1.5倍) 以体现恐慌
+                const fleeSpeed = this.getSpeed() * 1.5;
+                this.vx = (dx / dist) * fleeSpeed;
+                this.vy = (dy / dist) * fleeSpeed;
+                
+                // 汗滴粒子特效
+                if (Math.random() < 0.2) {
+                    this.game.addParticle({
+                        x: this.x + (Math.random() - 0.5) * this.radius,
+                        y: this.y - this.radius,
+                        vx: 0, vy: -50,
+                        color: '#87CEFA', // 浅蓝色汗滴
+                        life: 0.3, size: 3
+                    });
+                }
+            }
+            
+            if (this.fleeTimer <= 0) {
+                this.fleeTarget = null;
+                this.normalizeSpeed(); // 恢复正常速度
+            }
+        }
         
         // 确保各种直接操作血量（如吸血）导致的归零能够触发死亡
         if (this.hp <= 0.001 && !this.isDead) {
