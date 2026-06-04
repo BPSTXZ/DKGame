@@ -20,6 +20,7 @@
           'hero-icon--bomber': hero.class === 'Bomber', 
           'hero-icon--flameartist': hero.class === 'FlameArtist', 
           'hero-icon--crimsonblade': hero.class === 'CrimsonBlade',
+          'hero-icon--jueshiyouwu': hero.class === 'JueShiYouWu',
           'is-selected': store.p1Selection?.id === hero.id || store.p2Selection?.id === hero.id 
         }" :style="{ background: hero.iconColor }">
           <div v-if="hero.class === 'Van'" class="hero-icon-sock"></div>
@@ -71,6 +72,10 @@
             <div class="blade-line"></div>
           </div>
 
+          <div v-if="hero.iconImg" class="hero-icon-jueshiyouwu">
+            <img :src="hero.iconImg" alt="图片" />
+          </div>
+
           <span v-if="hero.disabled"
             style="display: flex; justify-content: center; align-items: center; height: 100%; font-size: 2rem; color: #888;">?</span>
         </div>
@@ -107,6 +112,9 @@
               <div v-if="store.p1Selection.class === 'CrimsonBlade'" class="hero-icon-blade-reflection">
                 <div class="blade-line"></div>
               </div>
+              <div v-if="store.p1Selection.iconImg" class="hero-icon-jueshiyouwu">
+                <img :src="store.p1Selection.iconImg" alt="图片" />
+              </div>
             </div>
             <div class="vs-name">{{ store.p1Selection.name }}</div>
           </div>
@@ -135,6 +143,9 @@
               </div>
               <div v-if="store.p2Selection.class === 'CrimsonBlade'" class="hero-icon-blade-reflection">
                 <div class="blade-line"></div>
+              </div>
+              <div v-if="store.p2Selection.iconImg" class="hero-icon-jueshiyouwu">
+                <img :src="store.p2Selection.iconImg" alt="图片" />
               </div>
             </div>
             <div class="vs-name">{{ store.p2Selection.name }}</div>
@@ -829,6 +840,29 @@ onUnmounted(() => {
 @keyframes blade-shine {
   from { transform: rotate(-45deg) translateX(-100%); }
   to { transform: rotate(-45deg) translateX(100%); }
+}
+
+.hero-icon-jueshiyouwu {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-icon-jueshiyouwu img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-icon--jueshiyouwu {
+  position: relative;
+  overflow: hidden;
+  /* 基础背景色，以防图片未加载出来 */
+  background-color: #ffcc00 !important;
 }
 
 .hero-icon-flame-waves {

@@ -12,6 +12,19 @@ export class CrimsonBlade extends Hero {
         
         // 技能一：绯线斩相关
         this.slashCooldown = 4.0;
+        this.traceLife = 4.0;
+        this.awakenTraceLife = 5.0;
+        
+        // 尝试从调试配置中读取参数
+        if (this.game && this.game.debugConfig && this.game.debugConfig.enabled) {
+            const tuning = this.game.debugConfig.skillTuning[this.playerId === 1 ? 'p1' : 'p2'];
+            if (tuning) {
+                if (tuning.slashCooldown !== undefined) this.slashCooldown = tuning.slashCooldown;
+                if (tuning.traceLife !== undefined) this.traceLife = tuning.traceLife;
+                if (tuning.awakenTraceLife !== undefined) this.awakenTraceLife = tuning.awakenTraceLife;
+            }
+        }
+        
         this.slashTimer = 1.0; // 初始给一点延迟
         this.state = 'normal'; // 'normal' | 'charging' | 'slashing' | 'awaken_slashing'
         
@@ -399,8 +412,8 @@ export class CrimsonBlade extends Hero {
             this.traces.push({
                 x1: startX, y1: startY,
                 x2: endPoint.x, y2: endPoint.y,
-                life: isAwaken ? 5.0 : 4.0,
-                maxLife: isAwaken ? 5.0 : 4.0,
+                life: isAwaken ? this.awakenTraceLife : this.traceLife,
+                maxLife: isAwaken ? this.awakenTraceLife : this.traceLife,
                 id: Date.now() + Math.random(),
                 triggered: false,
                 angle: this.slashAngle,

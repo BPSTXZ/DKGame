@@ -154,6 +154,7 @@ export const heroConfig = [
   {
     id: 'jueshiyouwu', name: '绝世油物', class: 'JueShiYouWu',
     iconColor: '#ffcc00',
+    iconImg: import.meta.env.BASE_URL + 'assets/img/jsyw.jpeg',
     quote: '"我要对你实行我的爱情专属权~"',
     traits: '精神污染 | 无限追踪与分身满屏',
     stats: 'HP: 100 | 移速: 60',

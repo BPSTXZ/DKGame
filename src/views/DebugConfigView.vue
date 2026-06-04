@@ -333,6 +333,64 @@ const skillTuningSchemas = {
       defaultValue: 6,
       hint: '霹雳一闪·六连的弹射次数，默认 6 次。'
     }
+  ],
+  CrimsonBlade: [
+    {
+      key: 'slashCooldown',
+      label: '斩击冷却',
+      min: 0.1,
+      step: 0.1,
+      type: 'float',
+      defaultValue: 4.0,
+      hint: '绯线斩的触发间隔，默认 4.0 秒。'
+    },
+    {
+      key: 'traceLife',
+      label: '斩痕存在时间',
+      min: 0.1,
+      step: 0.1,
+      type: 'float',
+      defaultValue: 4.0,
+      hint: '未直接命中的斩痕在地面的保留时间。'
+    },
+    {
+      key: 'awakenTraceLife',
+      label: '觉醒斩痕存在',
+      min: 0.1,
+      step: 0.1,
+      type: 'float',
+      defaultValue: 5.0,
+      hint: '觉醒释放的强化斩痕保留时间。'
+    }
+  ],
+  JueShiYouWu: [
+    {
+      key: 'trackingTriggerTime',
+      label: '追踪触发时间',
+      min: 0.1,
+      step: 0.1,
+      type: 'float',
+      defaultValue: 2.0,
+      hint: '多长时间未造成伤害则进入追踪模式。'
+    },
+    {
+      key: 'cloneCount',
+      label: '觉醒分身数量',
+      min: 1,
+      step: 1,
+      type: 'integer',
+      defaultValue: 4,
+      hint: '觉醒时产生的分身数量，默认 4 个。'
+    },
+    {
+      key: 'cloneLife',
+      label: '分身存在时间',
+      min: 1.0,
+      step: 0.5,
+      type: 'float',
+      defaultValue: 5.0,
+      hint: '分身在场上的存活时间，默认 5.0 秒。'
+    }
   ]
 };
 

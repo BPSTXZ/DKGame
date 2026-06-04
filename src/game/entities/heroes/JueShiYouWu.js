@@ -17,6 +17,21 @@ export class JueShiYouWu extends Hero {
         this.isTracking = false;
         this.currentTrackingSpeed = 0;
         
+        // 调试参数默认值
+        this.trackingTriggerTime = 2.0;
+        this.cloneCount = 4;
+        this.cloneLife = 5.0;
+        
+        // 尝试从调试配置中读取参数
+        if (this.game && this.game.debugConfig && this.game.debugConfig.enabled) {
+            const tuning = this.game.debugConfig.skillTuning[this.playerId === 1 ? 'p1' : 'p2'];
+            if (tuning) {
+                if (tuning.trackingTriggerTime !== undefined) this.trackingTriggerTime = tuning.trackingTriggerTime;
+                if (tuning.cloneCount !== undefined) this.cloneCount = tuning.cloneCount;
+                if (tuning.cloneLife !== undefined) this.cloneLife = tuning.cloneLife;
+            }
+        }
+        
         this.hitVisuals = [];
         this.clones = [];
         
@@ -94,7 +109,7 @@ export class JueShiYouWu extends Hero {
             this.game.logEvent('skill', { heroId: this.playerId, skill: 'Awaken: Clones' });
         }
         
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < this.cloneCount; i++) {
             const angle = Math.random() * Math.PI * 2;
             
             // 为每个分身创建一个独立的 BGM 实例
@@ -108,7 +123,7 @@ export class JueShiYouWu extends Hero {
                 y: this.y,
                 vx: Math.cos(angle) * (this.baseSpeed * 8),
                 vy: Math.sin(angle) * (this.baseSpeed * 8),
-                life: 5.0,
+                life: this.cloneLife,
                 radius: this.radius,
                 isTracking: false,
                 timeSinceLastHit: 0,
@@ -146,7 +161,7 @@ export class JueShiYouWu extends Hero {
         }
         
         this.timeSinceLastHit += dt;
-        if (this.timeSinceLastHit >= 2.0 && !this.isTracking) {
+        if (this.timeSinceLastHit >= this.trackingTriggerTime && !this.isTracking) {
             this.isTracking = true;
             this.currentTrackingSpeed = this.getSpeed();
         }
@@ -203,7 +218,7 @@ export class JueShiYouWu extends Hero {
             }
             
             clone.timeSinceLastHit += dt;
-            if (clone.timeSinceLastHit >= 2.0 && !clone.isTracking) {
+            if (clone.timeSinceLastHit >= this.trackingTriggerTime && !clone.isTracking) {
                 clone.isTracking = true;
                 clone.currentTrackingSpeed = Math.hypot(clone.vx, clone.vy);
             }
