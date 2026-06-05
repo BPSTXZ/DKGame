@@ -169,7 +169,7 @@ export const heroConfig = [
     quote: '"带派不老铁！"',
     traits: '持续压制 | 定向大汗脚与全场封锁',
     stats: 'HP: 100 | 移速: 60',
-    skill: { name: '带派大汗脚', desc: '每2秒触发，朝敌方伸出大汗脚持续3秒。大汗脚会持续追踪敌方，距离越远脚越大，伤害与范围越强。敌方触碰将受到持续伤害。觉醒：四方带派，从场地四周伸出四只持续追踪敌方的大汗脚，持续5秒。' },
+    skill: { name: '带派大汗脚', desc: '每2秒触发，朝敌方伸出大汗脚持续3秒。大汗脚会持续追踪敌方，距离越远脚越大，伤害与范围越强。敌方触碰将受到持续伤害。觉醒：赤足领域，从场地四周伸出四只持续追踪敌方的大汗脚进行全场封锁，持续5秒。' },
     audioSrc: import.meta.env.BASE_URL + 'assets/audio/DongBeiYuJie/带派不.mp3',
     isSpecial: false
   },
