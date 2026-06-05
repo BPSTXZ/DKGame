@@ -20,7 +20,7 @@
           'hero-icon--bomber': hero.class === 'Bomber', 
           'hero-icon--flameartist': hero.class === 'FlameArtist', 
           'hero-icon--crimsonblade': hero.class === 'CrimsonBlade',
-          'hero-icon--jueshiyouwu': hero.class === 'JueShiYouWu',
+          'hero-icon--has-img': !!hero.iconImg,
           'is-selected': store.p1Selection?.id === hero.id || store.p2Selection?.id === hero.id 
         }" :style="{ background: hero.iconColor }">
           <div v-if="hero.class === 'Van'" class="hero-icon-sock"></div>
@@ -68,12 +68,12 @@
             <div class="flame-wave wave-2"></div>
           </div>
 
-          <div v-if="hero.class === 'CrimsonBlade'" class="hero-icon-blade-reflection">
+          <div v-if="hero.class === 'CrimsonBlade' && !hero.iconImg" class="hero-icon-blade-reflection">
             <div class="blade-line"></div>
           </div>
 
-          <div v-if="hero.iconImg" class="hero-icon-jueshiyouwu">
-            <img :src="hero.iconImg" alt="图片" />
+          <div v-if="hero.iconImg" class="hero-icon-img-container">
+            <img :src="hero.iconImg" :alt="hero.name" />
           </div>
 
           <span v-if="hero.disabled"
@@ -105,15 +105,15 @@
                 </div>
               </div>
               <div v-if="store.p1Selection.class === 'Bomber'" class="hero-icon-bomber-stripes"></div>
-              <div v-if="store.p1Selection.class === 'FlameArtist'" class="hero-icon-flame-waves">
+              <div v-if="store.p1Selection.class === 'FlameArtist' && !store.p1Selection.iconImg" class="hero-icon-flame-waves">
                 <div class="flame-wave wave-1"></div>
                 <div class="flame-wave wave-2"></div>
               </div>
-              <div v-if="store.p1Selection.class === 'CrimsonBlade'" class="hero-icon-blade-reflection">
+              <div v-if="store.p1Selection.class === 'CrimsonBlade' && !store.p1Selection.iconImg" class="hero-icon-blade-reflection">
                 <div class="blade-line"></div>
               </div>
-              <div v-if="store.p1Selection.iconImg" class="hero-icon-jueshiyouwu">
-                <img :src="store.p1Selection.iconImg" alt="图片" />
+              <div v-if="store.p1Selection.iconImg" class="hero-icon-img-container">
+                <img :src="store.p1Selection.iconImg" :alt="store.p1Selection.name" />
               </div>
             </div>
             <div class="vs-name">{{ store.p1Selection.name }}</div>
@@ -137,15 +137,15 @@
                 </div>
               </div>
               <div v-if="store.p2Selection.class === 'Bomber'" class="hero-icon-bomber-stripes"></div>
-              <div v-if="store.p2Selection.class === 'FlameArtist'" class="hero-icon-flame-waves">
+              <div v-if="store.p2Selection.class === 'FlameArtist' && !store.p2Selection.iconImg" class="hero-icon-flame-waves">
                 <div class="flame-wave wave-1"></div>
                 <div class="flame-wave wave-2"></div>
               </div>
-              <div v-if="store.p2Selection.class === 'CrimsonBlade'" class="hero-icon-blade-reflection">
+              <div v-if="store.p2Selection.class === 'CrimsonBlade' && !store.p2Selection.iconImg" class="hero-icon-blade-reflection">
                 <div class="blade-line"></div>
               </div>
-              <div v-if="store.p2Selection.iconImg" class="hero-icon-jueshiyouwu">
-                <img :src="store.p2Selection.iconImg" alt="图片" />
+              <div v-if="store.p2Selection.iconImg" class="hero-icon-img-container">
+                <img :src="store.p2Selection.iconImg" :alt="store.p2Selection.name" />
               </div>
             </div>
             <div class="vs-name">{{ store.p2Selection.name }}</div>
@@ -847,7 +847,12 @@ onUnmounted(() => {
   to { transform: rotate(-45deg) translateX(100%); }
 }
 
-.hero-icon-jueshiyouwu {
+.hero-icon--has-img {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-icon-img-container {
   position: absolute;
   inset: 0;
   border-radius: 50%;
@@ -857,17 +862,10 @@ onUnmounted(() => {
   align-items: center;
 }
 
-.hero-icon-jueshiyouwu img {
+.hero-icon-img-container img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.hero-icon--jueshiyouwu {
-  position: relative;
-  overflow: hidden;
-  /* 基础背景色，以防图片未加载出来 */
-  background-color: #ffcc00 !important;
 }
 
 .hero-icon-flame-waves {

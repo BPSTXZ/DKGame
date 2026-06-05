@@ -391,6 +391,26 @@ const skillTuningSchemas = {
       defaultValue: 5.0,
       hint: '分身在场上的存活时间，默认 5.0 秒。'
     }
+  ],
+  DongBeiYuJie: [
+    {
+      key: 'skillCooldown',
+      label: '大汗脚冷却',
+      min: 0.1,
+      step: 0.1,
+      type: 'float',
+      defaultValue: 2.0,
+      hint: '技能结束后的冷却时间。'
+    },
+    {
+      key: 'skillDuration',
+      label: '大汗脚持续',
+      min: 0.1,
+      step: 0.1,
+      type: 'float',
+      defaultValue: 3.0,
+      hint: '大汗脚伸出后的持续时间。'
+    }
   ]
 };
 
