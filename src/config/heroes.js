@@ -174,6 +174,16 @@ export const heroConfig = [
     isSpecial: false
   },
   {
+    id: 'pingponghero', name: '乒乓侠', class: 'PingPongHero',
+    iconColor: '#ff6600',
+    quote: '"乒乓！乒乓！每一板都更快更强！"',
+    traits: '极速弹射 | 乒乓球反复强化',
+    stats: 'HP: 100 | 移速: 60',
+    skill: { name: '极速乒乓', desc: '快速发射乒乓球，碰到敌方造成伤害，碰到本体伤害+2、移速×1.5可无限强化。觉醒：双重奏，复制一颗当前属性相同的第二颗乒乓球，持续5秒。' },
+    audioSrc: null,
+    isSpecial: false
+  },
+  {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',
     quote: '"神秘的力量正在苏醒..."',
     traits: '未知 | ???',

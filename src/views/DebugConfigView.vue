@@ -411,6 +411,17 @@ const skillTuningSchemas = {
       defaultValue: 3.0,
       hint: '大汗脚伸出后的持续时间。'
     }
+  ],
+  PingPongHero: [
+    {
+      key: 'enhanceCooldown',
+      label: '强化冷却',
+      min: 0.05,
+      step: 0.05,
+      type: 'float',
+      defaultValue: 0.2,
+      hint: '乒乓球碰到本体后触发强化的冷却时间。'
+    }
   ]
 };
 

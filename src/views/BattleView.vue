@@ -143,6 +143,7 @@ import { FlameArtist } from '@/game/entities/heroes/FlameArtist.js';
 import { CrimsonBlade } from '@/game/entities/heroes/CrimsonBlade.js';
 import { JueShiYouWu } from '@/game/entities/heroes/JueShiYouWu.js';
 import { DongBeiYuJie } from '@/game/entities/heroes/DongBeiYuJie.js';
+import { PingPongHero } from '@/game/entities/heroes/PingPongHero.js';
 import { BattleRecordManager } from '@/utils/BattleRecordManager.js';
 import { heroConfig } from '@/config/heroes.js';
 
@@ -186,7 +187,8 @@ const classes = {
     'FlameArtist': FlameArtist,
     'CrimsonBlade': CrimsonBlade,
     'JueShiYouWu': JueShiYouWu,
-    'DongBeiYuJie': DongBeiYuJie
+    'DongBeiYuJie': DongBeiYuJie,
+    'PingPongHero': PingPongHero
   };
 
 const store = useGameStore();
