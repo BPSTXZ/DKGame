@@ -9,6 +9,11 @@ export class PingPongHero extends Hero {
         this.baseSpeed = 60;
         this.color = '#ff6600'; // 橙色乒乓主题
         
+        // 音效
+        this.launchAudioSrc = import.meta.env.BASE_URL + 'assets/audio/PingPongHero/抽出乒乓.mp3';
+        this.hitAudioSrc = import.meta.env.BASE_URL + 'assets/audio/PingPongHero/乒乓击打.mp3';
+        this.wallAudioSrc = import.meta.env.BASE_URL + 'assets/audio/PingPongHero/乒乓击打.mp3';
+        
         // 乒乓球数据
         this.balls = [];
         this.lastEnhanceTime = 0; // 上次强化时间，0.2s冷却
@@ -28,6 +33,9 @@ export class PingPongHero extends Hero {
     }
     
     launchBall(targetX, targetY, damage, speed) {
+        // 播放抽球音效
+        this.playAudio(this.launchAudioSrc, 1);
+
         const dx = targetX - this.x;
         const dy = targetY - this.y;
         const dist = Math.hypot(dx, dy);
@@ -45,6 +53,14 @@ export class PingPongHero extends Hero {
             trail: [], // 轨迹点
             hitCooldown: 0
         });
+    }
+    
+    playAudio(src, vol = 0.8) {
+        if (src) {
+            const snd = new Audio(src);
+            snd.volume = vol;
+            snd.play().catch(() => {});
+        }
     }
     
     updateSpecific(dt) {
@@ -87,10 +103,14 @@ export class PingPongHero extends Hero {
             ball.y += ball.vy * dt;
             
             // 边界反弹
-            if (ball.x < ball.radius) { ball.x = ball.radius; ball.vx = Math.abs(ball.vx); }
-            if (ball.x > this.game.width - ball.radius) { ball.x = this.game.width - ball.radius; ball.vx = -Math.abs(ball.vx); }
-            if (ball.y < ball.radius) { ball.y = ball.radius; ball.vy = Math.abs(ball.vy); }
-            if (ball.y > this.game.height - ball.radius) { ball.y = this.game.height - ball.radius; ball.vy = -Math.abs(ball.vy); }
+            let wallBounced = false;
+            if (ball.x < ball.radius) { ball.x = ball.radius; ball.vx = Math.abs(ball.vx); wallBounced = true; }
+            if (ball.x > this.game.width - ball.radius) { ball.x = this.game.width - ball.radius; ball.vx = -Math.abs(ball.vx); wallBounced = true; }
+            if (ball.y < ball.radius) { ball.y = ball.radius; ball.vy = Math.abs(ball.vy); wallBounced = true; }
+            if (ball.y > this.game.height - ball.radius) { ball.y = this.game.height - ball.radius; ball.vy = -Math.abs(ball.vy); wallBounced = true; }
+            if (wallBounced) {
+                this.playAudio(this.wallAudioSrc, 0.4);
+            }
             
             // 重新归一化速度
             const currentSpeed = Math.hypot(ball.vx, ball.vy);
@@ -109,6 +129,9 @@ export class PingPongHero extends Hero {
                 if (dist < ball.radius + this.enemy.radius) {
                     // 伤害
                     this.enemy.takeDamage(ball.damage * this.damageMultiplier, ball.x, ball.y);
+                    
+                    // 播放击打音效
+                    this.playAudio(this.hitAudioSrc, 0.9);
                     
                     // 反弹
                     const ex = ball.x - this.enemy.x;
