@@ -18,6 +18,12 @@ export class Vampire extends Hero {
         this.suckTime = 0;
         this.suckDuration = 3.0;
         this.suckCooldown = 0; // 吸附技能冷却时间
+        
+        // 主动追踪机制（同绝世油物如影随形）
+        this.timeSinceLastSuck = 0;
+        this.isTracking = false;
+        this.currentTrackingSpeed = 0;
+        this.trackingTriggerTime = 4.0; // 4秒未吸血进入追踪
 
         
         // Awaken specific
@@ -38,9 +44,37 @@ export class Vampire extends Hero {
     applyPassives() {
         // 被动技能：血量低于 10 时，吸血效率从 5 提升到 10
         this.currentDrainRate = (this.hp <= 10) ? 10 : 5;
+        
+        // 追踪模式下覆盖速度
+        if (this.isTracking && !this.isSucking) {
+            this.speedMultiplier = this.currentTrackingSpeed / (this.baseSpeed * 8);
+        }
     }
     
     updateSpecific(dt) {
+        // ---- 主动追踪机制（同绝世油物如影随形） ----
+        if (!this.isSucking && !this.isDead) {
+            this.timeSinceLastSuck += dt;
+            if (this.timeSinceLastSuck >= this.trackingTriggerTime && !this.isTracking && this.enemy && !this.enemy.isDead) {
+                this.isTracking = true;
+                this.currentTrackingSpeed = this.getSpeed();
+            }
+        }
+        
+        if (this.isTracking && !this.isSucking) {
+            this.currentTrackingSpeed += 240 * dt;
+            if (this.enemy && !this.enemy.isDead) {
+                const dx = this.enemy.x - this.x;
+                const dy = this.enemy.y - this.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist > 0) {
+                    this.vx = dx / dist;
+                    this.vy = dy / dist;
+                }
+            }
+        }
+        // -----------------------------------------
+        
         // 更新吸附冷却时间
         if (!this.isSucking && this.suckCooldown > 0) {
             this.suckCooldown -= dt;
@@ -262,6 +296,13 @@ export class Vampire extends Hero {
         if (!this.isSucking) {
             this.isSucking = true;
             this.suckTime = 0;
+            
+            // 重置追踪状态
+            this.timeSinceLastSuck = 0;
+            if (this.isTracking) {
+                this.isTracking = false;
+                this.speedMultiplier = 1.0;
+            }
             
             if (this.game) {
                 this.game.addFloatingText(this.x, this.y - 40, "BLOOD SUCK!", '#8b0000');
