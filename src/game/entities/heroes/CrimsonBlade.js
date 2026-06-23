@@ -208,6 +208,15 @@ export class CrimsonBlade extends Hero {
         }
     }
 
+    randomizeDirection() {
+        // 强制重置移速倍率，因为此时 speedMultiplier 可能仍为 0（applyPassives 在本帧已执行）
+        this.speedMultiplier = 1.0;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = this.getSpeed();
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+    }
+
     updateNormal(dt) {
         if (this.state === 'normal') {
             this.slashTimer -= dt;
@@ -226,6 +235,7 @@ export class CrimsonBlade extends Hero {
             if (this.slashProgress >= this.slashDuration) {
                 this.state = 'normal';
                 this.slashTimer = this.slashCooldown;
+                this.randomizeDirection();
             }
         }
     }
@@ -242,6 +252,7 @@ export class CrimsonBlade extends Hero {
                 this.isAwakened = false;
                 this.state = 'normal';
                 this.slashTimer = this.slashCooldown;
+                this.randomizeDirection();
             }
         } else if (this.state === 'charging') {
             this.chargeTimer -= dt;
