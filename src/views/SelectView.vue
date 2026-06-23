@@ -364,10 +364,17 @@ const selectHero = (hero) => {
   if (hero.disabled) return;
 
   if (!store.p1Selection) {
+    // 第一次点击：选P1
     store.p1Selection = hero;
-  } else if (!store.p2Selection && store.p1Selection.id !== hero.id) {
+  } else if (!store.p2Selection) {
+    // 第二次点击：选P2（允许与P1相同英雄）
     store.p2Selection = hero;
-  } else if (store.p1Selection && store.p2Selection) {
+  } else if (store.p1Selection.id === hero.id && store.p2Selection.id === hero.id) {
+    // 第三次点击同一英雄：取消全部选中
+    store.p1Selection = null;
+    store.p2Selection = null;
+  } else {
+    // 已有两个选中，且不是取消操作：重置P1为当前英雄，清空P2
     store.p1Selection = hero;
     store.p2Selection = null;
   }

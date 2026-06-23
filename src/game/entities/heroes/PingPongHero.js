@@ -166,12 +166,13 @@ export class PingPongHero extends Hero {
                 const dist = Math.hypot(ball.x - this.x, ball.y - this.y);
                 if (dist < ball.radius + this.radius) {
                     // 强化：伤害+2，移速×1.3；达到上限2000后速度不再提升，伤害改为+3
+                    // 乒乓球伤害加成上限设置为 20。无论是速度未满时的 +2 还是达到上限后的 +3，强化后的伤害都会被 Math.min(20, ...) 钳制在 20 以内
                     if (ball.speed < 2000) {
-                        ball.damage += 2;
+                        ball.damage = Math.min(20, ball.damage + 2);
                         ball.speed = Math.min(2000, ball.speed * 1.3);
                     } else {
                         ball.speed = 2000;
-                        ball.damage += 3;
+                        ball.damage = Math.min(20, ball.damage + 3);
                     }
                     
                     // 反弹
