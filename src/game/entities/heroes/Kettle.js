@@ -58,6 +58,9 @@ export class Kettle extends Hero {
         this.boilAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/Kettle/沸腾.mp3');
         this.boilAudio.loop = true;
         this.boilAudioStarted = false;
+
+        this.screamAudio = new Audio(import.meta.env.BASE_URL + 'assets/audio/Kettle/惨叫.mp3');
+        this.lastScreamTime = 0;
     }
     
     /**
@@ -68,6 +71,18 @@ export class Kettle extends Hero {
         if (this.temperature <= 27) return 4;
         const ratio = (this.temperature - 27) / (100 - 27);
         return Math.min(12, 4 + ratio * (12 - 4));
+    }
+    
+    /**
+     * 沸腾伤害时播放敌方惨叫（带冷却，避免频繁播放）
+     */
+    playEnemyScream() {
+        const now = Date.now();
+        if (this.isBoiling && this.screamAudio && now - this.lastScreamTime > 800) {
+            this.lastScreamTime = now;
+            this.screamAudio.currentTime = 0;
+            this.screamAudio.play().catch(() => {});
+        }
     }
     
     /**
@@ -117,6 +132,7 @@ export class Kettle extends Hero {
             const dist = Math.hypot(this.enemy.x - x, this.enemy.y - y);
             if (dist < 100) {
                 this.enemy.takeDamage(this.getSplashDamage() * this.damageMultiplier, x, y);
+                if (this.isBoiling) this.playEnemyScream();
             }
         }
     }
@@ -131,6 +147,7 @@ export class Kettle extends Hero {
             
             // 碰撞伤害
             other.takeDamage(this.getCurrentDamage() * this.damageMultiplier, this.x, this.y);
+            if (this.isBoiling) this.playEnemyScream();
             
             // 热水溅射
             const midX = (this.x + other.x) / 2;
@@ -266,6 +283,7 @@ export class Kettle extends Hero {
                     const ed = Math.hypot(this.enemy.x - sx, this.enemy.y - sy);
                     if (ed < 80) {
                         this.enemy.takeDamage(this.getSplashDamage() * this.damageMultiplier, sx, sy);
+                        this.playEnemyScream();
                     }
                 }
             }
@@ -277,6 +295,7 @@ export class Kettle extends Hero {
                 const dist = Math.hypot(this.enemy.x - this.x, this.enemy.y - this.y);
                 if (dist < 120) {
                     this.enemy.takeDamage((this.getCurrentDamage() / 3) * this.damageMultiplier, this.x, this.y);
+                    this.playEnemyScream();
                 }
             }
         }
@@ -327,6 +346,7 @@ export class Kettle extends Hero {
                         && this.enemy.y > pourY && this.enemy.y < pourY + dynamicLength;
                     if (inWaterColumn) {
                         this.enemy.takeDamage(tickDmg, pourX, pourY);
+                        if (this.isBoiling) this.playEnemyScream();
                         
                         // 热水命中敌方视觉效果
                         if (this.game) {
@@ -759,6 +779,7 @@ export class Kettle extends Hero {
         if (this.pourAudio) { this.pourAudio.pause(); this.pourAudio.currentTime = 0; }
         if (this.boilPreAudio) { this.boilPreAudio.pause(); this.boilPreAudio.currentTime = 0; }
         if (this.boilAudio) { this.boilAudio.pause(); this.boilAudio.currentTime = 0; }
+        if (this.screamAudio) { this.screamAudio.pause(); this.screamAudio.currentTime = 0; }
     }
     
     playAwakenAudio() {
