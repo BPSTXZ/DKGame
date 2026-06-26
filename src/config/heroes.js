@@ -184,6 +184,17 @@ export const heroConfig = [
     isSpecial: false
   },
   {
+    id: 'kettle', name: '烧水壶', class: 'Kettle',
+    iconColor: '#666666',
+    iconImg: import.meta.env.BASE_URL + 'assets/img/Kettle/1.png',
+    quote: '"喝开水吗？"',
+    traits: '水温成长 | 碰撞溅射与沸腾爆发',
+    stats: 'HP: 100 | 移速: 60',
+    skill: { name: '喝开水吗？', desc: '随时间升温提升伤害，敌方处于下方时向下倒出热水。100度进入沸腾姿态，并全屏溅射滚烫水花。觉醒：瞬时沸腾，水温直接拉满。' },
+    audioSrc: import.meta.env.BASE_URL + 'assets/audio/Kettle/沸腾.mp3',
+    isSpecial: false
+  },
+  {
     id: 'coming_soon', name: '敬请期待', class: 'None', iconColor: '#222222',
     quote: '"神秘的力量正在苏醒..."',
     traits: '未知 | ???',

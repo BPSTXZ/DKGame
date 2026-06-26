@@ -144,6 +144,7 @@ import { CrimsonBlade } from '@/game/entities/heroes/CrimsonBlade.js';
 import { JueShiYouWu } from '@/game/entities/heroes/JueShiYouWu.js';
 import { DongBeiYuJie } from '@/game/entities/heroes/DongBeiYuJie.js';
 import { PingPongHero } from '@/game/entities/heroes/PingPongHero.js';
+import { Kettle } from '@/game/entities/heroes/Kettle.js';
 import { BattleRecordManager } from '@/utils/BattleRecordManager.js';
 import { heroConfig } from '@/config/heroes.js';
 
@@ -188,7 +189,8 @@ const classes = {
     'CrimsonBlade': CrimsonBlade,
     'JueShiYouWu': JueShiYouWu,
     'DongBeiYuJie': DongBeiYuJie,
-    'PingPongHero': PingPongHero
+    'PingPongHero': PingPongHero,
+    'Kettle': Kettle
   };
 
 const store = useGameStore();
